@@ -25,7 +25,9 @@ BT::NodeStatus MovementBaseClass::tick() {
         msg.header.stamp = node_->get_clock()->now();
         setCommandData(msg);
         publisher_->publish(msg);
-        RCLCPP_INFO(node_->get_logger(), "Published MovementCommand with command: %s", command_.c_str());
+        RCLCPP_INFO(node_->get_logger(), "Published MovementCommand with command: %d", command_);
+
+     //   RCLCPP_INFO(node_->get_logger(), "Published MovementCommand with command: %s", command_.c_str());
         message_sent_ = true; 
     }
 
@@ -48,12 +50,12 @@ BT::NodeStatus MovementBaseClass::tick() {
     }
 }
 
-void MovementBehaviour::setCommandData(cascade_msgs::msg::MovementCommand &msg) {
+void MovementBaseClass::setCommandData(cascade_msgs::msg::MovementCommand &msg) {
     throw std::runtime_error("setCommandData must be overridden in a derived class");
 }
 
-MovementBaseClass::~MovementBaseClass() {
-    RCLCPP_INFO(node_->get_logger(), "Destroying MovementBehaviour node");
-}
+//MovementBaseClass::~MovementBaseClass() {
+ //   RCLCPP_INFO(node_->get_logger(), "Destroying MovementBehaviour node");
+//}
 
 

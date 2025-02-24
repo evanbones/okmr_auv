@@ -10,6 +10,7 @@ endif()
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(sensor_msgs REQUIRED)
+set(CMAKE_PREFIX_PATH "Cascade-AUV/ros2_ws/src/cascade_msgs/install")
 find_package(cascade_msgs REQUIRED)
 find_package(message_filters REQUIRED)
 find_package(tf2 REQUIRED)
@@ -17,27 +18,19 @@ find_package(tf2_ros REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
 find_package(behaviortree_cpp REQUIRED)
 
-add_executable(bt_executor src/main.cpp src/Move1m.cpp src/TurnCW.cpp)
-
-target_include_directories(serialization_test PUBLIC include)
-
-ament_target_dependencies(costmap_node rclcpp sensor_msgs geometry_msgs cv_bridge message_filters tf2 tf2_ros image_transport tf2_geometry_msgs OpenCV cascade_msgs)
-target_include_directories(costmap_node PUBLIC include)
+add_executable(bt_executor src/main.cpp src/Move1m.cpp src/TurnCW.cpp src/MovementBaseClass.cpp)
 
 target_link_libraries(bt_executor
     behaviortree_cpp::behaviortree_cpp
 )
 
+ament_target_dependencies(bt_executor rclcpp cascade_msgs geometry_msgs)
 
 target_include_directories(bt_executor PRIVATE include)
 
 
 install(TARGETS
-    depth_to_pointcloud
-    mapping_node
-    visualizer
-    serialization_test
-    costmap_node
+    bt_executor
     DESTINATION lib/${PROJECT_NAME})
 
 if(BUILD_TESTING)
