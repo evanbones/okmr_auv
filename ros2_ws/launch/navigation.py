@@ -22,6 +22,10 @@ def generate_launch_description():
                 ('/camera/camera/depth/image_rect_raw', '/camera/depth'),
                 ('/camera/camera/color/image_raw', '/camera/rgb'),
             ],
+            parameters=[{
+                'unite_imu_method': 2,
+                'enable_gyro': 'true',
+                }]
         ),
        Node(
             package='navigation',
