@@ -3,8 +3,9 @@
 #include "TurnCW.h"
 #include <iostream>
 
-int main() {
+int main(int argc, char** argv) {
 
+    rclcpp::init(argc, argv);
     BT::BehaviorTreeFactory factory;
     factory.registerNodeType<Move1m>("Move1m");
     factory.registerNodeType<TurnCW>("TurnCW");

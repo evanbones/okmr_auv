@@ -17,6 +17,8 @@ Move1m::Move1m(const std::string& name, const BT::NodeConfiguration& config)
     while (!client_->wait_for_service(std::chrono::seconds(1))) {
         RCLCPP_INFO(node_->get_logger(), "Service /navigator_status not available, waiting...");
     } 
+
+    command_ = 1;
 }
 
 BT::NodeStatus Move1m::tick() {

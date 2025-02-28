@@ -21,14 +21,14 @@ void setCommandData(cascade_msgs::msg::MovementCommand &msg) override;
 
   virtual ~TurnCW() = default;
 
-
 private:
- rclcpp::Node::SharedPtr node_;
+    rclcpp::Node::SharedPtr node_;
     rclcpp::Publisher<cascade_msgs::msg::MovementCommand>::SharedPtr publisher_;
     rclcpp::Client<cascade_msgs::srv::Status>::SharedPtr client_;
 
     bool message_sent_;
-    int32_t command_;
+    int32_t command_; 
+
 
 }; 
 
