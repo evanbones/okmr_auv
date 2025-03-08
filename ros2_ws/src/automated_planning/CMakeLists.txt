@@ -10,7 +10,6 @@ endif()
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(sensor_msgs REQUIRED)
-set(CMAKE_PREFIX_PATH "Cascade-AUV/ros2_ws/src/cascade_msgs/install")
 find_package(cascade_msgs REQUIRED)
 find_package(message_filters REQUIRED)
 find_package(tf2 REQUIRED)
@@ -20,11 +19,14 @@ find_package(behaviortree_cpp REQUIRED)
 
 add_executable(bt_executor src/main.cpp src/Move1m.cpp src/TurnCW.cpp src/MovementBaseClass.cpp)
 
+
+
+target_include_directories(bt_executor PUBLIC /usr/local/include)
+target_link_directories(bt_executor PUBLIC /usr/local/lib)
 target_link_libraries(bt_executor
     behaviortree_cpp::behaviortree_cpp
 )
-
-ament_target_dependencies(bt_executor rclcpp cascade_msgs geometry_msgs)
+ament_target_dependencies(bt_executor rclcpp cascade_msgs geometry_msgs behaviortree_cpp)
 
 target_include_directories(bt_executor PRIVATE include)
 

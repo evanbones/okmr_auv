@@ -21,7 +21,7 @@ BT::NodeStatus MovementBaseClass::tick() {
     if (!message_sent_) {
         
         cascade_msgs::msg::MovementCommand msg;
-        msg.command = command_;
+        msg.command = 1;
         msg.header.stamp = node_->get_clock()->now();
         setCommandData(msg);
         publisher_->publish(msg);

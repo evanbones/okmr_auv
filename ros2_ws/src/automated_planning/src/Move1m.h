@@ -26,7 +26,8 @@ private:
     rclcpp::Client<cascade_msgs::srv::Status>::SharedPtr client_;
 
     bool message_sent_;
-    int32_t command_;
+    int32_t command_; 
+
 
 };
 
