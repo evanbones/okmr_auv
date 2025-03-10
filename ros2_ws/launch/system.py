@@ -151,8 +151,8 @@ def generate_launch_description():
             executable='bt_executor',
         ),
         Node(
-            package='foxglove_bridge',
-            executable='foxglove_bridge',
+            package='object_detection',
+            executable='lid_detector',
         ),
        ])
 
