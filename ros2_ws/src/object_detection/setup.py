@@ -26,7 +26,8 @@ setup(
             'image_data_merger = object_detection.image_data_merger:main',
             'data_collector = object_detection.data_collector:main',
             'color_detector = object_detection.color_detector:main',
-            'lid_detector = object_detection.lid_detector:main'
+            'lid_detector = object_detection.lid_detector:main',
+            'data_recorder = object_detection.data_recorder:main'
         ],
     },
 )

@@ -24,4 +24,6 @@ ml_training/
 .keras
 /experiments
 datasets/
+data/
 .pcd
+.npy
