@@ -3,6 +3,8 @@ from object_detection.detector import ObjectDetectorNode
 import rclpy
 import numpy as np
 import torch
+from ultralytics import YOLO
+import cv2
 
 class LidDetector(ObjectDetectorNode):
     def __init__(self):
@@ -10,8 +12,8 @@ class LidDetector(ObjectDetectorNode):
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
         # Load YOLOv11 model
-        self.model = torch.load("LidModelRGB.pt", map_location=self.device)
-        self.model.eval()
+        self.model = YOLO("LidModelRGB.pt")
+        #self.model.eval()
 
         # Define input size for YOLO
         self.img_size = 640  # Adjust based on your training
@@ -55,19 +57,24 @@ class LidDetector(ObjectDetectorNode):
 
     def inference(self, rgb, depth):
         # returns list of bounding boxes
+        label_img = np.zeros(self.target_size, dtype=np.float32)
+        #input_tensor = self.preprocess_image(rgb)
         
-        input_tensor = self.preprocess_image(rgb)
+        #with torch.no_grad():
+        output = self.model(rgb)  # Inference
 
-        with torch.no_grad():
-            output = self.model(input_tensor)  # Inference
+        print(output)
 
-        detected_boxes = self.decode_predictions(output, rgb.shape[:2])
+        #detected_boxes = self.decode_predictions(output, rgb.shape[:2])
+        for result in output:
+            for box in result.boxes:
+                cv2.rectangle(label_img, (int(box.xyxy[0]), int(box.xyxy[1])), (int(box.xyxy[2]), int(box.xyxy[3])), 1.0, -1)
 
         # If no detections, return an empty array matching target size
-        if detected_boxes.size == 0:
-            return np.zeros(self.target_size, dtype=np.float32)
-
-        return detected_boxes  
+        #if detected_boxes.size == 0:
+            #return np.zeros(self.target_size, dtype=np.float32)
+        return label_img
+        #return detected_boxes  
 
 def main(args=None):
     rclpy.init(args=args)

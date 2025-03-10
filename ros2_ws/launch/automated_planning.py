@@ -150,5 +150,9 @@ def generate_launch_description():
             package='automated_planning',
             executable='bt_executor',
         ),
+        Node(
+            package='object_detection',
+            executable='lid_detector',
+        ),
        ])
 
