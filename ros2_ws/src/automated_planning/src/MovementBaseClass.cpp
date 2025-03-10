@@ -33,20 +33,22 @@ BT::NodeStatus MovementBaseClass::tick() {
 
   
     auto request = std::make_shared<cascade_msgs::srv::Status::Request>();
-    auto future = client_->async_send_request(request);
-
-  
-    if (rclcpp::spin_until_future_complete(node_, future) == rclcpp::FutureReturnCode::SUCCESS) {
-        auto response = future.get();
-        if (response->ongoing) {
-            return BT::NodeStatus::RUNNING;
+    bool keepSpinning=true;
+    while(keepSpinning){
+        auto future = client_->async_send_request(request);
+        if (rclcpp::spin_until_future_complete(node_, future) == rclcpp::FutureReturnCode::SUCCESS) {
+            auto response = future.get();
+            if (response->ongoing) {
+                continue;
+            } else {
+                message_sent_ = false;
+                keepSpinning = false;
+                return response->success ? BT::NodeStatus::SUCCESS : BT::NodeStatus::FAILURE;
+            }
         } else {
-            message_sent_ = false;
-            return response->success ? BT::NodeStatus::SUCCESS : BT::NodeStatus::FAILURE;
+            RCLCPP_ERROR(node_->get_logger(), "Service call failed");
+            return BT::NodeStatus::FAILURE;
         }
-    } else {
-        RCLCPP_ERROR(node_->get_logger(), "Service call failed");
-        return BT::NodeStatus::FAILURE;
     }
 }
 
