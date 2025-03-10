@@ -1,0 +1,38 @@
+import object_detection.detector 
+from object_detection.detector import ObjectDetectorNode 
+import rclpy
+import numpy as np
+import cv2
+import os
+from datetime import datetime
+
+class ExampleDetector(ObjectDetectorNode):
+    def __init__(self):
+        super().__init__(node_name="data_recorder")
+        self.counter = 0
+        self.save_path = "data/" 
+        start_time = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+        run_folder = os.path.join(self.save_path, start_time)
+    
+        # Make sure the folder exists
+        os.makedirs(run_folder, exist_ok=True)
+
+    def inference(self,rgb,depth):
+        np.save(os.path.join(self.run_folder, f"/rgb_{counter}.npy"), rgb)  # Save RGB array
+        np.save(os.path.join(self.run_folder, f"/depth_{counter}.npy"), depth)  # Save Depth array
+        counter += 1
+
+        label_img = np.zeros(self.target_size, dtype=np.float32)
+        cv2.rectangle(label_img, (0,0),(300,300),1.0, -1)
+        return label_img
+
+def main(args=None):
+    rclpy.init(args=args)
+    node = ExampleDetector()
+    rclpy.spin(node)
+    node.destroy_node()
+    rclpy.shutdown()
+
+if __name__ == '__main__':
+    main()
+
