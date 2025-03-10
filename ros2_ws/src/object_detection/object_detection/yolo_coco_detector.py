@@ -3,6 +3,8 @@ from object_detection.detector import ObjectDetectorNode
 import rclpy
 import numpy as np
 import os
+from tensorflow.keras.models import load_model
+
 
 os.environ["KERAS_BACKEND"] = "jax"  # @param ["tensorflow", "jax", "torch"]
 
@@ -27,11 +29,12 @@ class ExampleDetector(ObjectDetectorNode):
             # Tune confidence threshold for predictions to pass NMS
             confidence_threshold=0.7,
         )
-        self.pretrained_model = keras_cv.models.YOLOV8Detector.from_preset(
-            "yolo_v8_m_pascalvoc",
-            bounding_box_format="xyxy",
-            prediction_decoder=prediction_decoder,
-        )
+        #self.pretrained_model = keras_cv.models.YOLOV8Detector.from_preset(
+           # "yolo_v8_m_pascalvoc",
+           # bounding_box_format="xyxy",
+           # prediction_decoder=prediction_decoder,
+        #)
+        self.pretrained_model = keras.layers.TFSMLayer(LidModelRGB.pt, call_endpoint='serving_default')
         self.inference_resizing = keras_cv.layers.Resizing(
             640, 640, pad_to_aspect_ratio=True, bounding_box_format="xyxy"
         )
