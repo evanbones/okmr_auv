@@ -9,7 +9,7 @@ class SerialOutputNode(Node):
 
         # Initialize serial port (replace '/dev/ttyUSB0' with your ESP32 port and set the correct baud rate)
         try:
-            self.serial_port = serial.Serial('/dev/ttyACM0', 115200, timeout=1)
+            self.serial_port = serial.Serial('/dev/ttyUSB0', 115200, timeout=1)
             self.get_logger().info("Serial port opened successfully.")
         except serial.SerialException as e:
             self.get_logger().error(f"Failed to open serial port: {e}")
@@ -28,7 +28,7 @@ class SerialOutputNode(Node):
             return
 
         # Create a JSON object following the specified format
-        serial_msg = f'{msg.fli} {msg.fri} {msg.bli} {msg.bri} {msg.flo} {msg.fro} {msg.blo} {msg.bro}' 
+        serial_msg = f'0<{msg.fli}\n1<{msg.fri}\n2<{msg.bli}\n3<{msg.bri}\n4<{msg.flo}\n5<{msg.fro}\n6<{msg.blo}\n7<{msg.bro}' 
                     
         #self.get_logger().info(f'message sent: {serial_msg}')
 
