@@ -8,6 +8,10 @@ class TeleopNode(Node):
     def __init__(self):
         super().__init__('teleop_node')
 
+        self.declare_parameter('yaw_multiplier', 20.0)
+        self.declare_parameter('roll_multiplier', 45.0)
+        self.declare_parameter('pitch_multiplier', 45.0)
+
         # Subscribe to the joystick topic
         self.joy_subscriber = self.create_subscription(Joy, '/joy', self.joy_callback, 10)
 
@@ -40,19 +44,23 @@ class TeleopNode(Node):
         delta_time = (current_time - self.prev_time).nanoseconds / 1e9  # Convert to seconds
         self.prev_time = current_time
         
+        # Get parameter values
+        yaw_multiplier = self.get_parameter('yaw_multiplier').get_parameter_value().double_value
+        roll_multiplier = self.get_parameter('roll_multiplier').get_parameter_value().double_value
+        pitch_multiplier = self.get_parameter('pitch_multiplier').get_parameter_value().double_value
 
         # Joystick Axes: (normalized between -1 and 1)
         surge = msg.axes[1]   # Left stick Y-axis (up/down)
         sway  = msg.axes[0]  # Left stick X-axis (left/right)
-        yaw   = msg.axes[2] *20 # Right stick X-axis (left/right)
+        yaw   = msg.axes[2] * yaw_multiplier # Right stick X-axis (left/right)
         
         # Trigger for heave
         heaveUp   = msg.axes[4] # Right trigger resting at 1.0, depressed to -1.0
         heaveDown = msg.axes[5] # Left trigger resting at 1.0
         heave     = heaveDown - heaveUp 
         # D-pad for pitch, roll
-        roll  = msg.axes[6] *45 # Left is positive
-        pitch = msg.axes[7] *45 # Up is positive
+        roll  = msg.axes[6] * roll_multiplier# Left is positive
+        pitch = msg.axes[7] * pitch_multiplier # Up is positive
 
         # Button Presses: TODO kill switch button, button for going to the surface, button for leveling out roll pitch, button for firing torpedos, button for enabling arm
         dummy = msg.buttons[0] # A button
