@@ -24,6 +24,8 @@ class PIDNode(Node):
         self.decay=1.0
         self.wrap=0
         self.prevMsg=SensorReading()
+        self.dt = 0.0
+        self.secondCounter=0.0
         
         self.lastMsgTime=-1
         self.lastError=0.0
@@ -40,15 +42,20 @@ class PIDNode(Node):
         self.publisher_ = self.create_publisher(SensorReading, '/PID_correction/XXX', 10)
 
     def synced_callback(self, target_msg, actual_msg):
-        if(self.paramsRead==False):
-             self.kI = self.get_parameter('kI').get_parameter_value().double_value
-             self.kP = self.get_parameter('kP').get_parameter_value().double_value
-             self.kD = self.get_parameter('kD').get_parameter_value().double_value
-             self.bias = self.get_parameter('bias').get_parameter_value().double_value
-             self.max = self.get_parameter('max').get_parameter_value().double_value
-             self.saturation_limit = self.get_parameter('saturation_limit').get_parameter_value().double_value
-             self.decay = self.get_parameter('decay').get_parameter_value().double_value
-             self.paramsRead=True
+        if not self.paramsRead:
+            self.kI = self.get_parameter('kI').get_parameter_value().double_value
+            self.kP = self.get_parameter('kP').get_parameter_value().double_value
+            self.kD = self.get_parameter('kD').get_parameter_value().double_value
+            self.bias = self.get_parameter('bias').get_parameter_value().double_value
+            self.max = self.get_parameter('max').get_parameter_value().double_value
+            self.saturation_limit = self.get_parameter('saturation_limit').get_parameter_value().double_value
+            self.decay = self.get_parameter('decay').get_parameter_value().double_value
+            self.paramsRead = True
+
+        # Reset paramsRead to False every one second
+        if self.secondCounter > 1.0:
+            self.paramsRead = False
+            self.secondCounter = 0.0
 
         msg=SensorReading()
 
@@ -64,14 +71,15 @@ class PIDNode(Node):
             error-=360
         
         if(self.lastMsgTime>0):
-            dt=(self.get_clock().now().nanoseconds-self.lastMsgTime)/1000000000.0
+            self.dt=(self.get_clock().now().nanoseconds-self.lastMsgTime)/1000000000.0
+            self.secondCounter+=self.dt
             #dt is time delta from last message in seconds 
             P=self.kP*error
-            self.I+=self.kI*error*dt
+            self.I+=self.kI*error*self.dt
             self.I*=self.decay
             self.I = max(min(self.I, self.saturation_limit), -self.saturation_limit)
             #TODO: turn saturation into a ros2 parameter
-            D=self.kD*(error-self.lastError)/dt
+            D=self.kD*(error-self.lastError)/self.dt
             if(abs(self.max)>0):
                 msg.data=min(abs(P+self.I+D),abs(self.max))
                 if(P+self.I+D<0):
