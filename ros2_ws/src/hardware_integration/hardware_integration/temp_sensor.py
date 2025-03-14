@@ -35,15 +35,15 @@ class TempSensor(Node):
             self.get_logger().error(f'Error reading temperature: {e}')
         msg = TempReading()
         msg.header.stamp = self.get_clock().now().to_msg()
-        msg.Temp0 = t[0]
-        msg.Temp1 = t[1]
-        msg.Temp2 = t[2]
-        msg.Temp3 = t[3]
-        msg.Temp4 = t[4]
-        msg.Temp5 = t[5]
-        msg.Temp6 = t[6]
-        msg.Temp7 = t[7]
-        msg.Temp8 = t[8]
+        msg.temp0 = t[0]
+        msg.temp1 = t[1]
+        msg.temp2 = t[2]
+        msg.temp3 = t[3]
+        msg.temp4 = t[4]
+        msg.temp5 = t[5]
+        msg.temp6 = t[6]
+        msg.temp7 = t[7]
+        msg.temp8 = t[8]
         self.temp_publisher.publish(msg)
 
 
