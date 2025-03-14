@@ -27,6 +27,7 @@ setup(
             "qual=hardware_integration.qualification:main",
             "dvl_driver=hardware_integration.dvl_driver:main",
             "dvl_dummy_driver=hardware_integration.dvl_dummy:main",
+            "temp_sensor=hardware_integration.temp_sensor:main",
         ],
     },
 )
