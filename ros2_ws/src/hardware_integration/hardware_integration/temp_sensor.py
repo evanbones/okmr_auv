@@ -11,7 +11,7 @@ class TempSensor(Node):
         self.timer = self.create_timer(1, self.timer_callback)
         self.temperatures = {f'temp{i}': 0.0 for i in range(10)}
     def timer_callback(self):
-        t = []
+        t = [0,0,0,0,0,0,0,0,0]
         try:
             # Read the temperature from the system file
             
