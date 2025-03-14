@@ -19,6 +19,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
     msg/JsonStamped.msg
     msg/MovementCommand.msg
     msg/MotorThrottle.msg
+    msg/TempReading.msg
     msg/Status.msg
     msg/Dvl.msg
     srv/FindObject.srv
