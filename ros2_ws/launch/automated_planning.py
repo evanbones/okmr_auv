@@ -154,9 +154,9 @@ def generate_launch_description():
             package='foxglove_bridge',
             executable='foxglove_bridge',
         ),
-        Node(
-            package='object_detection',
-            executable='data_recorder',
-        ),
+        #Node(
+            #package='object_detection',
+            #executable='data_recorder',
+        #),
        ])
 

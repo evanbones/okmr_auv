@@ -22,8 +22,7 @@ class DataRecorder(ObjectDetectorNode):
         np.save(os.path.join(self.run_folder, f"depth_{self.counter}.npy"), depth)  # Save Depth array
         self.counter += 1
 
-        label_img = np.zeros(self.target_size, dtype=np.float32)
-        cv2.rectangle(label_img, (0,0),(300,300),1.0, -1)
+        label_img = np.zeros(self.target_size, dtype=np.uint8)
         return label_img
 
 def main(args=None):

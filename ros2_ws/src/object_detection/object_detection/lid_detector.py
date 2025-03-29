@@ -57,7 +57,7 @@ class LidDetector(ObjectDetectorNode):
 
     def inference(self, rgb, depth):
         # returns list of bounding boxes
-        label_img = np.zeros(self.target_size, dtype=np.float32)
+        label_img = np.zeros(self.target_size, dtype=np.uint8)
         #input_tensor = self.preprocess_image(rgb)
         
         #with torch.no_grad():
@@ -68,7 +68,8 @@ class LidDetector(ObjectDetectorNode):
         #detected_boxes = self.decode_predictions(output, rgb.shape[:2])
         for result in output:
             for box in result.boxes:
-                cv2.rectangle(label_img, (int(box.xyxy[0]), int(box.xyxy[1])), (int(box.xyxy[2]), int(box.xyxy[3])), 1.0, -1)
+                x1, y1, x2, y2 = box.xyxy[0].tolist()
+                cv2.rectangle(label_img, (int(x1), int(y1)), (int(x2), int(y2)), 65535, -1)# for each bounding box, not worrying about overlapping boxes for now
 
         # If no detections, return an empty array matching target size
         #if detected_boxes.size == 0:

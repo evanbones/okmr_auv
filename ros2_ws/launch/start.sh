@@ -1,4 +1,4 @@
-source /opt/ros/iron/setup.bash
+source /opt/ros/jazzy/setup.bash
 source ../install/local_setup.bash
 
 

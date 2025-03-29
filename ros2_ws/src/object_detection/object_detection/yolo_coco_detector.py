@@ -6,7 +6,7 @@ import os
 from tensorflow.keras.models import load_model
 
 
-os.environ["KERAS_BACKEND"] = "jax"  # @param ["tensorflow", "jax", "torch"]
+os.environ["KERAS_BACKEND"] = "tensorflow"  # @param ["tensorflow", "jax", "torch"]
 
 from tensorflow import data as tf_data
 import tensorflow_datasets as tfds

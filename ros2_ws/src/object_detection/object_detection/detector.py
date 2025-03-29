@@ -20,7 +20,7 @@ class ObjectDetectorNode(Node):
              ],
             queue_size,
             acceptable_delay)
-        self.target_size = (480, 640, 2)  # Example size (you can adjust this to your needs)
+        self.target_size = (480, 640, 1)  # Example size (you can adjust this to your needs)
         tss.registerCallback(self.synced_callback)
         self.publisher_ = self.create_publisher(Image, '/labeled_image', 10)
 
@@ -42,7 +42,7 @@ class ObjectDetectorNode(Node):
         
         try:
             # Convert the empty image to ROS Image message
-            label_msg = self.bridge.cv2_to_imgmsg(label_image, encoding='32FC2')
+            label_msg = self.bridge.cv2_to_imgmsg(label_image, encoding='8UC1')
         except CvBridgeError as e:
             self.get_logger().error(f"Failed to convert empty image: {e}")
             return

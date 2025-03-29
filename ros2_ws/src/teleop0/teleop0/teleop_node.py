@@ -68,12 +68,12 @@ class TeleopNode(Node):
 
         
         # Compute motor values based on joystick input and delta time
-        self.values["surge"] = surge * delta_time
-        self.values["sway"] = sway * delta_time
+        self.values["surge"] = surge
+        self.values["sway"] = sway
         self.values["yaw"] += yaw * delta_time
-        self.values["heave"] = heave * delta_time
-        self.values["roll"] = roll * delta_time
-        self.values["pitch"] = pitch * delta_time
+        self.values["heave"] = heave
+        self.values["roll"] = roll
+        self.values["pitch"] = pitch
 
         # Wrap yaw angle to [-180, 180] degrees
         if self.values["yaw"] > 180:
