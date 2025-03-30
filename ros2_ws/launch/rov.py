@@ -142,10 +142,10 @@ def generate_launch_description():
             package='teleop0',
             executable='teleop_node',
         ),
-        Node(
-            package='object_detection',
-            executable='lid_detector',
-        ),
+ #       Node(
+  #          package='object_detection',
+   #         executable='lid_detector',
+    #    ),
          Node(
             package='object_detection',
             executable='data_recorder',

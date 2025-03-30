@@ -3,8 +3,8 @@ project(mapping)
 
 add_compile_options(-O3)
 set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
-link_directories("$ENV{OPEN3D_ROOT}/lib")
-set(CMAKE_PREFIX_PATH "${CMAKE_PREFIX_PATH};$ENV{OPEN3D_ROOT}")
+#link_directories("$ENV{OPEN3D_ROOT}/lib")
+#set(CMAKE_PREFIX_PATH "${CMAKE_PREFIX_PATH};$ENV{OPEN3D_ROOT}")
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
@@ -23,23 +23,23 @@ find_package(tf2_geometry_msgs REQUIRED)
 find_package(glfw3 REQUIRED)
 find_package(OpenGL REQUIRED)
 find_package(OpenMP REQUIRED)
-find_package(Open3D REQUIRED)
+#find_package(Open3D REQUIRED)
 
 add_executable(mapping_node
  src/mapping_node.cpp
 )
 
-add_executable(matching_node
- src/matching.cpp
-)
+#add_executable(matching_node
+# src/matching.cpp
+#)
 
 add_executable(conversion_node
  src/conversion_node.cpp
 )
 
-add_executable(matching_test
- src/test.cpp
-)
+#add_executable(matching_test
+#src/test.cpp
+ #)
 
 add_executable(depth_to_pointcloud
     src/depth_to_pointcloud.cpp
@@ -51,14 +51,14 @@ ament_target_dependencies(mapping_node rclcpp sensor_msgs geometry_msgs tf2 tf2_
 target_include_directories(mapping_node PUBLIC include)
 target_include_directories(mapping_node PUBLIC /usr/local/include/eigen3)
 
-ament_target_dependencies(matching_node rclcpp sensor_msgs geometry_msgs cascade_msgs)
-target_include_directories(matching_node PUBLIC include)
-target_include_directories(matching_node PUBLIC /usr/local/include/eigen3)
-target_link_libraries(matching_node Open3D Open3D::Open3D)
+#ament_target_dependencies(matching_node rclcpp sensor_msgs geometry_msgs cascade_msgs)
+#target_include_directories(matching_node PUBLIC include)
+#target_include_directories(matching_node PUBLIC /usr/local/include/eigen3)
+#target_link_libraries(matching_node Open3D Open3D::Open3D)
 
-target_include_directories(matching_test PUBLIC include)
-target_include_directories(matching_test PUBLIC /usr/local/include/eigen3)
-target_link_libraries(matching_test Open3D Open3D::Open3D)
+#target_include_directories(matching_test PUBLIC include)
+#target_include_directories(matching_test PUBLIC /usr/local/include/eigen3)
+#target_link_libraries(matching_test Open3D Open3D::Open3D)
 
 ament_target_dependencies(conversion_node rclcpp sensor_msgs cascade_msgs)
 target_include_directories(conversion_node PUBLIC include)
@@ -75,8 +75,8 @@ target_include_directories(visualizer PUBLIC include)
 install(TARGETS
     depth_to_pointcloud
     mapping_node
-    matching_node
-    matching_test
+    #    matching_node
+    #	matching_test
     conversion_node
     visualizer
     DESTINATION lib/${PROJECT_NAME})
