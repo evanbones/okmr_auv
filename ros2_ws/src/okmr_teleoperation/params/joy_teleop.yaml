@@ -1,7 +1,7 @@
 joy_teleop:
   ros__parameters:
     type: topic
-    interface_type: cascade_msgs/msg/MotorThrottle
+    interface_type: okmr_msgs/msg/MotorThrottle
     topic_name: /motor_throttle
     axes:
       - name: "linear-param"

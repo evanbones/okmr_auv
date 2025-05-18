@@ -8,8 +8,7 @@ def generate_launch_description():
 
     return LaunchDescription([
         Node(
-            package='okmr_automated_planning',
-            executable='bt_executor',
+            package='okmr_teleoperation',
+            executable='teleop_node.py',
         ),
        ])
-

@@ -2,7 +2,7 @@ import rclpy
 from rclpy.node import Node
 from sensor_msgs.msg import Joy
 from std_msgs.msg import Header
-from cascade_msgs.msg import SensorReading
+from okmr_msgs.msg import SensorReading
 
 class TeleopNode(Node):
     def __init__(self):

@@ -9,32 +9,32 @@ from launch.actions import IncludeLaunchDescription
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 
 def generate_launch_description():
-    # L3 (High Level Control, ex. automated planner)
-    # to
-    # L1 (Low Level Control, ex. motors) 
-    # as you go down the file
+    #
+    # As you go down the file, the launch sub-files are roughly organized like this:
+    #
+    # L3: High Level Control,       (Automated Planner, Navigator)
+    # L2: Mid level control         (Motion Planner, Mapping Systems, Object Detection)
+    # L1: Low Level Control         (PID, Inverse Kinematics)
+    # L0: Hardware Interaction      (Motor Outputs, DVL Driver, Camera Drivers)
 
     return LaunchDescription([
         #High Level Control
-        PythonLaunchDescriptionSource([os.path.join(
-            get_package_share_directory('okmr_automated_planning'),'launch'),
-            '/automated_planner.launch.py']),
-        ),
-        
-        #add object detection
-        #add mapping
         
         PythonLaunchDescriptionSource([os.path.join(
-            get_package_share_directory('okmr_navigation'),'launch'),
-            '/straight_line_navigation.launch.py']),
+            get_package_share_directory('okmr_teleoperation'),'launch'),
+            '/xbox_control.launch.py']),
         ),
+        
+        #Low Level Control
 
         PythonLaunchDescriptionSource([os.path.join(
             get_package_share_directory('okmr_controls'),'launch'),
             '/full_cascading_pid.launch.py']),
         ),
 
-        #find out how to pass parameters into launch file
+        #Hardware Interaction
+
+        #TODO: find out how to pass parameters into launch file
         PythonLaunchDescriptionSource([os.path.join(
             get_package_share_directory('realsense2_camera'),'launch'),
             '/rs_multi_camera_launch.py']),
