@@ -6,13 +6,14 @@ import os
 
 def generate_launch_description():
     pid_config = os.path.join(
-      'config',
+      get_package_share_directory('okmr_controls'), 
+      'params',
       'pid.yaml'
     )
 
     return LaunchDescription([
         Node(
-            package='sensor_processing',
+            package='okmr_controls',
             executable='pid',
             name='yaw_pid_controller',
             remappings=[
@@ -23,7 +24,7 @@ def generate_launch_description():
             parameters=[pid_config]
         ),
         Node(
-            package='sensor_processing',
+            package='okmr_controls',
             executable='pid',
             name='pitch_pid_controller',
             remappings=[
@@ -34,7 +35,7 @@ def generate_launch_description():
             parameters=[pid_config]
         ),
         Node(
-            package='sensor_processing',
+            package='okmr_controls',
             executable='pid',
             name='roll_pid_controller',
             remappings=[
@@ -45,7 +46,7 @@ def generate_launch_description():
             parameters=[pid_config]
         ),
         Node(
-            package='sensor_processing',
+            package='okmr_controls',
             executable='pid',
             name='surge_pid_controller',
             remappings=[
@@ -56,7 +57,7 @@ def generate_launch_description():
             parameters=[pid_config]
         ),
         Node(
-            package='sensor_processing',
+            package='okmr_controls',
             executable='pid',
             name='sway_pid_controller',
             remappings=[
@@ -67,7 +68,7 @@ def generate_launch_description():
             parameters=[pid_config]
         ),
         Node(
-            package='sensor_processing',
+            package='okmr_controls',
             executable='pid',
             name='heave_pid_controller',
             remappings=[
@@ -76,38 +77,4 @@ def generate_launch_description():
                 ('/PID_correction/XXX', '/PID_correction/heave')
             ],
             parameters=[pid_config]
-        ),
-        Node(
-            package='sensor_processing',
-            executable='pid',
-            name='x_translation_pid_controller',
-            remappings=[
-                ('/PID/XXX/target', '/PID/translation/target'),#goal translation is always 0 for now, so each translational PID controller has the same target
-                ('/PID/XXX/actual', '/PID/x_translation/actual'),
-                ('/PID_correction/XXX', '/PID/surge/target')#cascading
-            ],
-            parameters=[pid_config]
-        ),
-        Node(
-            package='sensor_processing',
-            executable='pid',
-            name='y_translation_pid_controller',
-            remappings=[
-                ('/PID/XXX/target', '/PID/translation/target'),
-                ('/PID/XXX/actual', '/PID/y_translation/actual'),
-                ('/PID_correction/XXX', '/PID/sway/target')#cascading
-            ],
-            parameters=[pid_config]
-        ),
-        Node(
-            package='sensor_processing',
-            executable='pid',
-            name='z_translation_pid_controller',
-            remappings=[
-                ('/PID/XXX/target', '/PID/translation/target'),
-                ('/PID/XXX/actual', '/PID/z_translation/actual'),
-                ('/PID_correction/XXX', '/PID/heave/target')#cascading
-            ],
-            parameters=[pid_config]
-        )])
-
+        ),])

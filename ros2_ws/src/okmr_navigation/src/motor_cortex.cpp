@@ -32,7 +32,6 @@ class MotorCortexNode : public rclcpp::Node
             
             status_service=this->create_service<okmr_msgs::srv::Status>("motor_cortex_status", std::bind(&MotorCortexNode::status_callback, this, std::placeholders::_1, std::placeholders::_2));
 
-
             //adds all publishers to a map
             
             pidPublisherMap.insert(std::pair{"yaw", this->create_publisher<okmr_msgs::msg::SensorReading>("/PID/yaw/target", 10)});

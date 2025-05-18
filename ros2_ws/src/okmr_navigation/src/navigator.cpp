@@ -27,7 +27,7 @@ class NavigatorNode : public rclcpp::Node
             command_subscription = this->create_subscription<okmr_msgs::msg::MovementCommand>("/movement_command", 10, std::bind(&NavigatorNode::movement_command_callback, this, _1));
             pose_subscription = this->create_subscription<geometry_msgs::msg::PoseStamped>("/pose", 10, std::bind(&NavigatorNode::pose_callback, this, _1));
 
-            pose_publisher = this->create_publisher<okmr_msgs::msg::GoalPose>("/current_goal_pose", 10);
+            pose_publisher = this->create_publisher<okmr_msgs::msg::GoalPose>("/end_goal_pose", 10);
 
             status_service=this->create_service<okmr_msgs::srv::Status>("navigator_status", std::bind(&NavigatorNode::status_callback, this, std::placeholders::_1, std::placeholders::_2));
 
