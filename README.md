@@ -1,4 +1,4 @@
-# Marine Design Software
+# Okanagan Marine Robotics AUV Software
 
 ## Overview
 
