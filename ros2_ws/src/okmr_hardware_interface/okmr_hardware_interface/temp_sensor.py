@@ -1,6 +1,6 @@
 import rclpy
 from rclpy.node import Node
-from cascade_msgs.msg import TempReading
+from okmr_msgs.msg import TempReading
 
 class TempSensor(Node):
     def __init__(self):
@@ -15,9 +15,6 @@ class TempSensor(Node):
         temp_files = [
             '/sys/class/thermal/thermal_zone0/temp',
             '/sys/class/thermal/thermal_zone1/temp',
-            '/sys/class/thermal/thermal_zone2/temp',
-            '/sys/class/thermal/thermal_zone3/temp',
-            '/sys/class/thermal/thermal_zone4/temp',
             '/sys/class/thermal/thermal_zone5/temp',
             '/sys/class/thermal/thermal_zone6/temp',
             '/sys/class/thermal/thermal_zone7/temp',
@@ -43,9 +40,6 @@ class TempSensor(Node):
         msg.temp3 = self.temperatures['temp3']
         msg.temp4 = self.temperatures['temp4']
         msg.temp5 = self.temperatures['temp5']
-        msg.temp6 = self.temperatures['temp6']
-        msg.temp7 = self.temperatures['temp7']
-        msg.temp8 = self.temperatures['temp8']
         self.temp_publisher.publish(msg)
 
 def main(args=None):

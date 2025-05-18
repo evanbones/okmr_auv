@@ -8,12 +8,15 @@ def generate_launch_description():
 
     return LaunchDescription([
         Node(
-            package='hardware_integration',
+            package='okmr_hardware_interface',
             executable='dvl_driver',
         ),
         Node(
-            package='hardware_integration',
+            package='okmr_hardware_interface',
             executable='serial_output',
         ),
-
+        Node(
+            package='okmr_hardware_interface',
+            executable='temp_sensor',
+        ),
         ])

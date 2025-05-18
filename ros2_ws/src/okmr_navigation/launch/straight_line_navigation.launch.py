@@ -1,23 +1,16 @@
-from launch import LaunchDescription
 from launch_ros.actions import Node
-from launch.actions import ExecuteProcess
-from ament_index_python.packages import get_package_share_directory
-import os
+from launch import LaunchDescription
 
 def generate_launch_description():
-    pid_config = os.path.join(
-      'config',
-      'pid.yaml'
-    )
 
     return LaunchDescription([
         
        Node(
-            package='navigation',
+            package='okmr_navigation',
             executable='dead_reckoning',
         ),
         Node(
-            package='navigation',
+            package='okmr_navigation',
             executable='navigator',
             remappings=[
                 ('/end_goal_pose', '/current_goal_pose'),
@@ -25,7 +18,7 @@ def generate_launch_description():
             ],
         ),
         Node(
-            package='navigation',
+            package='okmr_navigation',
             executable='motor_cortex',
         ),
        ])

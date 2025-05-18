@@ -1,27 +1,25 @@
-from launch import LaunchDescription
 from launch_ros.actions import Node
 from launch.actions import ExecuteProcess
-from ament_index_python.packages import get_package_share_directory
-import os
-
 from launch import LaunchDescription
 from launch.actions import IncludeLaunchDescription
-from launch.launch_description_sources import PythonLaunchDescriptionSource
+from launch.substitutions import PathJoinSubstitution
+from launch_ros.substitutions import FindPackageShare
 
 def generate_launch_description():
     
-    return LaunchDescription([
-        PythonLaunchDescriptionSource([os.path.join(
-            get_package_share_directory('okmr_controls'),'launch'),
-            '/velocity_to_motor_throttle.launch.py']),
+    controls_dir = PathJoinSubstitution([FindPackageShare('okmr_controls'), 'launch'])
 
-        PythonLaunchDescriptionSource([os.path.join(
-            get_package_share_directory('okmr_controls'),'launch'),
-            '/position_to_velocity.launch.py']),
+    return LaunchDescription([
+        IncludeLaunchDescription(
+           PathJoinSubstitution([controls_dir, 'velocity_to_motor_throttle.launch.py'])
+        ),
         
+        IncludeLaunchDescription(
+           PathJoinSubstitution([controls_dir, 'position_to_velocity.launch.py'])
+        ),
+
         Node(
             package='okmr_controls',
             executable='pid_combiner',
         ),
-
-        ),])
+    ])

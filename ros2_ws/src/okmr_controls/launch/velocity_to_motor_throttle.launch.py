@@ -76,5 +76,5 @@ def generate_launch_description():
                 ('/PID/XXX/actual', '/PID/heave/actual'),
                 ('/PID_correction/XXX', '/PID_correction/heave')
             ],
-            parameters=[pid_config]
-        ),])
+            parameters=[pid_config]),
+        ])

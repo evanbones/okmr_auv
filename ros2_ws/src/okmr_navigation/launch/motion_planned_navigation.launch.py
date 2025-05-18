@@ -5,27 +5,22 @@ from ament_index_python.packages import get_package_share_directory
 import os
 
 def generate_launch_description():
-    pid_config = os.path.join(
-      'config',
-      'pid.yaml'
-    )
-
     return LaunchDescription([
         
        Node(
-            package='navigation',
+            package='okmr_navigation',
             executable='dead_reckoning',
         ),
         Node(
-            package='navigation',
+            package='okmr_navigation',
             executable='navigator',
         ),
         Node(
-            package='navigation',
+            package='okmr_navigation',
             executable='motion_planner',
         ),
         Node(
-            package='navigation',
+            package='okmr_navigation',
             executable='motor_cortex',
         ),
        ])

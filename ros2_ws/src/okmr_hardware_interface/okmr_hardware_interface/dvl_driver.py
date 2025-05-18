@@ -2,7 +2,7 @@ import socket
 import re
 import rclpy
 from rclpy.node import Node
-from cascade_msgs.msg import SensorReading
+from okmr_msgs.msg import SensorReading
 
 class DvlDriverNode(Node):
     def __init__(self):

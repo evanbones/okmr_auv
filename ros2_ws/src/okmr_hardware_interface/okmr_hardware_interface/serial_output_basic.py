@@ -1,6 +1,6 @@
 import rclpy
 from rclpy.node import Node
-from cascade_msgs.msg import MotorThrottle
+from okmr_msgs.msg import MotorThrottle
 import serial  # Import pyserial
 
 class SerialOutputNode(Node):
