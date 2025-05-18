@@ -1,0 +1,10 @@
+float32 temp0
+float32 temp1
+float32 temp2
+float32 temp3
+float32 temp4
+float32 temp5
+float32 temp6
+float32 temp7
+float32 temp8
+std_msgs/Header header
