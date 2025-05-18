@@ -1,3 +1,0 @@
-cascade_msgs/VoxelGrid voxel_grid
----
-sensor_msgs/PointCloud2 pointcloud

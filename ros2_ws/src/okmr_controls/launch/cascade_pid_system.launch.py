@@ -12,26 +12,6 @@ def generate_launch_description():
 
     return LaunchDescription([
         Node(
-            package='hardware_integration',
-            executable='dvl_dummy_driver',
-        ),
-        Node(
-            package='realsense2_camera',
-            executable='realsense2_camera_node',
-            remappings=[
-                ('/camera/camera/depth/image_rect_raw', '/camera/depth'),
-                ('/camera/camera/color/image_raw', '/camera/rgb'),
-            ],
-            parameters=[{
-                'unite_imu_method': 2,
-                'enable_gyro': 'true',
-                }]
-        ),
-       Node(
-            package='navigation',
-            executable='dead_reckoning',
-        )   ,
-        Node(
             package='sensor_processing',
             executable='pid',
             name='yaw_pid_controller',
@@ -129,25 +109,5 @@ def generate_launch_description():
                 ('/PID_correction/XXX', '/PID/heave/target')#cascading
             ],
             parameters=[pid_config]
-        ),
-        Node(
-            package='sensor_processing',
-            executable='pid_combiner',
-        ),
-        Node(
-            package='hardware_integration',
-            executable='serial_output',
-        ),
-        Node(
-            package='teleop0',
-            executable='teleop_node',
-        ),
-        Node(
-            package='object_detection',
-            executable='lid_detector',
-        ),
-         Node(
-            package='object_detection',
-            executable='data_recorder',
-        ),       ])
+        )])
 
