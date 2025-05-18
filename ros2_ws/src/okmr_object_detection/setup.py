@@ -21,13 +21,8 @@ setup(
     entry_points={
         'console_scripts': [
             'example_detector = okmr_object_detection.example_detector:main',
-            'yolo_coco_detector = okmr_object_detection.yolo_coco_detector:main',
-            'dummy_detector = okmr_object_detection.example_detector:main',
-            'image_data_merger = okmr_object_detection.image_data_merger:main',
-            'data_collector = okmr_object_detection.data_collector:main',
             'color_detector = okmr_object_detection.color_detector:main',
             'lid_detector = okmr_object_detection.lid_detector:main',
-            'data_recorder = okmr_object_detection.data_recorder:main'
         ],
     },
 )
