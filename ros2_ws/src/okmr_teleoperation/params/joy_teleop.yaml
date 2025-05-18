@@ -1,0 +1,69 @@
+joy_teleop:
+  ros__parameters:
+    type: topic
+    interface_type: okmr_msgs/msg/MotorThrottle
+    topic_name: /motor_throttle
+    axes:
+      - name: "linear-param"
+        scale: 1.0
+        axis: 0  # left joy leftright
+      - name: "linear-param"
+        scale: 1.0
+        axis: 1  # left joy updown
+      - name: "linear-param"
+        scale: 1.0
+        axis: 2  # right joy leftright
+      - name: "linear-param"
+        scale: 1.0
+        axis: 3  # right joy updown
+      - name: "linear-param"
+        scale: 1.0
+        axis: 4  # right trigger resting at 1.0, depressed at -1.0
+      - name: "linear-param"
+        scale: 1.0
+        axis: 5  # left trigger similar to right
+      - name: "linear-param"
+        scale: 1.0
+        axis: 6  # Dpad leftright
+      - name: "linear-param"
+        scale: 1.0
+        axis: 7  # Dpad updown
+
+    buttons:
+      - name: "button"
+        button: 0  # A button
+      - name: "button"
+        button: 1  # B button
+      - name: "button"
+        button: 2  # Unknown
+      - name: "button"
+        button: 3  # X button
+      - name: "button"
+        button: 4  # Y button
+      - name: "button"
+        button: 5  # Unknown
+      - name: "button"
+        button: 6  # Left bumper
+      - name: "button"
+        button: 7  # Right bumper
+      - name: "button"
+        button: 8  # Unknown
+      - name: "button"
+        button: 9  # Unknown
+      - name: "button"
+        button: 10  # Unknown
+      - name: "button"
+        button: 11  # Middle right
+      - name: "button"
+        button: 12  # Unknown
+      - name: "button"
+        button: 13  # Left joy down
+      - name: "button"
+        button: 14  # Right joy down
+      - name: "button"
+        button: 15  # Middle left
+      - name: "button"
+        button: 16  # Unknown
+
+
+

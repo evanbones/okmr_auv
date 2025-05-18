@@ -2,7 +2,7 @@ from setuptools import find_packages, setup
 import os
 from glob import glob
 
-package_name = 'okmr_object_detection'
+package_name = 'okmr_hardware_interface'
 
 setup(
     name=package_name,
@@ -17,16 +17,17 @@ setup(
     ],
     install_requires=['setuptools'],
     zip_safe=True,
-    maintainer='eryk',
+    maintainer='jetson',
     maintainer_email='erykhalicki0@gmail.com',
     description='TODO: Package description',
     license='TODO: License declaration',
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'example_detector = okmr_object_detection.example_detector:main',
-            'color_detector = okmr_object_detection.color_detector:main',
-            'lid_detector = okmr_object_detection.lid_detector:main',
+            "serial_output=okmr_hardware_interface.serial_output_basic:main",
+            "dvl_driver=okmr_hardware_interface.dvl_driver:main",
+            "dvl_dummy_driver=okmr_hardware_interface.dvl_dummy:main",
+            "temp_sensor=okmr_hardware_interface.temp_sensor:main",
         ],
     },
 )

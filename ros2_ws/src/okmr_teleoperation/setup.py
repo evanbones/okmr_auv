@@ -1,8 +1,8 @@
 from setuptools import find_packages, setup
-import os
 from glob import glob
+import os
 
-package_name = 'okmr_object_detection'
+package_name = 'okmr_teleoperation'
 
 setup(
     name=package_name,
@@ -14,19 +14,18 @@ setup(
         ('share/' + package_name, ['package.xml']),
         (os.path.join('share', package_name, 'launch'), glob(os.path.join('launch', '*launch.[pxy][yma]*'))),
         (os.path.join('share', package_name, 'params'), glob(os.path.join('params', '*.yaml')))
+    
     ],
     install_requires=['setuptools'],
     zip_safe=True,
-    maintainer='eryk',
-    maintainer_email='erykhalicki0@gmail.com',
+    maintainer='graeme',
+    maintainer_email='vooner90@gmail.com',
     description='TODO: Package description',
     license='TODO: License declaration',
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'example_detector = okmr_object_detection.example_detector:main',
-            'color_detector = okmr_object_detection.color_detector:main',
-            'lid_detector = okmr_object_detection.lid_detector:main',
+            'teleop_node = okmr_teleoperation.teleop_node:main',
         ],
     },
 )
