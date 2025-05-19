@@ -1,11 +1,18 @@
-from transitions import Machine
+from transitions.extensions import GraphMachine
+import os
 
 class RobotStateMachine:
     states = ['idle', 'exploring', 'collecting_data', 'returning_home', 'charging']
 
     def __init__(self):
-        # Initialize the state machine
-        self.machine = Machine(model=self, states=self.states, initial='idle')
+        # Initialize the state machine with GraphMachine
+        self.machine = GraphMachine(
+            model=self, 
+            states=self.states, 
+            initial='idle',
+            show_conditions=True,
+            title='Robot Mission State Machine'
+        )
 
         # Define transitions
         self.machine.add_transition('start_mission', 'idle', 'exploring')
@@ -29,6 +36,15 @@ class RobotStateMachine:
 def main():
     robot = RobotStateMachine()
     
+    # Generate state machine graph
+    graph_dir = 'state_machine_graphs'
+    os.makedirs(graph_dir, exist_ok=True)
+    # Try to visualize model
+    # Read more about transitions library
+    graph_path = os.path.join(graph_dir, 'robot_state_machine.png')
+    robot.get_graph().draw(graph_path, prog='dot')
+    print(f'State machine graph saved to {graph_path}')
+
     # Demonstrate state transitions
     robot.start_mission()     # idle -> exploring
     robot.detect_data()       # exploring -> collecting_data
