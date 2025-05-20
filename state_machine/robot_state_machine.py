@@ -1,12 +1,12 @@
-from transitions.extensions import GraphMachine
+from transitions.extensions import HierarchicalGraphMachine as Machine
 import os
 
-class RobotStateMachine:
+class AUVStateMachine:
     states = ['idle', 'exploring', 'collecting_data', 'returning_home', 'charging']
 
     def __init__(self):
         # Initialize the state machine with GraphMachine
-        self.machine = GraphMachine(
+        self.machine = Machine(
             model=self, 
             states=self.states, 
             initial='idle',
@@ -34,16 +34,10 @@ class RobotStateMachine:
         print("Charging batteries")
 
 def main():
-    robot = RobotStateMachine()
+    robot = AUVStateMachine()
     
-    # Generate state machine graph
-    graph_dir = 'state_machine_graphs'
-    os.makedirs(graph_dir, exist_ok=True)
-    # Try to visualize model
-    # Read more about transitions library
-    graph_path = os.path.join(graph_dir, 'robot_state_machine.png')
-    robot.get_graph().draw(graph_path, prog='dot')
-    print(f'State machine graph saved to {graph_path}')
+    dot_graph = robot.get_graph()
+    dot_graph.draw('auv_fsm.dot', prog='dot')
 
     # Demonstrate state transitions
     robot.start_mission()     # idle -> exploring
