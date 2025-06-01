@@ -1,40 +1,52 @@
-from transitions import Machine
+#from transitions.extensions import HierarchicalGraphMachine as Machine
+from transitions.extensions import HierarchicalMachine as Machine
+import os
 
-class RobotStateMachine:
-    states = ['idle', 'exploring', 'collecting_data', 'returning_home', 'charging']
+class AUVStateMachine:
+    states = ['idle', 'taskA', 'taskB', 'taskC', 'surfaced']
+    transitions = [
+        { 'trigger': 'start', 'source': 'idle', 'dest': 'taskA' },
+        { 'trigger': 'done_taskA', 'source': 'taskA', 'dest': 'taskB' },
+        { 'trigger': 'done_taskB', 'source': 'taskB', 'dest': 'taskC' },
+        { 'trigger': 'done_taskC', 'source': 'taskC', 'dest': 'surfaced' },
+    ]
 
     def __init__(self):
-        # Initialize the state machine
-        self.machine = Machine(model=self, states=self.states, initial='idle')
+        # Initialize the state machine with GraphMachine
+        self.machine = Machine(
+            model=self, 
+            states=self.states, 
+            transitions=self.transitions,
+            initial='idle',
+        )
 
-        # Define transitions
-        self.machine.add_transition('start_mission', 'idle', 'exploring')
-        self.machine.add_transition('detect_data', 'exploring', 'collecting_data')
-        self.machine.add_transition('mission_complete', 'collecting_data', 'returning_home')
-        self.machine.add_transition('arrived_home', 'returning_home', 'charging')
-        self.machine.add_transition('fully_charged', 'charging', 'idle')
+    def on_enter_idle(self):
+        print("Started Task A!")
 
-    def on_enter_exploring(self):
-        print("Robot is now exploring the environment")
+    def on_enter_taskA(self):
+        print("Started Task A!")
 
-    def on_enter_collecting_data(self):
-        print("Collecting scientific data")
+    def on_enter_taskB(self):
+        print("Started Task B!")
 
-    def on_enter_returning_home(self):
-        print("Returning to home base")
+    def on_enter_taskC(self):
+        print("Started Task C!")
 
-    def on_enter_charging(self):
-        print("Charging batteries")
+    def on_enter_surfaced(self):
+        print("Surfaced")
 
 def main():
-    robot = RobotStateMachine()
+    robot = AUVStateMachine()
     
+    #used for drawing the graph
+    #dot_graph = robot.get_graph()
+    #dot_graph.draw('auv_fsm.dot', prog='dot')
+
     # Demonstrate state transitions
-    robot.start_mission()     # idle -> exploring
-    robot.detect_data()       # exploring -> collecting_data
-    robot.mission_complete()  # collecting_data -> returning_home
-    robot.arrived_home()      # returning_home -> charging
-    robot.fully_charged()     # charging -> idle
+    robot.start()
+    robot.done_taskA()
+    robot.done_taskB()
+    robot.done_taskC()
 
 if __name__ == "__main__":
     main()
