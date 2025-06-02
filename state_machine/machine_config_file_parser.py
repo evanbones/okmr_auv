@@ -30,25 +30,26 @@ class MachineConfigFileParser:
 
     def isValidStateDict(self, state):
         if 'name' not in state:
-            raise ValueError(f"State dictionary missing required 'name' field: {state}")
+            raise ValueError(f"{self.name}\tState dictionary missing required 'name' field: {state}")
 
         for key in state:
             if key not in self._allowed_state_keys:
-                raise ValueError(f"Invalid state key '{key}' in state {state['name'] if 'name' in state else state}. Allowed keys: {self._allowed_state_keys}")
+                raise ValueError(f"{self.name}\tInvalid state key '{key}' in state {state['name'] if 'name' in state else state}. Allowed keys: {self._allowed_state_keys}")
         return True
     
     def isValidTransitionDict(self, transition):
         #transition dict must contain all of, and only the required keys
-        mandatory_states = BaseStateMachine.mandatory_states
         for key in self._allowed_transition_keys:
             if key not in transition:
-                raise ValueError(f"Transition missing required key '{key}': {transition}")
+                raise ValueError(f"{self.name}\tTransition missing required key '{key}': {transition}")
 
+        state_names = [state['name'] for state in self._states]
+        mandatory_state_names = BaseStateMachine.mandatory_states #these states may be auto added later
         for key in transition:
             if key not in self._allowed_transition_keys:
-                raise ValueError(f"Invalid transition key '{key}' in transition {transition}. Allowed keys: {self._allowed_transition_keys}")
-            elif key in ['source', 'dest'] and transition[key] != '*' and transition[key] not in self._states and transition[key] not in mandatory_states:
-                raise ValueError(f"Transition {transition['trigger']} references unknown state '{transition[key]}'")
+                raise ValueError(f"{self.name}\tInvalid transition key '{key}' in transition {transition}. Allowed keys: {self._allowed_transition_keys}")
+            elif key in ['source', 'dest'] and transition[key] != '*' and transition[key] not in state_names and transition[key] not in mandatory_state_names:
+                raise ValueError(f"{self.name}\tTransition {transition['trigger']} references unknown state '{transition[key]}'")
         
         return True
 

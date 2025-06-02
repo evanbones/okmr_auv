@@ -1,5 +1,6 @@
 import os
 from machine_config_file_parser import MachineConfigFileParser
+from state_node import StateNode
 from base_state_machine import BaseStateMachine
 from master_state_machine import MasterStateMachine
 from task_state_machines.finding_gate_state_machine import FindingGateStateMachine
@@ -19,8 +20,7 @@ class StateMachineFactory:
             An instance of the appropriate state machine subclass, or None if creation fails
         """
         if not os.path.exists(config_yaml):
-            print(f"Config file not found: {config_yaml}")
-            return None
+            raise ValueError(f"Config file not found: {config_yaml}")
             
         # Parse the configuration file
         config_parser = MachineConfigFileParser(config_yaml)
@@ -35,14 +35,17 @@ class StateMachineFactory:
             sub_machine = None
             if 'config_path' in state_dict:
                 sub_config_path = state_dict['config_path']
-                state_dict.pop('config_path')
                 # Recursively create the sub-machine
                 sub_machine = StateMachineFactory.createMachineFromConfig(
                     sub_config_path, 
                     ros_node
                 )
 
-            state_objects.append(StateNode(state_dict, sub_machine))
+            timeout = None
+            if 'timeout' in state_dict:
+                timeout = state_dict['timeout']
+
+            state_objects.append(StateNode(state_dict['name'], timeout, sub_machine))
             
             # Create the appropriate machine instance based on name
         machine_instance = None
@@ -53,6 +56,7 @@ class StateMachineFactory:
                 states=state_objects,
                 transitions=transitions
             )
+            print(machine_name)
         elif machine_name == "findingGate":
             machine_instance = FindingGateStateMachine(
                 name=machine_name,
@@ -61,7 +65,6 @@ class StateMachineFactory:
                 transitions=transitions
             )
         else:
-            print(f"No implementation found for machine type: {machine_name}")
-            return None
+            raise ValueError(f"No implementation found for machine type: {machine_name}")
             
         return machine_instance

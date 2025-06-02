@@ -5,7 +5,7 @@ from state_node import StateNode
 class BaseStateMachine(Machine):
     mandatory_states = ['uninitialized','initializing','initialized', 'done', 'aborted']
     mandatory_transitions = [
-                                { 'trigger': 'start', 'source': 'uninitialized', 'dest': 'initializing' },
+                                { 'trigger': 'initialize', 'source': 'uninitialized', 'dest': 'initializing' },
                                 { 'trigger': 'initializingDone', 'source': 'initializing', 'dest': 'initialized' },
                                 { 'trigger': 'finish', 'source': '*', 'dest': 'done' },
                                 { 'trigger': 'abort', 'source': '*', 'dest': 'aborted' },
@@ -20,7 +20,7 @@ class BaseStateMachine(Machine):
                  *args, **kwargs):
 
         self.state_cls = StateNode
-        self.name = name
+        self.machine_name = name
         self.ros_node = ros_node
         self.states = states
         self.transitions = transitions
@@ -37,29 +37,31 @@ class BaseStateMachine(Machine):
 
         self.success = False
         
-        self.add_mandatory_state()
+        self.add_mandatory_states()
         self.add_mandatory_transitions()
 
-        Machine.__init__(
+        super().__init__(
             model=self, 
             states=self.states, 
             transitions=self.transitions,
             initial='uninitialized',
-            after_state_change='after_state_change'
+            after_state_change='state_change_callback',
+            *args,
             **kwargs #allows for additional arguments
         )
 
         self.current_sub_machine = None
 
     def add_mandatory_transitions(self):
-        for state in self._mandatory_states:
+        for state in self.mandatory_states:
             if state not in self.states:
                 self.states.append(state)
 
     def add_mandatory_states(self):
-        mandatory_triggers = [transition['trigger'] for transition in self._mandatory_transitions]
-        for transition in self._mandatory_transitions:
-            if transition["trigger"] not in mandatory_triggers:
+        mandatory_triggers = [transition['trigger'] for transition in self.mandatory_transitions]
+        all_triggers = [transition['trigger'] for transition in self.transitions]
+        for transition in self.mandatory_transitions:
+            if transition["trigger"] not in all_triggers:
                 self.transitions.append(transition)
 
     def record_initial_start_time(self):
@@ -72,14 +74,14 @@ class BaseStateMachine(Machine):
         #to be implemented by sub classes if desired
         pass
 
-    def after_state_change(self):
+    def state_change_callback(self):
         self.record_state_start_time()
         self.log_state_change()
         self.check_completion()
 
     def log_state_change(self):
-        self.ros_node.get_logger().info(f"State Change\t{self.name}\t{self.state}")
-        print(f"State Change\t{self.name}\t{self.state}")
+        self.ros_node.get_logger().info(f"State Change \t Machine: {self.machine_name} \t State: {self.state}")
+        #print(f"State Change\t{self.name}\t{self.state}")
 
     def check_completion(self):
         if self.state == 'done' or self.state == 'aborted':
@@ -96,7 +98,7 @@ class BaseStateMachine(Machine):
         self.current_sub_machine = sub_machine
         sub_machine.success_callback = success_callback
         sub_machine.failure_callback = failure_callback
-        threading.Thread(target=sub_machine.start, daemon=True).start()
+        threading.Thread(target=sub_machine.initialize, daemon=True).start()
 
     def add_subscription(self, topic, msg_type, callback):
         sub = self.ros_node.create_subscription(msg_type, topic, callback, 10)
