@@ -1,0 +1,10 @@
+
+task_states:
+  - { name: scanningCW }
+  - { name: scanningCCW }
+
+task_transitions:
+  - { trigger: start, source: idle, dest: scanningCW }
+  - { trigger: scanningCWDone, source: scanningCW, dest: scanningCCW }
+  - { trigger: scanningCCWDone, source: scanningCCW, dest: done }
+  - { trigger: foundGate, source: '*', dest: done }

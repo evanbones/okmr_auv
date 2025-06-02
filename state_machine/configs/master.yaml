@@ -1,0 +1,26 @@
+#This file defines the master state machine flow
+#
+states:
+  - { name: uninitialized }
+  - { name: initializing, timeout: 30.0} #if initialization is taking too long we should abort
+  - { name: initialized } #can sit at this state for as long as needed
+  - { name: sinking, timeout: 30.0}
+  - { name: findingGate, is_task: true, config: "task_configs/finding_gate.yaml", timeout: 30.0 }
+  - { name: passingGate, is_task: true, config: "task_configs/passing_gate.yaml", timeout: 60.0 }
+  - { name: findingMarker, is_task: true, config: "task_configs/findingMarker.yaml", timeout: 30.0}
+  - { name: arbitratingTask, timeout: 15.0}
+  - { name: surfacing }
+  - { name: surfaced }
+
+transitions:
+  - { trigger: initialize, source: uninitialized, dest: initializing }
+  - { trigger: initializingDone, source: initializing, dest: initialized }
+  - { trigger: missionStartReceived, source: initialized, dest: sinking }
+  - { trigger: sinkingDone, source: sinking, dest: findingGate }
+  - { trigger: findingGateDone, source: findingGate, dest: passingGate }
+  - { trigger: passingGateDone, source: passingGate, dest: findingMarker }
+  - { trigger: findingMarkerDone, source: findingMarker, dest: arbitratingTask }
+  - { trigger: arbitratingTaskDone, source: arbitratingTask, dest: surfacing }
+  - { trigger: surfacingDone, source: surfacing, dest: uninitialized }
+  - { trigger: abort, source: '*', dest: surfacing }
+

@@ -1,11 +1,11 @@
 import rclpy
 import threading
 import time
-from find_gate_state_machine import FindGateStateMachine
+from find_gate_state_machine import FindingGateStateMachine
 from transitions import Machine, State
 
 class MasterStateMachine:
-    states = ['idle', 'findingGate', 'taskB', 'taskC', 'surfacing']
+    states = ['uninititialized' ,'initialized', 'findingGate', 'taskB', 'taskC', 'surfacing']
 
     #general naming format: 
     #   state: (xyz)
@@ -18,33 +18,33 @@ class MasterStateMachine:
         { 'trigger': 'findingGateDone', 'source': 'findingGate', 'dest': 'taskB' },
         { 'trigger': 'taskBDone', 'source': 'taskB', 'dest': 'taskC' },
         { 'trigger': 'taskCDone', 'source': 'taskC', 'dest': 'surfacing' },
+        { 'trigger': 'surfacingDone', 'source': 'surfacing', 'dest': 'surfaced' },
         { 'trigger': 'abort', 'source': '*', 'dest': 'surfacing' },
     ]
 
     def __init__(self, master_node):
         self.task_machine = None
         self.node = master_node
-        self.start_time = 0
+        self.initial_start_time = 0
+        self.task_start_time = 0
 
         self.machine = Machine(
             model=self, 
             states=self.states, 
             transitions=self.transitions,
-            initial='idle',
+            initial='uninitialized',
         )
 
-    def on_enter_initialized():
-        start_time = master_node.get_clock().now()
+    def on_enter_sinking():
+        initial_start_time = self.node.get_clock().now()
         #unfreeze dead reckoning
-        #
 
     def on_enter_idle(self):
-
         print("entered idle state")
 
     def on_enter_findingGate(self):
-        print("Started findGate!")
-        self.task_machine = FindGateStateMachine(self.node, done_callback=self.foundGate, fail_callback=self.arbitrate_failure)
+        print("Started findingGate!")
+        self.task_machine = FindGateStateMachine(self.node, done_callback=self.findingGateDone, fail_callback=self.arbitrate_failure)
         self.run_task_machine()
 
     def on_enter_taskB(self):
@@ -57,6 +57,7 @@ class MasterStateMachine:
         print("Surfaced")
 
     def run_task_machine(self):
+        task_start_time = self.node.get_clock().now()
         threading.Thread(target=self.task_machine.run, daemon=True).start()
 
     def arbitrate_failure(self):
@@ -74,14 +75,16 @@ def main():
     #used for drawing the graph
     #dot_graph = robot.get_graph()
     #dot_graph.draw('auv_fsm.dot', prog='dot')
-    threading.Thread(target=master_state_machine.start, daemon=True).start()
+    threading.Thread(target=master_state_machine.initialize, daemon=True).start()
     try:
         while rclpy.ok():
             rclpy.spin_once(master_node, timeout_sec=0.05)
             #check for high level failures, ex. time
             if master_state_machine.check_for_shutdown():
                 break
-            print(master_state_machine.task_machine.state)
+            print(f"Master State: {master_state_machine.state}")
+            if master_state_machine.task_machine:
+                print(f"Task Machine State: {master_state_machine.task_machine.state}")
     except KeyboardInterrupt:
         pass
     finally:
