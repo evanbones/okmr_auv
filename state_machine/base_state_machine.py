@@ -120,14 +120,14 @@ class BaseStateMachine(Machine):
             elif not self.success and self.fail_callback:
                 self.fail_callback()
     
-    def start_current_state_sub_machine(self, success_callback=None, failure_callback=None):
+    def start_current_state_sub_machine(self, success_callback=None, fail_callback=None):
         sub_machine = self.get_state(self.state).sub_machine
-        self._start_sub_machine(sub_machine, success_callback, failure_callback)
+        self._start_sub_machine(sub_machine, success_callback, fail_callback)
     
-    def _start_sub_machine(self, sub_machine, success_callback=None, failure_callback=None):
+    def _start_sub_machine(self, sub_machine, success_callback=None, fail_callback=None):
         self.current_sub_machine = sub_machine
         sub_machine.success_callback = success_callback
-        sub_machine.failure_callback = failure_callback
+        sub_machine.fail_callback = fail_callback
         threading.Thread(target=sub_machine.initialize, daemon=True).start()
 
     '''

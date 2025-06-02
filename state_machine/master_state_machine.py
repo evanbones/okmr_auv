@@ -2,6 +2,9 @@ from base_state_machine import BaseStateMachine
 
 class MasterStateMachine(BaseStateMachine):
     
+    def on_enter_aborted(self):
+        self.ros_node.get_logger().fatal(f"Master State Machine Aborted")
+
     def on_enter_initializing(self):
         self.queued_method = self.initializingDone
 
@@ -14,10 +17,9 @@ class MasterStateMachine(BaseStateMachine):
         #unfreeze dead reckoning
 
     def on_enter_findingGate(self):
-        print("Started findingGate!")
         self.start_current_state_sub_machine(
                                             success_callback=self.findingGateDone, 
-                                            failure_callback=self.arbitrate_failure
+                                            fail_callback=self.arbitrate_failure
                                             )
 
     def arbitrate_failure(self):

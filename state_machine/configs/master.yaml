@@ -17,7 +17,7 @@ master:
     - { trigger: findingGateDone, source: findingGate, dest: passingGate }
     - { trigger: passingGateDone, source: passingGate, dest: findingMarker }
     - { trigger: findingMarkerDone, source: findingMarker, dest: arbitratingTask }
-    - { trigger: arbitratingTaskDone, source: arbitratingTask, dest: surfacing }
+    - { trigger: arbitratingTaskDone, source: arbitratingTask, dest: surfacing } #TODO: update this line to go into next tasks
     - { trigger: surfacingDone, source: surfacing, dest: uninitialized }
-    - { trigger: abort, source: '*', dest: surfacing }
+    - { trigger: abort, source: '*', dest:  aborted}
 

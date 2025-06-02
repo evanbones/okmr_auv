@@ -1,6 +1,9 @@
 from base_state_machine import BaseStateMachine
 
 class FindingGateStateMachine(BaseStateMachine):
+    
+    def on_enter_initializing(self):
+        self.queued_method = self.abort
 
     def on_enter_scanningCW(self):
         print("Started CW scan")
