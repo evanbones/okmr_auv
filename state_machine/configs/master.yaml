@@ -5,9 +5,9 @@ states:
   - { name: initializing, timeout: 30.0} #if initialization is taking too long we should abort
   - { name: initialized } #can sit at this state for as long as needed
   - { name: sinking, timeout: 30.0}
-  - { name: findingGate, is_task: true, config: "task_configs/finding_gate.yaml", timeout: 30.0 }
-  - { name: passingGate, is_task: true, config: "task_configs/passing_gate.yaml", timeout: 60.0 }
-  - { name: findingMarker, is_task: true, config: "task_configs/findingMarker.yaml", timeout: 30.0}
+  - { name: findingGate, is_task: true, config_path: "task_configs/finding_gate.yaml", timeout_sec: 30.0 }
+  - { name: passingGate, is_task: true, config_path: "task_configs/passing_gate.yaml", timeout_sec: 60.0 }
+  - { name: findingMarker, is_task: true, config_path: "task_configs/findingMarker.yaml", timeout_sec: 30.0}
   - { name: arbitratingTask, timeout: 15.0}
   - { name: surfacing }
   - { name: surfaced }

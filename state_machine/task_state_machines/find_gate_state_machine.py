@@ -1,15 +1,6 @@
-from transitions import  Machine, State
-from task_state_machine import TaskStateMachine
+from task_state_machine import BaseStateMachine
 
-class FindGateStateMachine(TaskStateMachine):
-    task_states = ['scanningCW', 'scanningCCW']
-
-    task_transitions = [
-        { 'trigger': 'start', 'source': 'idle', 'dest': 'scanningCW' },
-        { 'trigger': 'doneCWScan', 'source': 'scanningCW', 'dest': 'scanningCCW' },
-        { 'trigger': 'doneCCWScan', 'source': 'scanningCCW', 'dest': 'done' },
-    ]
-
+class FindGateStateMachine(BaseStateMachine):
     def on_enter_idle(self):
         print("entered idle state")
 
