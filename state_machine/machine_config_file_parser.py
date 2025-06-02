@@ -1,8 +1,10 @@
 import yaml
+from state_node import StateNode
+from base_state_machine import BaseStateMachine
 
 class MachineConfigFileParser:
-    _mandatory_states = ['uninitialized', 'done', 'aborted']
-    _mandatory_transitions = [{ 'trigger': 'abort', 'source': '*', 'dest': 'aborted' }]
+    _allowed_state_keys = ['name', 'timeout', 'config_path']
+    _allowed_transition_keys = ['trigger', 'source', 'dest']
 
     def __init__(self, yaml_path):
         self.yaml_path = yaml_path
@@ -17,30 +19,44 @@ class MachineConfigFileParser:
             config = yaml.safe_load(file)
 
         for state in config.get('states', []):
-            if isinstance(state, dict):
-                state_name = state.get('name')
-                self.states.append(state_name)
-                if 'timeout_sec' in state and state_name:
-                    self.timeouts[state_name] = state['timeout_sec']
-                if 'config_path' in state and state_name:
-                    self._config_paths[state_name] = state['config_path']
-            else:
-                self._states.append(state)# if the state is not a dict in the yaml
+            if self.isValidStateDict(state):
+                self._states.append(state)
+        
+        for transition in config.get('transitions', []):
+            if self.isValidTransitionDict(transition):
+                self.transitions.append(transition)
 
-        self.transitions = config.get('transitions', [])
+    def isValidStateDict(self, state):
+        if 'name' not in state:
+            raise ValueError(f"State dictionary missing required 'name' field: {state}")
 
-        for state in self.mandatory_states:
-            if state not in self.states:
-                self.states.append(state)
+        for key in state:
+            if key not in self._allowed_state_keys:
+                raise ValueError(f"Invalid state key '{key}' in state {state['name'] if 'name' in state else state}. Allowed keys: {self._allowed_state_keys}")
+        return True
+    
+    def isValidTransitionDict(self, transition):
+        #transition dict must contain all of, and only the required keys
+        mandatory_states = BaseStateMachine.mandatory_states
+        for key in self._allowed_transition_keys:
+            if key not in transition:
+                raise ValueError(f"Transition missing required key '{key}': {transition}")
+
+            
+
+        for key in transition:
+            if key not in self._allowed_transition_keys:
+                raise ValueError(f"Invalid transition key '{key}' in transition {transition}. Allowed keys: {self._allowed_transition_keys}")
+            elif key in ['source', 'dest'] and transition[key] != '*' and transition[key] not in self._states and transition[key] not in mandatory_states:
+                raise ValueError(f"Transition {transition['trigger']} references unknown state '{transition[key]}'")
+        
+        return True
 
     def get_states(self):
         return self._states
 
     def get_transitions(self):
         return self._transitions
-
-    def get_timeouts(self):
-        return self._timeouts
 
     def get_config_paths(self):
         return self._config_paths

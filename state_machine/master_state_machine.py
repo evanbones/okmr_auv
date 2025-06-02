@@ -7,21 +7,13 @@ from transitions import Machine, State
 class MasterStateMachine(BaseStateMachine):
     
     def __init__(self):
-        
+        super.__init__()
         self.current_task_machine = None
-        self.node = master_node
-        self.initial_start_time = 0
-        self.task_start_time = 0
-
-        self.machine = Machine(
-            model=self, 
-            states=self.states, 
-            transitions=self.transitions,
-            initial='uninitialized',
-        )
+        
 
     def on_enter_sinking():
-        initial_start_time = self.node.get_clock().now()
+        self.record_initial_start_time()
+        initial_start_time = 
         #unfreeze dead reckoning
 
     def on_enter_idle(self):
@@ -45,12 +37,7 @@ class MasterStateMachine(BaseStateMachine):
     def on_enter_surfaced(self):
         print("Surfaced")
 
-    def run_task_machine(self):
-        task_start_time = self.node.get_clock().now()
-        threading.Thread(target=self.current_task_machine.run, daemon=True).start()
-
     def arbitrate_failure(self):
-        print("Figuring out what to do on failure ...")
         self.abort()
     
     def check_for_shutdown(self):
