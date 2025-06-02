@@ -56,7 +56,6 @@ class StateMachineFactory:
                 states=state_objects,
                 transitions=transitions
             )
-            print(machine_name)
         elif machine_name == "findingGate":
             machine_instance = FindingGateStateMachine(
                 name=machine_name,
