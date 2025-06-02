@@ -37,6 +37,10 @@ class BaseStateMachine(Machine):
 
         self.success = False
         
+        self.queued_method = None 
+        # can be used to more cleanly immediately progress from one state to another
+        #self.queued_method is called after every state change
+        
         self.add_mandatory_states()
         self.add_mandatory_transitions()
 
@@ -45,9 +49,10 @@ class BaseStateMachine(Machine):
             states=self.states, 
             transitions=self.transitions,
             initial='uninitialized',
-            after_state_change='state_change_callback',
-            *args,
-            **kwargs #allows for additional arguments
+            after_state_change='post_state_change',
+            before_state_change='pre_state_change',
+            #*args,
+            #**kwargs #allows for additional arguments
         )
 
         self.current_sub_machine = None
@@ -74,14 +79,35 @@ class BaseStateMachine(Machine):
         #to be implemented by sub classes if desired
         pass
 
-    def state_change_callback(self):
-        self.record_state_start_time()
-        self.log_state_change()
-        self.check_completion()
+    def pre_state_change(self):
+        self.log_pre_state_change()
 
-    def log_state_change(self):
-        self.ros_node.get_logger().info(f"State Change \t Machine: {self.machine_name} \t State: {self.state}")
-        #print(f"State Change\t{self.name}\t{self.state}")
+    def post_state_change(self):
+        self.record_state_start_time()
+        self.log_post_state_change()
+        self.check_completion()
+        if self.queued_method:
+            self.warn_auto_queued_method()
+            temp = self.queued_method
+            self.queued_method = None
+            temp()
+
+    def log_pre_state_change(self):
+        self.ros_node.get_logger().info(f"Pre State Change  \t Machine: {self.machine_name} \t From: {self.state}")
+
+    def log_post_state_change(self):
+        self.ros_node.get_logger().info(f"Post State Change \t Machine: {self.machine_name} \t To: {self.state}")
+
+    def warn_auto_queued_method(self):
+        queued_func_name = "lost_in_the_sauce"
+        try:
+            queued_func_name = self.queued_method.func.__self__.name
+        except:
+            try:
+                queued_func_name = self.queued_method.__name__
+            except:
+                pass
+        self.ros_node.get_logger().warn(f"Auto Queued Method\t Machine: {self.machine_name} \t From: {self.state} \t To: {queued_func_name} \t (NOT recommended outside of testing)")
 
     def check_completion(self):
         if self.state == 'done' or self.state == 'aborted':
@@ -89,16 +115,26 @@ class BaseStateMachine(Machine):
             self.cleanup_ros2_resources()
             #optional success and failure callbacks
             #can be used to hand control back to a parent machine
-            if self.success and self.done_callback:
+            if self.success and self.success_callback:
                 self.success_callback()
             elif not self.success and self.fail_callback:
                 self.fail_callback()
-
-    def start_sub_machine(self, sub_machine, success_callback=None, failure_callback=None):
+    
+    def start_current_state_sub_machine(self, success_callback=None, failure_callback=None):
+        sub_machine = self.get_state(self.state).sub_machine
+        self._start_sub_machine(sub_machine, success_callback, failure_callback)
+    
+    def _start_sub_machine(self, sub_machine, success_callback=None, failure_callback=None):
         self.current_sub_machine = sub_machine
         sub_machine.success_callback = success_callback
         sub_machine.failure_callback = failure_callback
         threading.Thread(target=sub_machine.initialize, daemon=True).start()
+
+    '''
+
+    ROS2 CODE
+
+    '''
 
     def add_subscription(self, topic, msg_type, callback):
         sub = self.ros_node.create_subscription(msg_type, topic, callback, 10)
