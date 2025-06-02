@@ -1,8 +1,6 @@
-from task_state_machine import BaseStateMachine
+from base_state_machine import BaseStateMachine
 
 class FindingGateStateMachine(BaseStateMachine):
-    def on_enter_initializing(self):
-        print(f"{self.name}: entered initializing state")
 
     def on_enter_scanningCW(self):
         print("Started CW scan")
@@ -17,4 +15,5 @@ class FindingGateStateMachine(BaseStateMachine):
 
     def on_completion(self):
         #disable object detection
+        pass
 

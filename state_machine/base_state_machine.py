@@ -7,8 +7,8 @@ class BaseStateMachine(Machine):
     mandatory_transitions = [
                                 { 'trigger': 'start', 'source': 'uninitialized', 'dest': 'initializing' },
                                 { 'trigger': 'initializingDone', 'source': 'initializing', 'dest': 'initialized' },
-                                { 'trigger': 'finish', 'source': '*', 'dest': 'done' }
-                                { 'trigger': 'abort', 'source': '*', 'dest': 'aborted' }
+                                { 'trigger': 'finish', 'source': '*', 'dest': 'done' },
+                                { 'trigger': 'abort', 'source': '*', 'dest': 'aborted' },
                               ]
     def __init__(self, 
                  name, 
@@ -35,9 +35,7 @@ class BaseStateMachine(Machine):
         self.initial_start_time = 0
         self.state_start_time = 0
 
-        #"global" aborted and success states
-        self.machine_aborted = False 
-        self.machine_success = False
+        self.success = False
         
         self.add_mandatory_state()
         self.add_mandatory_transitions()
@@ -50,6 +48,8 @@ class BaseStateMachine(Machine):
             after_state_change='after_state_change'
             **kwargs #allows for additional arguments
         )
+
+        self.current_sub_machine = None
 
     def add_mandatory_transitions(self):
         for state in self._mandatory_states:
@@ -89,11 +89,13 @@ class BaseStateMachine(Machine):
             #can be used to hand control back to a parent machine
             if self.success and self.done_callback:
                 self.success_callback()
-            elif self.success and self.fail_callback:
+            elif not self.success and self.fail_callback:
                 self.fail_callback()
 
-    def start_sub_machine(self, sub_machine):
+    def start_sub_machine(self, sub_machine, success_callback=None, failure_callback=None):
         self.current_sub_machine = sub_machine
+        sub_machine.success_callback = success_callback
+        sub_machine.failure_callback = failure_callback
         threading.Thread(target=sub_machine.start, daemon=True).start()
 
     def add_subscription(self, topic, msg_type, callback):
@@ -111,9 +113,9 @@ class BaseStateMachine(Machine):
         return service_client
 
     def cleanup_ros2_resources(self):
-    '''
-    Cleans up all ROS2 resources from this Machine
-    '''
+        '''
+        Cleans up all ROS2 resources from this Machine
+        '''
         for sub in self._subscriptions:
             try:
                 self.ros_node.destroy_subscription(sub)

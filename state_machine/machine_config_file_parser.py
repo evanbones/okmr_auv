@@ -8,15 +8,17 @@ class MachineConfigFileParser:
 
     def __init__(self, yaml_path):
         self.yaml_path = yaml_path
-        self._states = []#list of states ['a', 'b', 'c']
+        self.name = ""
+        self._states = []#list of disctionaries [{name: 'a', timeout: 10, config_path: "xyz/abc"}, ...]
         self._transitions = [] #list of dictionaries {trigger: 'doneA', source: 'a', dest: 'b'}
-        self._timeouts = {} #dictionary of timeouts {'a' : 30.0} in seconds
-        self._config_paths = {} #dictionary of config paths for sub machines {'a' : 'task_configs/a.yaml'}
         self._load_yaml()
 
     def _load_yaml(self):
         with open(self.yaml_path, 'r') as file:
             config = yaml.safe_load(file)
+
+        self.name = next(iter(config))
+        config = config[self.name]
 
         for state in config.get('states', []):
             if self.isValidStateDict(state):
@@ -24,7 +26,7 @@ class MachineConfigFileParser:
         
         for transition in config.get('transitions', []):
             if self.isValidTransitionDict(transition):
-                self.transitions.append(transition)
+                self._transitions.append(transition)
 
     def isValidStateDict(self, state):
         if 'name' not in state:
@@ -42,8 +44,6 @@ class MachineConfigFileParser:
             if key not in transition:
                 raise ValueError(f"Transition missing required key '{key}': {transition}")
 
-            
-
         for key in transition:
             if key not in self._allowed_transition_keys:
                 raise ValueError(f"Invalid transition key '{key}' in transition {transition}. Allowed keys: {self._allowed_transition_keys}")
@@ -57,6 +57,3 @@ class MachineConfigFileParser:
 
     def get_transitions(self):
         return self._transitions
-
-    def get_config_paths(self):
-        return self._config_paths
