@@ -73,6 +73,12 @@ class BaseStateMachine(Machine):
 
     def record_state_start_time(self):
         self.state_start_time =  self.ros_node.get_clock().now()
+
+    def get_time_since_initial_start(self):
+        return (self.ros_node.get_clock().now() - self.initial_start_time).nanoseconds / float(10 ** 9)
+    
+    def get_time_since_state_start(self):
+        return (self.ros_node.get_clock().now() - self.state_start_time).nanoseconds / float(10 ** 9)
     
     def on_completion(self):
         #to be implemented by sub classes if desired
@@ -146,6 +152,17 @@ class BaseStateMachine(Machine):
         self._subscriptions.append(sub)
         return sub
 
+    def remove_subscription(self, topic):
+        matching_subs = [sub for sub in self._subscriptions if sub.topic_name == topic or sub.topic_name == "/" + topic]
+        for sub in self._subscriptions:
+            print(sub.topic_name)
+        for sub in matching_subs:
+            try:
+                self._subscriptions.remove(sub)
+                self.ros_node.destroy_subscription(sub)
+            except:
+                pass 
+
     def add_timer(self, duration, callback):
         timer = self.ros_node.create_timer(duration, callback)
         self._timers.append(timer)
@@ -155,10 +172,7 @@ class BaseStateMachine(Machine):
         self._clients.append(service_client)
         return service_client
 
-    def cleanup_ros2_resources(self):
-        '''
-        Cleans up all ROS2 resources from this Machine
-        '''
+    def cleanup_ros2_subscriptions(self):
         for sub in self._subscriptions:
             try:
                 self.ros_node.destroy_subscription(sub)
@@ -166,6 +180,7 @@ class BaseStateMachine(Machine):
                 pass
         self._subscriptions.clear()
 
+    def cleanup_ros2_timers(self):
         for timer in self._timers:
             try:
                 self.ros_node.destroy_timer(timer)
@@ -173,6 +188,13 @@ class BaseStateMachine(Machine):
                 pass
         self._timers.clear()
 
+    def cleanup_ros2_clients(self):
         self._clients.clear()
 
-    
+    def cleanup_ros2_resources(self):
+        '''
+        Cleans up all ROS2 resources from this Machine
+        '''
+        self.cleanup_ros2_subscriptions()
+        self.cleanup_ros2_timers()
+        self.cleanup_ros2_clients()
