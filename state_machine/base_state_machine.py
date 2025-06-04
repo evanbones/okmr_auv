@@ -18,7 +18,6 @@ class BaseStateMachine(Machine):
                  success_callback=None, 
                  fail_callback=None, 
                  *args, **kwargs):
-
         self.state_cls = StateNode
         self.machine_name = name
         self.ros_node = ros_node
@@ -68,7 +67,7 @@ class BaseStateMachine(Machine):
         for transition in self.mandatory_transitions:
             if transition["trigger"] not in all_triggers:
                 self.transitions.append(transition)
-
+    
     def record_initial_start_time(self):
         self.initial_start_time =  self.ros_node.get_clock().now()
 
@@ -113,6 +112,9 @@ class BaseStateMachine(Machine):
         if self.state == 'done' or self.state == 'aborted':
             self.on_completion()
             self.cleanup_ros2_resources()
+            if self.current_sub_machine and not self.current_sub_machine.is_aborted():
+                self.current_sub_machine.abort()
+                self.current_sub_machine = None
             #optional success and failure callbacks
             #can be used to hand control back to a parent machine
             if self.success and self.success_callback:
@@ -121,6 +123,9 @@ class BaseStateMachine(Machine):
                 self.fail_callback()
     
     def start_current_state_sub_machine(self, success_callback=None, fail_callback=None):
+        '''
+        Convenience function for starting sub state machines
+        '''
         sub_machine = self.get_state(self.state).sub_machine
         self._start_sub_machine(sub_machine, success_callback, fail_callback)
     

@@ -2,8 +2,7 @@ from base_state_machine import BaseStateMachine
 
 class MasterStateMachine(BaseStateMachine):
     
-    def on_enter_aborted(self):
-        self.ros_node.get_logger().fatal(f"Master State Machine Aborted")
+    
 
     def on_enter_initializing(self):
         self.queued_method = self.initializingDone
@@ -24,4 +23,7 @@ class MasterStateMachine(BaseStateMachine):
 
     def arbitrate_failure(self):
         self.abort()
+
+    def on_enter_aborted(self):
+        self.ros_node.get_logger().fatal(f"Master State Machine Aborted")
     
