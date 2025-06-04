@@ -154,8 +154,6 @@ class BaseStateMachine(Machine):
 
     def remove_subscription(self, topic):
         matching_subs = [sub for sub in self._subscriptions if sub.topic_name == topic or sub.topic_name == "/" + topic]
-        for sub in self._subscriptions:
-            print(sub.topic_name)
         for sub in matching_subs:
             try:
                 self._subscriptions.remove(sub)
@@ -163,10 +161,14 @@ class BaseStateMachine(Machine):
             except:
                 pass 
 
-    def add_timer(self, duration, callback):
+    def add_timer(self, name: str, duration, callback):
         timer = self.ros_node.create_timer(duration, callback)
-        self._timers.append(timer)
+        self._timers.append({name: timer})
         return timer
+
+    def remove_timer(self, name):
+        self.ros_node.destroy_timer(self._timers[name])
+        self._timers.pop(name)
 
     def add_service_client(self, service_client):
         self._clients.append(service_client)
@@ -181,9 +183,9 @@ class BaseStateMachine(Machine):
         self._subscriptions.clear()
 
     def cleanup_ros2_timers(self):
-        for timer in self._timers:
+        for name in self._timers:
             try:
-                self.ros_node.destroy_timer(timer)
+                self.ros_node.destroy_timer(self._timers[name])
             except:
                 pass
         self._timers.clear()
