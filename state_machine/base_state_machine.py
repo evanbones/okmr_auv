@@ -31,8 +31,14 @@ class BaseStateMachine(Machine):
         self._timers = []
         self._clients = []
 
-        self.initial_start_time = 0
-        self.state_start_time = 0
+        self.initial_start_time = None
+        self.state_start_time = None
+
+        self.record_initial_start_time() 
+        # to actually be useful, initial start should be overwritten, since this is called during master state machine creation, not when the machine actually starts getting used
+        #ex. call the above method inside on_enter_initialized if you want to track time since initialization
+
+        self.record_state_start_time()
 
         self.success = False
         
@@ -56,10 +62,31 @@ class BaseStateMachine(Machine):
 
         self.current_sub_machine = None
 
+        period = self.ros_node.get_state_timeout_check_period()
+        
+        self.add_timer(f"state_timeout_check", period, self.state_timeout_check_callback)
+
+    def get_current_state_node(self):
+        #this could cause errors if you dont specifically declare every parameter as a StateNode type
+        return self.get_state(self.state)
+
+    def state_timeout_check_callback(self):
+        time_since_state_start = self.get_time_since_state_start()
+
+        self.ros_node.get_logger().debug(f"Time Since State Start {time_since_state_start}" + 
+                                            f"\t Machine: {self.machine_name} \t State: {self.state}")
+
+        timeout = self.get_current_state_node().timeout 
+
+        if time_since_state_start >= timeout and timeout > 0:
+            self.ros_node.get_logger().warn(f"State Timed Out after {time_since_state_start}" + 
+                                            f"\t Machine: {self.machine_name} \t State: {self.state}")
+            self.abort()
+
     def add_mandatory_transitions(self):
         for state in self.mandatory_states:
             if state not in self.states:
-                self.states.append(state)
+                self.states.append(StateNode(state))
 
     def add_mandatory_states(self):
         mandatory_triggers = [transition['trigger'] for transition in self.mandatory_transitions]
@@ -93,9 +120,9 @@ class BaseStateMachine(Machine):
         self.check_completion()
         if self.queued_method:
             self.warn_auto_queued_method()
-            temp = self.queued_method
+            method = self.queued_method
             self.queued_method = None
-            temp()
+            method()
 
     def log_pre_state_change(self):
         self.ros_node.get_logger().info(f"Pre State Change  \t Machine: {self.machine_name} \t From: {self.state}")
@@ -131,6 +158,7 @@ class BaseStateMachine(Machine):
     def start_current_state_sub_machine(self, success_callback=None, fail_callback=None):
         '''
         Convenience function for starting sub state machines
+        calls "initialize" trigger
         '''
         sub_machine = self.get_state(self.state).sub_machine
         self._start_sub_machine(sub_machine, success_callback, fail_callback)
@@ -163,7 +191,7 @@ class BaseStateMachine(Machine):
 
     def add_timer(self, name: str, duration, callback):
         timer = self.ros_node.create_timer(duration, callback)
-        self._timers.append({name: timer})
+        self._timers.append({"f{self.machine_name}_{name}": timer})
         return timer
 
     def remove_timer(self, name):
@@ -195,7 +223,7 @@ class BaseStateMachine(Machine):
 
     def cleanup_ros2_resources(self):
         '''
-        Cleans up all ROS2 resources from this Machine
+        Cleans up all ROS2 resources from ONLY THIS MACHINE
         '''
         self.cleanup_ros2_subscriptions()
         self.cleanup_ros2_timers()

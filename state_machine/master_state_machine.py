@@ -38,7 +38,7 @@ class MasterStateMachine(BaseStateMachine):
     def on_enter_findingGate(self):
         self.start_current_state_sub_machine(
                                             success_callback=self.findingGateDone, 
-                                            #fail_callback=self.abort
+                                            fail_callback=self.abort
                                             )
         self.ros_node.get_logger().info(f"{self.get_time_since_state_start()}")
 

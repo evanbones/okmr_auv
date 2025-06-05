@@ -3,20 +3,26 @@ from base_state_machine import BaseStateMachine
 class FindingGateStateMachine(BaseStateMachine):
 
     def on_enter_initializing(self):
-        self.queued_method = self.abort
+        # start up object detection model
+        pass
+
+    def on_enter_initialized(self):
+        # add callback waiting for gateFound
+        pass
 
     def on_enter_scanningCW(self):
-        print("Started CW scan")
-        #send 360 scan request
-        #if request success:
-        #   add callback waiting for movement completion
-        #   add callback waiting for gateFound
-        #callback will 
+        # send request
+        # add callback waiting for movement completion
+        #   callback triggers scanningCWDone
+        pass
 
     def on_enter_scanningCCW(self):
-        print("Started CCW scan")
+        # send request
+        # add callback waiting for movement completion
+        #   callback triggers scanningCCWDone
+        pass
 
     def on_completion(self):
-        #disable object detection
+        # disable object detection
         pass
 
