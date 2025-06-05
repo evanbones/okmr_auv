@@ -26,6 +26,33 @@ class MasterStateMachine(BaseStateMachine):
     def on_enter_initializing(self):
         self.add_subscription("battery_voltage", BatteryVoltage, self.battery_voltage_callback)
         self.add_subscription("system_status", Status, self.system_status_callback)
+        # add SystemStatus message with more information
+        # once all systems show healthy, allow next state
+        # system health node should:
+        # check if all required services are available
+        # check if all required nodes are running
+        #   can get a list of all nodes and:
+        #       ensure that there are no duplicates
+        #       ensure the list contains all desired nodes
+        #
+        # send status check to all nodes that have one (currently navigator only?)
+        #   add status check to mapper and object detection nodes
+        #
+        # check connection to microcontroller (ESP32)
+        # check connection to DVL
+        #   can add a service to the dvl driver
+        # check connection to cameras
+        #   check that frames are being published?
+        #   maybe there is a better way to test?
+        # check system temperatures
+        # check battery voltages
+        # check leak sensor outputs?
+        #
+        # health check can be set as a timer
+        #   certain checks can be more frequent?
+        # system health node should also subscribe to certain topics all the time
+        # ex. battery voltage, current draw, motor throttle output (high throttle can be a fault)
+
 
     def on_enter_initialized(self):
         self.queued_method = self.missionStartReceived

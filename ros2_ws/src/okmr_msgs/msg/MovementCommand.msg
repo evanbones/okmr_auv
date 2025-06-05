@@ -1,6 +1,10 @@
 int32 command
 geometry_msgs/Vector3 data0 #used to communicate some kind of data along with the command
-geometry_msgs/Vector3 data1 
+geometry_msgs/Vector3 data1
+geometry_msgs/Vector3 translation
+geometry_msgs/Vector3 rotation
+float32 rotation_speed
+geometry_msgs/Pose pose
 
 std_msgs/Header header
 
@@ -11,4 +15,6 @@ int32 MOVE_RELATIVE = 1
     #does a movement relative to the sub, ex. move 5m forward, rotate 90 degrees cw, etc
     #data0 is for translation (x, y, z)
     #data1 is for rotation (r, p, y) in degrees NOT radians
+
+int32 MOVE_ABSOLUTE = 2
 

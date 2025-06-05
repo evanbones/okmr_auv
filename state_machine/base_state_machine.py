@@ -28,6 +28,7 @@ class BaseStateMachine(Machine):
         self.fail_callback = fail_callback
         
         self._subscriptions = []
+        self._publishers = []
         self._timers = []
         self._clients = []
 
@@ -189,6 +190,20 @@ class BaseStateMachine(Machine):
             except:
                 pass 
 
+    def add_publisher(self, topic, msg_type):
+        pub = self.ros_node.create_publisher(msg_type, topic, 10)
+        self._publishers.append(pub)
+        return sub
+
+    def publish_on_topic(msg_type, topic_name, msg):
+        matching_pubs = [pub for pub in self._publishers if pub.topic_name == topic or pub.topic_name == "/" + topic]
+        pub = None
+        if len(matching_pubs) > 0:
+            pub = self._publishers[topic_name]
+        else:
+            pub = self.add_publisher(msg_type, topic_name)
+        pub.publish(msg)
+
     def add_timer(self, name: str, duration, callback):
         timer = self.ros_node.create_timer(duration, callback)
         self._timers.append({"f{self.machine_name}_{name}": timer})
@@ -198,14 +213,32 @@ class BaseStateMachine(Machine):
         self.ros_node.destroy_timer(self._timers[name])
         self._timers.pop(name)
 
-    def add_service_client(self, service_client):
-        self._clients.append(service_client)
-        return service_client
+    def add_service_client(self, service_type, service_name):
+        cli = self.create_client(service_type, service_name)
+        #unchecked, service may not exist
+        self._clients.append({service_name: cli})
+        return cli
+
+    def send_service_request(service_type, service_name, srv_msg, done_callback):
+        cli = None
+        if service_name in self._clients:
+            cli = self._clients[service_name]
+        else:
+            cli = self.add_service_client(service_type, service_name)
+        cli.call_async(srv_msg).add_done_callback(done_callback)
 
     def cleanup_ros2_subscriptions(self):
         for sub in self._subscriptions:
             try:
                 self.ros_node.destroy_subscription(sub)
+            except:
+                pass
+        self._subscriptions.clear()
+
+    def cleanup_ros2_publishers(self):
+        for sub in self._publishers:
+            try:
+                self.ros_node.destroy_publisher(pub)
             except:
                 pass
         self._subscriptions.clear()
@@ -226,5 +259,6 @@ class BaseStateMachine(Machine):
         Cleans up all ROS2 resources from ONLY THIS MACHINE
         '''
         self.cleanup_ros2_subscriptions()
+        self.cleanup_ros2_publishers()
         self.cleanup_ros2_timers()
         self.cleanup_ros2_clients()
