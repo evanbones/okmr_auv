@@ -1,4 +1,4 @@
-from base_state_machine import BaseStateMachine
+from okmr_automated_planner.base_state_machine import BaseStateMachine
 from okmr_msgs.msg import Status, BatteryVoltage
 
 class MasterStateMachine(BaseStateMachine):
@@ -24,8 +24,9 @@ class MasterStateMachine(BaseStateMachine):
             self.ros_node.get_logger().warn(f"Battery Voltage Low \t{voltage_sum}V")
 
     def on_enter_initializing(self):
-        self.add_subscription("battery_voltage", BatteryVoltage, self.battery_voltage_callback)
-        self.add_subscription("system_status", Status, self.system_status_callback)
+        self.add_subscription( BatteryVoltage, "battery_voltage", self.battery_voltage_callback)
+        #self.add_subscription( Status, "system_status", self.system_status_callback)
+        self.queued_method = self.initializingDone
         # add SystemStatus message with more information
         # once all systems show healthy, allow next state
         # system health node should:

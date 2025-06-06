@@ -1,5 +1,5 @@
 doingGateTask:
-  task_states:
+  states:
     - { name: lockingGate } #how to decide to enter this state?
     - { name: approachingGate }
     - { name: findingShark }
@@ -7,7 +7,7 @@ doingGateTask:
     - { name: passingGate } #could be called passingGate
     - { name: barrelRolling }
 
-  task_transitions:
+  transitions:
     - { trigger: UNKNOWN, source: initialized, dest: lockingGate }
     - { trigger: lockingGateDone, source: lockingGate, dest: approachingGate }
     - { trigger: approachingGateDone, source: approachingGate, dest: findingShark }

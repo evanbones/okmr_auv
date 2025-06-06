@@ -1,6 +1,6 @@
 import threading
 from transitions import Machine
-from state_node import StateNode
+from okmr_automated_planner.state_node import StateNode
 
 class BaseStateMachine(Machine):
     mandatory_states = ['uninitialized','initializing','initialized', 'done', 'aborted']
@@ -85,8 +85,9 @@ class BaseStateMachine(Machine):
             self.abort()
 
     def add_mandatory_transitions(self):
+        state_names = [state.name for state in self.states]
         for state in self.mandatory_states:
-            if state not in self.states:
+            if state not in state_names:
                 self.states.append(StateNode(state))
 
     def add_mandatory_states(self):
@@ -117,6 +118,7 @@ class BaseStateMachine(Machine):
 
     def post_state_change(self):
         self.record_state_start_time()
+        self.ros_node.get_logger().info(f"{self.get_current_state_node().timeout}") 
         self.log_post_state_change()
         self.check_completion()
         if self.queued_method:
@@ -176,7 +178,7 @@ class BaseStateMachine(Machine):
 
     '''
 
-    def add_subscription(self, topic, msg_type, callback):
+    def add_subscription(self,msg_type, topic, callback):
         sub = self.ros_node.create_subscription(msg_type, topic, callback, 10)
         self._subscriptions.append(sub)
         return sub
@@ -190,12 +192,12 @@ class BaseStateMachine(Machine):
             except:
                 pass 
 
-    def add_publisher(self, topic, msg_type):
+    def add_publisher(self, msg_type, topic):
         pub = self.ros_node.create_publisher(msg_type, topic, 10)
         self._publishers.append(pub)
-        return sub
+        return pub
 
-    def publish_on_topic(msg_type, topic_name, msg):
+    def publish_on_topic(self, msg_type, topic_name, msg):
         matching_pubs = [pub for pub in self._publishers if pub.topic_name == topic or pub.topic_name == "/" + topic]
         pub = None
         if len(matching_pubs) > 0:

@@ -1,9 +1,9 @@
 findingGate:
-  task_states:
+  states:
     - { name: scanningCW }
     - { name: scanningCCW }
 
-  task_transitions:
+  transitions:
     - { trigger: gateDetectionOn, source: initialized, dest: scanningCW }
     - { trigger: scanningCWDone, source: scanningCW, dest: scanningCCW }  #
     - { trigger: scanningCCWDone, source: scanningCCW, dest: scanningCW } # these 2 will loop until timeout

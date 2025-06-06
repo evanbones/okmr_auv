@@ -1,6 +1,6 @@
 import yaml
-from state_node import StateNode
-from base_state_machine import BaseStateMachine
+from okmr_automated_planner.state_node import StateNode
+from okmr_automated_planner.base_state_machine import BaseStateMachine
 
 class MachineConfigFileParser:
     _allowed_state_keys = ['name', 'timeout', 'config_path']

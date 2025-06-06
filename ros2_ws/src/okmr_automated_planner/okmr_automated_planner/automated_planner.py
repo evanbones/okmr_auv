@@ -1,8 +1,10 @@
+#!/usr/bin/env python3
+
 import rclpy
 import threading
 from rclpy.node import Node
 from rclpy.parameter import Parameter
-from state_machine_factory import StateMachineFactory
+from okmr_automated_planner.state_machine_factory import StateMachineFactory
 from rcl_interfaces.msg import ParameterDescriptor
 
 class AutomatedPlannerNode(Node):
@@ -12,7 +14,8 @@ class AutomatedPlannerNode(Node):
         {'name': 'min_battery_voltage', 'value': 14.0, 'descriptor': 'min voltage before aborting master state machine'},
         {'name': 'max_battery_voltage', 'value': 17.0, 'descriptor': 'max voltage before aborting master state machine'},
         {'name': 'state_timeout_check_period', 'value': 0.5, 'descriptor': 'How often to check if the current state should timeout'},
-        {'name': 'root_mission_config', 'value': 'configs/master.yaml', 'descriptor': None}
+        {'name': 'config_base_path', 'value': '', 'descriptor': 'Base path for all configuration files'},
+        {'name': 'master_config', 'value': 'master.yaml', 'descriptor': 'Master configuration file name (relative to config_base_path)'}
     ]
 
     def __init__(self):
@@ -47,12 +50,22 @@ class AutomatedPlannerNode(Node):
 def main():
     rclpy.init()
     master_node = AutomatedPlannerNode()
-    root_mission_config = master_node.get_root_mission_config()
+    config_base_path = master_node.get_config_base_path()
+    master_config = master_node.get_master_config()
     root_state_machine = None
     #root state machine is the only SM that is not a StateNode, all sub machines are also states
 
+    master_node.get_logger().info(f"Using config base path: {config_base_path}")
+    master_node.get_logger().info(f"Using master config: {master_config}")
+
     try:
-        root_state_machine = StateMachineFactory.createMachineFromConfig(root_mission_config, master_node)
+        root_state_machine = StateMachineFactory.createMachineFromConfig(
+            master_config, 
+            master_node,
+            config_base_path
+        )
+        # root_state_machine.fail_callback =  
+        #root_state_machine.done_callback = lamda: 
     except Exception as e:
         master_node.get_logger().fatal(f"Error when parsing config: \n{str(e)}")
         rclpy.shutdown()
@@ -64,9 +77,12 @@ def main():
 
     threading.Thread(target=root_state_machine.initialize, daemon=True).start()
     master_node.get_logger().info(f"Started root state machine")
+    master_done = False
     try:
-        rclpy.spin(master_node)
-    except KeyboardInterrupt:
+        while rclpy.ok() and not root_state_machine.is_aborted() and not root_state_machine.is_done():
+            rclpy.spin_once(master_node)
+    except Exception as e:
+        master_node.get_logger().error(f"{str(e)}")
         pass
     finally:
         rclpy.shutdown()

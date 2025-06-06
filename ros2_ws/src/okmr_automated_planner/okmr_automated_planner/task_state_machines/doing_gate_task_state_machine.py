@@ -1,4 +1,4 @@
-from base_state_machine import BaseStateMachine
+from okmr_automated_planner.base_state_machine import BaseStateMachine
 
 class DoingGateTaskStateMachine(BaseStateMachine):
 
