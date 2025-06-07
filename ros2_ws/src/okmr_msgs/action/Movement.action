@@ -1,0 +1,11 @@
+# Goal
+MovementCommand command_msg
+---
+# Result
+string debug_info
+float32 completion_time
+---
+# Feedback
+float32 time_elapsed
+geometry_msgs/Vector3 current_velocity
+float32 completion_percentage

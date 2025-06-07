@@ -2,6 +2,7 @@
 #include "geometry_msgs/msg/pose_stamped.hpp"
 #include "geometry_msgs/msg/quaternion.hpp"
 #include "okmr_msgs/msg/sensor_reading.hpp"
+#include "okmr_msgs/srv/get_pose.hpp"
 #include "sensor_msgs/msg/imu.hpp"
 #include <tf2/LinearMath/Quaternion.h>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
@@ -21,6 +22,7 @@ class DeadReckoningNode : public rclcpp::Node{
         double x=0,y=0,z=0,roll=0,pitch=0,yaw=0,surge=0,sway=0,heave=0;
         bool gotFirstTime=false;
         std::chrono::time_point<std::chrono::high_resolution_clock> last_time;
+        geometry_msgs::msg::PoseStamped current_pose;
 
 	    DeadReckoningNode() : Node("dead_reckoning_node") {
             rclcpp::QoS qos_profile(10);  // Create QoS profile with history depth 10
@@ -38,6 +40,11 @@ class DeadReckoningNode : public rclcpp::Node{
             heave_subscriber.subscribe(this, "PID/heave/actual");
             sync_ = std::make_shared<message_filters::Synchronizer<SyncPolicy>>(SyncPolicy(10), surge_subscriber,sway_subscriber,heave_subscriber);
             sync_->registerCallback(std::bind(&DeadReckoningNode::linear_velocity_callback, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
+            
+            get_pose_service = this->create_service<okmr_msgs::srv::GetPose>(
+                "get_pose", 
+                std::bind(&DeadReckoningNode::get_pose_callback, this, std::placeholders::_1, std::placeholders::_2)
+            );
 	    }
 
 	private:
@@ -124,6 +131,8 @@ class DeadReckoningNode : public rclcpp::Node{
         pose_msg.header.stamp=msg.header.stamp;
         pose_msg.header.frame_id="map";
 
+        current_pose = pose_msg;
+
 		pitch_publisher -> publish(pitch_msg);
 		roll_publisher  -> publish(roll_msg);
 		yaw_publisher   -> publish(yaw_msg);
@@ -136,6 +145,13 @@ class DeadReckoningNode : public rclcpp::Node{
         heave=heave_msg->data;
     }
 
+    void get_pose_callback(const std::shared_ptr<okmr_msgs::srv::GetPose::Request> request,
+                          std::shared_ptr<okmr_msgs::srv::GetPose::Response> response) {
+        (void)request; // Unused parameter
+        response->pose = current_pose;
+        response->success = gotFirstTime; // Only return success if we've received at least one IMU measurement
+    }
+
     using SensorMsg = okmr_msgs::msg::SensorReading;
 
     using SyncPolicy = message_filters::sync_policies::ApproximateTime<SensorMsg, SensorMsg, SensorMsg>;
@@ -146,6 +162,7 @@ class DeadReckoningNode : public rclcpp::Node{
 	rclcpp::Subscription<sensor_msgs::msg::Imu>::SharedPtr imu_subscription;
 	rclcpp::Publisher<SensorMsg>::SharedPtr roll_publisher, pitch_publisher, yaw_publisher, sway_publisher;
 	rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr pose_publisher;
+    rclcpp::Service<okmr_msgs::srv::GetPose>::SharedPtr get_pose_service;
     message_filters::Subscriber<SensorMsg> surge_subscriber, sway_subscriber, heave_subscriber;
 
 };

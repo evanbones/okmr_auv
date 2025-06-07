@@ -26,8 +26,10 @@ rosidl_generate_interfaces(${PROJECT_NAME}
     srv/Vg2pc.srv
     srv/Matching.srv
     srv/Status.srv
+    srv/GetPose.srv
     msg/VoxelGrid.msg
     msg/Classes.msg
+    action/Movement.action
   DEPENDENCIES sensor_msgs geometry_msgs std_msgs)
 
 if(BUILD_TESTING)

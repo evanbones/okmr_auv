@@ -7,6 +7,7 @@ endif()
 
 # find dependencies
 find_package(ament_cmake REQUIRED)
+find_package(ament_cmake_python REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(sensor_msgs REQUIRED)
@@ -34,6 +35,8 @@ ament_target_dependencies(motion_planner rclcpp std_msgs sensor_msgs okmr_msgs g
 
 target_include_directories(motion_planner PUBLIC include)
 
+ament_python_install_package(${PROJECT_NAME})
+
 install(TARGETS
     dead_reckoning
     navigator
@@ -44,6 +47,12 @@ install(TARGETS
 install(DIRECTORY
   launch
   DESTINATION share/${PROJECT_NAME}/
+)
+
+install(PROGRAMS
+    ${PROJECT_NAME}/navigator_action_server.py
+    DESTINATION lib/${PROJECT_NAME}
+    RENAME navigator_action_server
 )
 
 if(BUILD_TESTING)
