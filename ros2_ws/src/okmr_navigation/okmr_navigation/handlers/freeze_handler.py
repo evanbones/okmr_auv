@@ -6,6 +6,7 @@ import time
 
 def handle_freeze(goal_handle):
     """Execute freeze action with monitoring"""
+    node = goal_handle._action_server._node
     # Execute the common freeze functionality
     if not execute_freeze(goal_handle):
         goal_handle.abort()
@@ -14,9 +15,8 @@ def handle_freeze(goal_handle):
         return result
     
     # Wait for vehicle to come to complete stop with timeout
-    node = goal_handle._action_server._node
     start_time = node.get_clock().now()
-    timeout_duration = 10.0  # 10 second timeout
+    timeout_duration = goal_handle.request.command_msg.duration
     
     while True:
         if goal_handle.is_cancel_requested:
@@ -38,7 +38,7 @@ def handle_freeze(goal_handle):
         
         # TODO: Check if all velocities are under threshold
         # vehicle_stopped = check_velocities_under_threshold()
-        vehicle_stopped = False  # Placeholder
+        vehicle_stopped = True  # Placeholder
         
         if vehicle_stopped:
             goal_handle.succeed()
