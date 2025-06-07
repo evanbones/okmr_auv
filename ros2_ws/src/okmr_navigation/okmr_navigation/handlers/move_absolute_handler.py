@@ -1,6 +1,7 @@
 from okmr_msgs.action import Movement
 from okmr_msgs.msg import GoalPose
 import time
+from okmr_navigation.handlers.freeze_handler import send_freeze
 
 
 def handle_move_absolute(goal_handle):
@@ -36,9 +37,11 @@ def execute_absolute_movement(goal_handle, goal_pose):
     
     while True:
         if goal_handle.is_cancel_requested:
+            # Send freeze command before canceling
+            send_freeze(goal_handle)
             goal_handle.canceled()
             result = Movement.Result()
-            result.debug_info = 'Movement command was canceled'
+            result.debug_info = 'Movement command was canceled and vehicle frozen'
             return result
         
         # Check if we've reached the goal via motor cortex status

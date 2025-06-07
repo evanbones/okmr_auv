@@ -1,6 +1,7 @@
 import threading
 from transitions import Machine
 from okmr_automated_planner.state_node import StateNode
+from okmr_automated_planner.movement_command_action_client import MovementCommandActionClient
 
 class BaseStateMachine(Machine):
     mandatory_states = ['uninitialized','initializing','initialized', 'done', 'aborted']
@@ -31,6 +32,9 @@ class BaseStateMachine(Machine):
         self._publishers = []
         self._timers = []
         self._clients = []
+        
+        # Initialize movement action client for all state machines
+        self.movement_client = MovementCommandActionClient(self.ros_node)
 
         self.initial_start_time = None
         self.state_start_time = None
@@ -256,6 +260,10 @@ class BaseStateMachine(Machine):
     def cleanup_ros2_clients(self):
         self._clients.clear()
 
+    def cleanup_movement_client(self):
+        """Clean up the movement action client"""
+        self.movement_client.cleanup()
+
     def cleanup_ros2_resources(self):
         '''
         Cleans up all ROS2 resources from ONLY THIS MACHINE
@@ -264,3 +272,4 @@ class BaseStateMachine(Machine):
         self.cleanup_ros2_publishers()
         self.cleanup_ros2_timers()
         self.cleanup_ros2_clients()
+        self.cleanup_movement_client()

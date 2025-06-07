@@ -29,7 +29,7 @@ class NavigatorActionServer(Node):
         self._action_server = ActionServer(
             self,
             Movement,
-            'navigator_movement',
+            'movement_command',
             self.execute_callback
         )
         
