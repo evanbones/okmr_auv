@@ -36,6 +36,7 @@ if(BUILD_TESTING)
     add_launch_test("${path}" RUNNER "${RUNNER}" ${ARGN})
   endfunction()
   add_ros_isolated_launch_test(test/test_movement_action_integration.py)
+  add_ros_isolated_launch_test(test/test_relative_move_integration.py)
   add_ros_isolated_launch_test(test/test_freeze_integration.py)
 endif()
 

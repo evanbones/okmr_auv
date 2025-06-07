@@ -29,7 +29,9 @@ The overall system is designed in a layered manner, with L5 systems making high 
 and every system below that being a step in the chain that makes the L5 systems request a reality
 
 
-Refresh / processing rate is the main factor that determines what layer a subsystem is in. The slower, the higher the layer.
+Refresh / processing rate is the main factor that determines what layer a subsystem is in. The slower, the higher the layer. 
+
+This also strongly defines what programming language the code should be written in. 
 
 - L5 = Mission Plan (e.g., root state machaine in Automated Planner) ~30 second period
 - L4 = Behavior Logic (specific task state machines, motion planner) ~5 second period
