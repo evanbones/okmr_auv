@@ -1,7 +1,7 @@
 from okmr_msgs.action import Movement
 from okmr_msgs.msg import GoalPose
-from okmr_msgs.srv import GetPose
 from okmr_navigation.handlers.move_absolute_handler import execute_absolute_movement, execute_test_movement
+from okmr_navigation.handlers.get_pose import get_current_pose
 import math
 import numpy as np
 from scipy.spatial.transform import Rotation
@@ -13,7 +13,7 @@ def handle_move_relative(goal_handle):
     node = goal_handle._action_server._node
     
     # Get current pose and calculate absolute goal
-    current_pose_stamped = _get_current_pose(node)
+    current_pose_stamped = get_current_pose(node)
     if current_pose_stamped is None:
         goal_handle.abort()
         result = Movement.Result()
@@ -41,22 +41,6 @@ def test_handle_move_relative(goal_handle):
     return execute_test_movement(goal_handle, distance)
 
 
-def _get_current_pose(node):
-    """Helper to get current pose via service call"""
-    client = node.create_client(GetPose, 'get_pose')
-    
-    if not client.wait_for_service(timeout_sec=1.0):
-        node.get_logger().error('get_pose service not available')
-        return None
-    
-    request = GetPose.Request()
-    response = client.call(request)
-    
-    if response.success:
-        return response.pose
-    else:
-        node.get_logger().error('Failed to get current pose from service')
-        return None
 
 
 def _calculate_relative_goal_pose(current_pose, translation, rotation):

@@ -1,7 +1,7 @@
 from okmr_msgs.action import Movement
 from okmr_msgs.msg import GoalPose
-import time
 from okmr_navigation.handlers.freeze_handler import send_freeze
+import time
 
 
 def handle_move_absolute(goal_handle):
@@ -33,7 +33,7 @@ def execute_absolute_movement(goal_handle, goal_pose):
     goal_publisher.publish(goal_pose)
     
     # Monitor execution with feedback
-    start_time = time.time()
+    start_time = node.get_clock().now()
     
     while True:
         if goal_handle.is_cancel_requested:
@@ -49,7 +49,7 @@ def execute_absolute_movement(goal_handle, goal_pose):
         
         # Provide feedback
         feedback_msg = Movement.Feedback()
-        feedback_msg.time_elapsed = time.time() - start_time
+        feedback_msg.time_elapsed = (node.get_clock().now() - start_time).nanoseconds / 1e9
         
         if status_response and not status_response.ongoing:
             # Movement completed
@@ -78,9 +78,10 @@ def execute_test_movement(goal_handle, distance):
     # Simulate movement time based on distance (roughly 0.5 m/s)
     estimated_time = max(2.0, distance / 0.5)
     
-    start_time = time.time()
+    node = goal_handle._action_server._node
+    start_time = node.get_clock().now()
     
-    while time.time() - start_time < estimated_time:
+    while (node.get_clock().now() - start_time).nanoseconds / 1e9 < estimated_time:
         if goal_handle.is_cancel_requested:
             goal_handle.canceled()
             result = Movement.Result()
@@ -88,7 +89,7 @@ def execute_test_movement(goal_handle, distance):
             return result
         
         feedback_msg = Movement.Feedback()
-        feedback_msg.time_elapsed = time.time() - start_time
+        feedback_msg.time_elapsed = (node.get_clock().now() - start_time).nanoseconds / 1e9
         feedback_msg.completion_percentage = (feedback_msg.time_elapsed / estimated_time) * 100.0
         
         goal_handle.publish_feedback(feedback_msg)
@@ -96,7 +97,7 @@ def execute_test_movement(goal_handle, distance):
     
     goal_handle.succeed()
     result = Movement.Result()
-    result.completion_time = time.time() - start_time
+    result.completion_time = (node.get_clock().now() - start_time).nanoseconds / 1e9
     result.debug_info = f'Test movement completed successfully ({distance:.2f}m in {result.completion_time:.2f}s)'
     return result
 

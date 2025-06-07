@@ -1,5 +1,6 @@
 from okmr_msgs.action import Movement
 from okmr_msgs.msg import GoalPose
+from okmr_navigation.handlers.get_pose import get_current_pose
 import time
 
 
@@ -66,19 +67,24 @@ def execute_freeze(goal_handle):
     # TODO: Switch to position mode
     # This would involve calling the appropriate service/topic
     
-    # TODO: Get current vehicle position
-    # This would involve calling a service to get current pose
+    # Get current pose using service (like relative movement handler)
+    current_pose_stamped = get_current_pose(node)
+    if current_pose_stamped is None:
+        node.get_logger().error("Could not get current pose for freeze command")
+        return False
     
-    # TODO: Send absolute movement command at current position
-    # Create goal pose at current location
-    current_pose = GoalPose()  # This should be populated with actual current position
-    current_pose.header.stamp = node.get_clock().now().to_msg()
-    current_pose.header.frame_id = "map"  # Or appropriate frame
+    # Create goal pose at current location to freeze vehicle
+    freeze_goal_pose = GoalPose()
+    freeze_goal_pose.header.stamp = node.get_clock().now().to_msg()
+    freeze_goal_pose.header.frame_id = current_pose_stamped.header.frame_id
+    freeze_goal_pose.pose = current_pose_stamped.pose
+    freeze_goal_pose.copy_orientation = True
     
-    # Publish to freeze the vehicle at current position
+    # Publish goal pose to freeze vehicle at current position (like absolute handler)
     goal_publisher = node.create_publisher(GoalPose, '/current_goal_pose', 10)
-    goal_publisher.publish(current_pose)
+    goal_publisher.publish(freeze_goal_pose)
     
+    node.get_logger().info("Freeze command sent - vehicle will hold current position")
     return True
 
 
@@ -90,7 +96,8 @@ def send_freeze(goal_handle):
     return execute_freeze(goal_handle)
 
 def test_handle_freeze(goal_handle):
-    start_time = time.time()
+    node = goal_handle._action_server._node
+    start_time = node.get_clock().now()
         
     for i in range(20):
         if goal_handle.is_cancel_requested:
@@ -100,7 +107,7 @@ def test_handle_freeze(goal_handle):
             return result
             
         feedback_msg = Movement.Feedback()
-        feedback_msg.time_elapsed = time.time() - start_time
+        feedback_msg.time_elapsed = (node.get_clock().now() - start_time).nanoseconds / 1e9
         feedback_msg.completion_percentage = (i / 20.0) * 100.0
             
         goal_handle.publish_feedback(feedback_msg)
@@ -108,7 +115,7 @@ def test_handle_freeze(goal_handle):
         
     goal_handle.succeed()
     result = Movement.Result()
-    result.completion_time = time.time() - start_time
+    result.completion_time = (node.get_clock().now() - start_time).nanoseconds / 1e9
     result.debug_info = 'Test freeze command completed successfully'
     return result
 
