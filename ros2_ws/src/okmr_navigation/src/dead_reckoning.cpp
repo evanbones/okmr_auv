@@ -73,6 +73,7 @@ class DeadReckoningNode : public rclcpp::Node{
         
 
         double alpha = 0.995;  //determines the ratio of accelerometer to gyroscope data in the estimated value 
+        //TODO: make this a parameter
         //pitch and roll use a basic complemntary filter
 
         double ax = msg.linear_acceleration.z;

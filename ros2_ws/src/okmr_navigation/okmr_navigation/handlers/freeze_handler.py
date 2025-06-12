@@ -28,14 +28,7 @@ def handle_freeze(goal_handle):
         
         current_time = node.get_clock().now()
         elapsed_time = (current_time - start_time).nanoseconds / 1e9
-        
-        # Check timeout
-        if elapsed_time > timeout_duration:
-            goal_handle.abort()
-            result = Movement.Result()
-            result.debug_info = f'Freeze command timed out after {timeout_duration}s'
-            return result
-        
+
         # TODO: Check if all velocities are under threshold
         # vehicle_stopped = check_velocities_under_threshold()
         vehicle_stopped = True  # Placeholder
@@ -53,6 +46,13 @@ def handle_freeze(goal_handle):
         feedback_msg.completion_percentage = min(100.0, (elapsed_time / timeout_duration) * 100.0)
         
         goal_handle.publish_feedback(feedback_msg)
+        
+        # Check timeout
+        if elapsed_time > timeout_duration:
+            goal_handle.abort()
+            result = Movement.Result()
+            result.debug_info = f'Freeze command timed out after {timeout_duration}s'
+            return result
         time.sleep(0.1)
 
 

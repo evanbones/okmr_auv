@@ -1,0 +1,4 @@
+---
+geometry_msgs/Vector3 translation_differences
+geometry_msgs/Vector3 orientation_differences
+#x = roll, y = pitch, z = yaw

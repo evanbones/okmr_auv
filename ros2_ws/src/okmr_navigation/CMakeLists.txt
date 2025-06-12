@@ -19,18 +19,14 @@ find_package(okmr_msgs REQUIRED)
 add_executable(dead_reckoning
   src/dead_reckoning.cpp)
 
-add_executable(navigator
-  src/navigator.cpp)
-
 add_executable(motion_planner
   src/motion_planner.cpp)
 
-add_executable(motor_cortex
-  src/motor_cortex.cpp)
+add_executable(relative_pose_target_server
+  src/relative_pose_target_server.cpp)
 
-ament_target_dependencies(motor_cortex rclcpp std_msgs okmr_msgs tf2 tf2_geometry_msgs)
+ament_target_dependencies(relative_pose_target_server rclcpp std_msgs okmr_msgs tf2 tf2_geometry_msgs)
 ament_target_dependencies(dead_reckoning rclcpp std_msgs okmr_msgs tf2 tf2_geometry_msgs)
-ament_target_dependencies(navigator rclcpp std_msgs sensor_msgs okmr_msgs geometry_msgs tf2_geometry_msgs tf2)
 ament_target_dependencies(motion_planner rclcpp std_msgs sensor_msgs okmr_msgs geometry_msgs tf2_geometry_msgs tf2)
 
 target_include_directories(motion_planner PUBLIC include)
@@ -39,9 +35,8 @@ ament_python_install_package(${PROJECT_NAME})
 
 install(TARGETS
     dead_reckoning
-    navigator
     motion_planner
-    motor_cortex
+    relative_pose_target_server
     DESTINATION lib/${PROJECT_NAME})
 
 install(DIRECTORY

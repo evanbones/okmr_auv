@@ -12,13 +12,45 @@ def generate_launch_description():
     )
 
     return LaunchDescription([
-        #goal translation is always 0 for now, so each translational PID controller has the same target
+        Node(
+            package='okmr_controls',
+            executable='pid',
+            name='yaw_angle_pid_controller',
+            remappings=[
+                ('/PID/XXX/target', '/PID/yaw/target'), 
+                ('/PID/XXX/actual', '/PID/yaw/actual'),
+                ('/PID_correction/XXX', '/PID/yaw_rate/target')#cascading
+            ],
+            parameters=[pid_config]
+        ),
+        Node(
+            package='okmr_controls',
+            executable='pid',
+            name='pitch_angle_pid_controller',
+            remappings=[
+                ('/PID/XXX/target', '/PID/pitch/target'), 
+                ('/PID/XXX/actual', '/PID/pitch/actual'),
+                ('/PID_correction/XXX', '/PID/pitch_rate/target')#cascading
+            ],
+            parameters=[pid_config]
+        ),
+        Node(
+            package='okmr_controls',
+            executable='pid',
+            name='roll_angle_pid_controller',
+            remappings=[
+                ('/PID/XXX/target', '/PID/roll/target'), 
+                ('/PID/XXX/actual', '/PID/roll/actual'),
+                ('/PID_correction/XXX', '/PID/roll_rate/target')#cascading
+            ],
+            parameters=[pid_config]
+        ),
         Node(
             package='okmr_controls',
             executable='pid',
             name='x_translation_pid_controller',
             remappings=[
-                ('/PID/XXX/target', '/PID/translation/target'), 
+                ('/PID/XXX/target', '/PID/zero_reference/target'), 
                 ('/PID/XXX/actual', '/PID/x_translation/actual'),
                 ('/PID_correction/XXX', '/PID/surge/target')#cascading
             ],
@@ -29,7 +61,7 @@ def generate_launch_description():
             executable='pid',
             name='y_translation_pid_controller',
             remappings=[
-                ('/PID/XXX/target', '/PID/translation/target'),
+                ('/PID/XXX/target', '/PID/zero_reference/target'),
                 ('/PID/XXX/actual', '/PID/y_translation/actual'),
                 ('/PID_correction/XXX', '/PID/sway/target')#cascading
             ],
@@ -40,7 +72,7 @@ def generate_launch_description():
             executable='pid',
             name='z_translation_pid_controller',
             remappings=[
-                ('/PID/XXX/target', '/PID/translation/target'),
+                ('/PID/XXX/target', '/PID/zero_reference/target'),
                 ('/PID/XXX/actual', '/PID/z_translation/actual'),
                 ('/PID_correction/XXX', '/PID/heave/target')#cascading
             ],

@@ -1,16 +1,38 @@
-yaw_pid_controller:
+#TODO: need to retune all values
+#TEST PLAN: 
+#start all values at 0 and slowly increase P, then D, and if needed, I (mainly on heave)
+
+yaw_angle_pid_controller:
   ros__parameters:
     kI: 0.0
-    kP: 0.45
+    kP: 2.0 #roughly: 90 degrees error -> 180 degrees / second rate target
+    kD: 0.0
+    bias: 0.0
+pitch_angle_pid_controller:
+  ros__parameters:
+    kI: 0.0
+    kP: 0.5 
+    kD: 0.0
+    bias: 0.0
+roll_angle_pid_controller:
+  ros__parameters:
+    kI: 0.0
+    kP: 0.5
+    kD: 0.0
+    bias: 0.0
+yaw_rate_pid_controller:
+  ros__parameters:
+    kI: 0.0
+    kP: 0.45 #roughly: 90 degrees / second error -> 45% throttle  
     kD: 0.12
     bias: 0.0
-pitch_pid_controller:
+pitch_rate_pid_controller:
   ros__parameters:
     kI: 0.0
     kP: 2.0
     kD: 0.7
     bias: 0.0
-roll_pid_controller:
+roll_rate_pid_controller:
   ros__parameters:
     kI: 0.0
     kP: 1.5

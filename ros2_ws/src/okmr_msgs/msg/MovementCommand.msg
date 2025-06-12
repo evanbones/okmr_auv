@@ -8,6 +8,10 @@ geometry_msgs/Vector3 data1
 geometry_msgs/Vector3 translation 
 geometry_msgs/Vector3 rotation 
 
+float32 radius_of_acceptance 
+#determines how close we have to be to the goal before its considered done
+#used in rel move and abs move commands
+
 float32 rotation_speed 
 #for spin commands, degree / sec
 

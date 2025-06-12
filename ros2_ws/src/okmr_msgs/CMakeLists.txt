@@ -27,6 +27,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
     srv/Matching.srv
     srv/Status.srv
     srv/GetPose.srv
+    srv/DistanceFromGoal.srv
     msg/VoxelGrid.msg
     msg/Classes.msg
     action/Movement.action
