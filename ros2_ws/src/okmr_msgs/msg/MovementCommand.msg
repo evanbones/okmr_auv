@@ -1,10 +1,6 @@
 int32 command
 #defines which of the commands defined below to execute
 
-geometry_msgs/Vector3 data0 
-#DEPRECATED: used to communicate some kind of data along with the command
-geometry_msgs/Vector3 data1
-
 geometry_msgs/Vector3 translation 
 geometry_msgs/Vector3 rotation 
 
@@ -19,28 +15,24 @@ float32 duration
 #can be used for throttle and speed based commands to determine how long a specific command should be executed
 #ideally throttle and speed commands get a maximum duration around 
 #10 seconds since they are less reliable than position based commands
+#can also be used to specify max timeout for relative and absolute move commands
 
 okmr_msgs/GoalPose goal_pose #for absolute move commands
 
 std_msgs/Header header
-
-int32 GO_TO_GATE = -1
-    #goes to gate, using data field 0 to determine how far from gate to stop
-    #should this instead be absolute move sent by the automated planner instead?
-    #essentially moving the mapping system / object location request 
-    #into the automated planner instead of the navigator
-    #this could make sense since navigator should only be used for pure navigation commands, not executive level coordination
-    #i.e. we dont want navigator to figure out where to move, it should be told where/how to move
 
 int32 FREEZE = 0
     #hold current pose, stop all movements going on
     #this will automatically set all pid systems into position mode
 
 int32 MOVE_RELATIVE = 1 
-    #does a movement relative to the current (at time received) pose, ex. move 5m forward, rotate 90 degrees cw, etc
-    #data0 is for translation (x, y, z)
-    #data1 is for rotation (r, p, y) in degrees NOT radians
-    #NOTE: GOING TO DEPRECATE DATA0 AND DATA1
+    #does a movement relative to the current (at time received) pose, 
+    #ex. move 5m forward, rotate 90 degrees cw, etc
+    #
+    #translation (x, y, z), defines how many meters to move
+    #rotation (r, p, y) in degrees NOT radians
+    
+    #NOTE: command is relative to the pose the auv was in when the command was received by the action server
 
 int32 MOVE_ABSOLUTE = 2
     #move to the absolute position defined by the goal_pose field
@@ -61,17 +53,18 @@ int32 SPIN_YAW = 3
     #turns the rotational pid system into speed mode
     #should keep translation pid in position mode
 
-int32 BARREL_ROLL_PID = 4
+int32 BARREL_ROLL = 4
     #spin roll at the speed defined by rotation_speed field
-    #will need to selectively enable pid systems (disable all translation, disable other rotational PID systems)
+
+int32 DO_A_FLIP = 5
+    #spin pitch at the speed defined by rotation_speed field
+
+#applies to both pitch and roll:
+#will need to selectively enable pid systems 
+#(disable all translation, disable other rotational PID systems, disable dead reckoning)
     #NEEDS TESTING
     #REMEBER, ROTATION DEAD RECKONING DOESNT WORK OUTSIDE OF NORMAL UPRIGHT OPERATION
     #CANNOT BE TRANSLATIONAL, MUST BE SPEED BASED
-    #may end up becoming a direct throttle control based maneuver
-
-int32 BARREL_ROLL_THROTTLE = 5
-    #the more probable barrel roll that will be used
-    #directly publishes motor throttles to the motor throttle topic
 
 int32 LOOK_AT = 6
     #could be used for looking at a specific location

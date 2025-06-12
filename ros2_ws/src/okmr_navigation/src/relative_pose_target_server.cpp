@@ -45,17 +45,17 @@ class RelativePoseTargetServer: public rclcpp::Node
             //placeholders are used in place of request and response arguments
 
             //adds all publishers to a map
-            pidPublisherMap.insert(std::pair{"yaw", 
+            pidPublisherMap.insert(std::pair{"yaw_angle", 
                     this->create_publisher<okmr_msgs::msg::SensorReading>
-                    ("/PID/yaw/target", 10)});
+                    ("/PID/yaw_angle/target", 10)});
 
-            pidPublisherMap.insert(std::pair{"pitch", 
+            pidPublisherMap.insert(std::pair{"pitch_angle", 
                     this->create_publisher<okmr_msgs::msg::SensorReading>
-                    ("/PID/pitch/target", 10)});
+                    ("/PID/pitch_angle/target", 10)});
 
-            pidPublisherMap.insert(std::pair{"roll", 
+            pidPublisherMap.insert(std::pair{"roll_angle", 
                     this->create_publisher<okmr_msgs::msg::SensorReading>
-                    ("/PID/roll/target", 10)});
+                    ("/PID/roll_angle/target", 10)});
 
             pidPublisherMap.insert(std::pair{"zero_reference",
                     this->create_publisher<okmr_msgs::msg::SensorReading>
@@ -277,9 +277,9 @@ class RelativePoseTargetServer: public rclcpp::Node
             zMsg.header.stamp=this->now();
             zeroMsg.header.stamp=this->now();
 
-            pidPublisherMap["pitch"]->publish(pitchMsg);
-            pidPublisherMap["yaw"]->publish(yawMsg);
-            pidPublisherMap["roll"]->publish(rollMsg);
+            pidPublisherMap["pitch_angle"]->publish(pitchMsg);
+            pidPublisherMap["yaw_angle"]->publish(yawMsg);
+            pidPublisherMap["roll_angle"]->publish(rollMsg);
 
             pidPublisherMap["x_translation"]->publish(xMsg);
             pidPublisherMap["y_translation"]->publish(yMsg);
@@ -287,14 +287,16 @@ class RelativePoseTargetServer: public rclcpp::Node
 
             pidPublisherMap["zero_reference"]->publish(zeroMsg);
             //zero reference is published for position PID controllers
-            //since we want the xyzrpy_difference from the goal pose to be zero
-            //zero difference from goal pose = at the goal pose
+            //since we want the xyz_translation from the goal pose to be zero
+            //zero translation from goal pose = at the goal pose
 
-            //these publishers define the pid setpoints for translation and rotation, not speed
+            //these publishers define the pid setpoints for 
+            //translation and angles (xyzrpy), not rate (uvwpqr)
+            //
             //speed setpoint generation is handled by either 
-            //a) pid control (intended when using this node)
+            //a) cascading pid control (intended when using this node)
             //or
-            //b) speed setpoint server
+            //b) speed setpoint server (indended for spinning and test commands)
         }
         
         //Member Variables

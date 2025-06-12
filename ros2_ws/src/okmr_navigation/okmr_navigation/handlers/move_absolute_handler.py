@@ -44,14 +44,14 @@ def execute_absolute_movement(goal_handle, goal_pose):
             result.debug_info = 'Movement command was canceled and vehicle frozen'
             return result
         
-        # Check if we've reached the goal via motor cortex status
-        status_response = _check_motor_cortex_status(node)
+        # Check if we've reached the goal via distance_from_goal service
+        distance_from_goal = _check_distance_from_goal(node)
         
         # Provide feedback
         feedback_msg = Movement.Feedback()
         feedback_msg.time_elapsed = (node.get_clock().now() - start_time).nanoseconds / 1e9
         
-        if status_response and not status_response.ongoing:
+        if distance_from_goal <= goal_handle.request.command_msg:
             # Movement completed
             goal_handle.succeed()
             result = Movement.Result()
@@ -65,7 +65,7 @@ def execute_absolute_movement(goal_handle, goal_pose):
         goal_handle.publish_feedback(feedback_msg)
         time.sleep(0.1)
         
-        # Timeout after reasonable time
+        # TODO: timeout should be after duration provided inside the MovementCommand Request
         if feedback_msg.time_elapsed > 30.0:
             goal_handle.abort()
             result = Movement.Result()
