@@ -24,6 +24,11 @@ def generate_test_description():
         # Launch the dead_reckoning node for pose tracking
         launch_ros.actions.Node(
             package='okmr_navigation',
+            executable='relative_pose_target_server',
+            output='screen'
+        ),
+        launch_ros.actions.Node(
+            package='okmr_navigation',
             executable='dead_reckoning',
             name='dead_reckoning_node',
             output='screen'
@@ -100,7 +105,7 @@ class TestRelativeMoveIntegration(unittest.TestCase):
         # Steady state IMU (vehicle at rest, level)
         imu_msg.linear_acceleration.x = 0.0
         imu_msg.linear_acceleration.y = 0.0
-        imu_msg.linear_acceleration.z = 9.81  # Gravity
+        imu_msg.linear_acceleration.z = 0.0  # Gravity
         imu_msg.angular_velocity.x = 0.0
         imu_msg.angular_velocity.y = 0.0
         imu_msg.angular_velocity.z = 0.0
@@ -144,6 +149,7 @@ class TestRelativeMoveIntegration(unittest.TestCase):
         movement_cmd.command = MovementCommand.MOVE_RELATIVE
         movement_cmd.translation = Vector3(x=1.0, y=0.0, z=0.0)  # 1m forward
         movement_cmd.rotation = Vector3(x=0.0, y=0.0, z=0.0)     # No rotation
+        movement_cmd.duration = 5.0     # No rotation
         
         success = self.movement_client.send_movement_command(
             movement_cmd,
@@ -170,7 +176,7 @@ class TestRelativeMoveIntegration(unittest.TestCase):
         tolerance = 0.01  # 1cm tolerance
         
         self.assertAlmostEqual(relative_goal_pose.pose.position.x, expected_x, delta=tolerance,
-                              msg="Relative goal X should be 1m forward from initial position")
+                              msg=f"{relative_goal_pose.pose.position}Relative goal X should be 1m forward from initial position")
         self.assertAlmostEqual(relative_goal_pose.pose.position.y, initial_pose.pose.position.y, delta=tolerance,
                               msg="Relative goal Y should match initial position (no Y movement)")
         self.assertAlmostEqual(relative_goal_pose.pose.position.z, initial_pose.pose.position.z, delta=tolerance,

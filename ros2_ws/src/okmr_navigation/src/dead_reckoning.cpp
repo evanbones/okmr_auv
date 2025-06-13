@@ -75,7 +75,9 @@ class DeadReckoningNode : public rclcpp::Node{
         double alpha = 0.995;  //determines the ratio of accelerometer to gyroscope data in the estimated value 
         //TODO: make this a parameter
         //pitch and roll use a basic complemntary filter
-
+        
+        //the following filter is very jank and may look weird
+        //it converts the coordinate frame of the camera imu into ros2 format
         double ax = msg.linear_acceleration.z;
         double ay = -msg.linear_acceleration.x;
         double az = -msg.linear_acceleration.y;
@@ -90,6 +92,7 @@ class DeadReckoningNode : public rclcpp::Node{
             alpha = 0.995;
         }
 
+        //this is some kind of logic to try to fix weird flipping issues when the imu is upsidedown, although it doesnt work all that well
         if (az < 0) {  
             if (accel_pitch > 0) {
                 accel_pitch = M_PI - accel_pitch;
@@ -99,6 +102,12 @@ class DeadReckoningNode : public rclcpp::Node{
         }
         
         // Fix roll flipping when upside down
+        //
+        // The following filter works decently well when upright, 
+        // it compensates for drift from integrating the angular velocities
+        // by setting a small part of the pitch estimate to be from the accelerometer
+        // This works by taking the angle between the different accelerometer axes
+        // allowing us to estimate the angle the imu is facing just from the accelerometer data
         
         pitch = alpha * (pitch + angular_velocity_pitch * dt) + (1 - alpha) * accel_pitch;
         roll  = alpha * (roll + angular_velocity_roll * dt) + (1 - alpha) * accel_roll;
