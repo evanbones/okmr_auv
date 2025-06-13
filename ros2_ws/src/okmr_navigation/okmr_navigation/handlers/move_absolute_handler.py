@@ -33,6 +33,7 @@ def execute_absolute_movement(goal_handle, goal_pose):
     
     goal_publisher = node.create_publisher(GoalPose, '/current_goal_pose', 10)
     goal_publisher.publish(goal_pose)
+    node.destroy_publisher(goal_publisher)
     
     # Monitor execution with feedback
     start_time = node.get_clock().now()
@@ -46,7 +47,6 @@ def execute_absolute_movement(goal_handle, goal_pose):
             return result
 
         if goal_handle.is_cancel_requested:
-            node.get_logger().warn('absolute move command cancelled')
             # Send freeze command before canceling
             execute_freeze(goal_handle)
             goal_handle.canceled()

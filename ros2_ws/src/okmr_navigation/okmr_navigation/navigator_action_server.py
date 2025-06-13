@@ -68,10 +68,12 @@ class NavigatorActionServer(Node):
         return GoalResponse.ACCEPT
 
     def handle_accepted_callback(self, goal_handle):
+        #code for preemption found in:
+        # https://github.com/ros2/examples/blob/rolling/rclpy/actions/minimal_action_server/examples_rclpy_minimal_action_server/server_single_goal.py
+        #not sure why never mentioned in official tutorials?
         with self._goal_lock:
-            # This server only allows one goal at a time
             if self._goal_handle is not None and self._goal_handle.is_active:
-                self.get_logger().info('Aborting previous goal')
+                self.get_logger().warn('Aborting previous goal')
                 # Abort the existing goal
                 self._goal_handle.abort()
             self._goal_handle = goal_handle
@@ -80,7 +82,7 @@ class NavigatorActionServer(Node):
 
     def cancel_callback(self, goal_handle):
         """Accept all cancel requests."""
-        self.get_logger().info('Cancel request received')
+        self.get_logger().warn('Cancel request received')
         return CancelResponse.ACCEPT
 
     def execute_callback(self, goal_handle):

@@ -83,6 +83,7 @@ def execute_freeze(goal_handle):
     # Publish goal pose to freeze vehicle at current position (like absolute handler)
     goal_publisher = node.create_publisher(GoalPose, '/current_goal_pose', 10)
     goal_publisher.publish(freeze_goal_pose)
+    node.destroy_publisher(goal_publisher)
     
     node.get_logger().info("Freeze command sent - vehicle will hold current position")
     return True
