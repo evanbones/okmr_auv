@@ -1,6 +1,8 @@
 from okmr_msgs.action import Movement
 from okmr_msgs.msg import GoalPose
-from okmr_navigation.handlers.freeze_handler import send_freeze
+from okmr_msgs.srv import DistanceFromGoal
+from okmr_navigation.handlers.freeze_handler import execute_freeze
+import rclpy
 import time
 
 
@@ -26,7 +28,7 @@ def execute_absolute_movement(goal_handle, goal_pose):
     """
     node = goal_handle._action_server._node
     
-    # Update timestamp and publish goal pose to motor cortex
+    # Update timestamp and publish goal pose to topic
     goal_pose.header.stamp = node.get_clock().now().to_msg()
     
     goal_publisher = node.create_publisher(GoalPose, '/current_goal_pose', 10)
@@ -34,43 +36,52 @@ def execute_absolute_movement(goal_handle, goal_pose):
     
     # Monitor execution with feedback
     start_time = node.get_clock().now()
+
+    max_time = max(0.5, goal_handle.request.command_msg.duration)
     
     while True:
+        if not goal_handle.is_active:
+            result = Movement.Result()
+            result.debug_info = 'Movement command was preempted'
+            return result
+
         if goal_handle.is_cancel_requested:
+            node.get_logger().warn('absolute move command cancelled')
             # Send freeze command before canceling
-            send_freeze(goal_handle)
+            execute_freeze(goal_handle)
             goal_handle.canceled()
             result = Movement.Result()
             result.debug_info = 'Movement command was canceled and vehicle frozen'
             return result
         
-        # Check if we've reached the goal via distance_from_goal service
-        distance_from_goal = _check_distance_from_goal(node)
-        
         # Provide feedback
         feedback_msg = Movement.Feedback()
         feedback_msg.time_elapsed = (node.get_clock().now() - start_time).nanoseconds / 1e9
+        feedback_msg.completion_percentage = (feedback_msg.time_elapsed / max_time) * 100.0
         
-        if distance_from_goal <= goal_handle.request.command_msg:
+        # Check if we've reached the goal via distance_from_goal service
+        goal_distances = _call_distance_from_goal_service(node)
+        
+        #HOW WAS THIS GETTING CALLED AFTER ABORTIN??????
+        if goal_distances is not None and _is_translation_close_enough(goal_distances[0]) and _is_orientation_close_enough(goal_distances[1]):
             # Movement completed
-            goal_handle.succeed()
+            #goal_handle.succeed()
             result = Movement.Result()
             result.completion_time = feedback_msg.time_elapsed
             result.debug_info = f'Movement completed successfully in {feedback_msg.time_elapsed:.2f}s'
             return result
         
-        # Time-based completion estimation for now
-        feedback_msg.completion_percentage = min(100.0, (feedback_msg.time_elapsed / 10.0) * 100.0)
-        
         goal_handle.publish_feedback(feedback_msg)
-        time.sleep(0.1)
         
         # TODO: timeout should be after duration provided inside the MovementCommand Request
-        if feedback_msg.time_elapsed > 30.0:
+        if feedback_msg.time_elapsed >= max_time:
             goal_handle.abort()
             result = Movement.Result()
-            result.debug_info = 'Movement timed out after 30 seconds'
+            result.debug_info = f'Movement timed out after {max_time} seconds'
+            execute_freeze(goal_handle)
             return result
+        
+        time.sleep(0.1)#TODO set as param
 
 
 def execute_test_movement(goal_handle, distance):
@@ -102,8 +113,43 @@ def execute_test_movement(goal_handle, distance):
     return result
 
 
-def _check_distance_from_goal(node):
-    #create a client, send request, wait for result
-    return None
+def _call_distance_from_goal_service(node):
+    try:
+        client = node.create_client(DistanceFromGoal, 'distance_from_goal')
+        
+        # Wait for service to be available
+        if not client.wait_for_service(timeout_sec=2.0):
+            node.get_logger().error('distance_from_goal service not available after 2s timeout')
+            return None
+        
+        # Make the blocking service call
+        request = DistanceFromGoal.Request()
+        response = client.call(request, timeout_sec=2.0)
+        
+        # Return tuple of translation and orientation differences
+        if response is not None:
+            return (response.translation_differences, response.orientation_differences)
+        else:
+            node.get_logger().error('distance_from_goal service returned invalid response')
+            return None
+            
+    except Exception as e:
+        node.get_logger().error(f'Exception in _call_distance_from_goal_service: {str(e)}')
+        return None
+
+
+def _is_translation_close_enough(translation_vector, threshold = 0.1):
+    distance = (translation_vector.x**2 + translation_vector.y**2 + translation_vector.z**2)**0.5
+    return distance <= threshold
+
+
+def normalize_angle_deg(angle):
+    return (angle + 180) % 360 - 180
+
+def _is_orientation_close_enough(rpy_diff, threshold=5.0):
+    roll = normalize_angle_deg(rpy_diff.x)
+    pitch = normalize_angle_deg(rpy_diff.y)
+    yaw = normalize_angle_deg(rpy_diff.z)
+    return abs(roll) < threshold and abs(pitch) < threshold and abs(yaw) < threshold
 
     

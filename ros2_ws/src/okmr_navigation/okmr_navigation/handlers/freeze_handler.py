@@ -87,14 +87,6 @@ def execute_freeze(goal_handle):
     node.get_logger().info("Freeze command sent - vehicle will hold current position")
     return True
 
-
-def send_freeze(goal_handle):
-    """
-    Send freeze command for cancellation scenarios.
-    This is called by other handlers when they are canceled.
-    """
-    return execute_freeze(goal_handle)
-
 def test_handle_freeze(goal_handle):
     node = goal_handle._action_server._node
     start_time = node.get_clock().now()

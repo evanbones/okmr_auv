@@ -1,13 +1,15 @@
 #!/usr/bin/env python3
 
 import rclpy
-from rclpy.action import ActionServer
+
+from threading import Lock
+
+from rclpy.action import ActionServer, CancelResponse, GoalResponse
 from rclpy.node import Node
 from rclpy.executors import MultiThreadedExecutor
 
 from okmr_msgs.action import Movement
 from okmr_msgs.msg import MovementCommand
-import time
 
 from okmr_navigation.handlers.freeze_handler import *
 from okmr_navigation.handlers.move_relative_handler import *
@@ -27,11 +29,16 @@ class NavigatorActionServer(Node):
         self.declare_parameter('test_mode', True)
         #TODO CHANGE TO FALSE ONCE HARDWARE TESTING
         
+        self._goal_handle = None #this is the only goal handle allowed to run
+        self._goal_lock = Lock()
         self._action_server = ActionServer(
             self,
             Movement,
             'movement_command',
-            self.execute_callback
+            execute_callback=self.execute_callback,
+            cancel_callback=self.cancel_callback,
+            handle_accepted_callback=self.handle_accepted_callback,
+            goal_callback=self.goal_callback
         )
         
         self.COMMAND_HANDLERS = {
@@ -40,9 +47,7 @@ class NavigatorActionServer(Node):
             MovementCommand.MOVE_ABSOLUTE: handle_move_absolute,
             MovementCommand.SPIN_YAW: handle_spin_yaw,
             MovementCommand.BARREL_ROLL_PID: handle_barrel_roll_pid,
-            MovementCommand.BARREL_ROLL_THROTTLE: handle_barrel_roll_throttle,
             MovementCommand.LOOK_AT: handle_look_at,
-            MovementCommand.GO_TO_GATE: handle_go_to_gate,
         }
         
         self.TEST_COMMAND_HANDLERS = {
@@ -51,13 +56,32 @@ class NavigatorActionServer(Node):
             MovementCommand.MOVE_ABSOLUTE: test_handle_move_absolute,
             MovementCommand.SPIN_YAW: test_handle_spin_yaw,
             MovementCommand.BARREL_ROLL_PID: test_handle_barrel_roll_pid,
-            MovementCommand.BARREL_ROLL_THROTTLE: test_handle_barrel_roll_throttle,
             MovementCommand.LOOK_AT: test_handle_look_at,
-            MovementCommand.GO_TO_GATE: test_handle_go_to_gate,
         }
         
         test_mode = self.get_parameter('test_mode').value
         self.get_logger().info(f'Navigator Action Server started (test_mode: {test_mode})')
+
+    def goal_callback(self, goal_request):
+        """Accept new goals and allow preemption of existing goals."""
+        self.get_logger().info('New goal received')
+        return GoalResponse.ACCEPT
+
+    def handle_accepted_callback(self, goal_handle):
+        with self._goal_lock:
+            # This server only allows one goal at a time
+            if self._goal_handle is not None and self._goal_handle.is_active:
+                self.get_logger().info('Aborting previous goal')
+                # Abort the existing goal
+                self._goal_handle.abort()
+            self._goal_handle = goal_handle
+
+        goal_handle.execute()#i assume this works because the default handler just calls this anyway
+
+    def cancel_callback(self, goal_handle):
+        """Accept all cancel requests."""
+        self.get_logger().info('Cancel request received')
+        return CancelResponse.ACCEPT
 
     def execute_callback(self, goal_handle):
         requested_movement = goal_handle.request.command_msg

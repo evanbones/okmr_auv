@@ -12,18 +12,10 @@ def get_current_pose(parent_node):
             parent_node.get_logger().error('get_pose service not available after 2s timeout')
             return None
         
-        # Make the service call
+        # Make the blocking service call
         request = GetPose.Request()
-        future = client.call_async(request)
-        
-        rclpy.spin_until_future_complete(parent_node, future, timeout_sec=2.0)
-
-        if not future.done():
-            parent_node.get_logger().error('get_pose service call timed out')
-            return None
-
-        # Get the response
-        response = future.result()
+        response = client.call(request, timeout_sec=2.0)
+        #TODO: is this async call fine if we use multi threaded executor?
         
         # Check response and return pose
         if response is not None and hasattr(response, 'success') and response.success:

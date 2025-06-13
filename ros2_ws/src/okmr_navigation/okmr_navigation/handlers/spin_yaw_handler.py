@@ -1,5 +1,5 @@
 from okmr_msgs.action import Movement
-from okmr_navigation.handlers.freeze_handler import send_freeze
+from okmr_navigation.handlers.freeze_handler import execute_freeze
 import time
 
 
