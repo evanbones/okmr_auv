@@ -3,6 +3,7 @@
 import rclpy
 from rclpy.action import ActionServer
 from rclpy.node import Node
+from rclpy.executors import MultiThreadedExecutor
 
 from okmr_msgs.action import Movement
 from okmr_msgs.msg import MovementCommand
@@ -80,7 +81,9 @@ def main(args=None):
     navigator_action_server = NavigatorActionServer()
     
     try:
-        rclpy.spin(navigator_action_server)
+        executor = MultiThreadedExecutor()
+        executor.add_node(navigator_action_server)
+        executor.spin()
     except KeyboardInterrupt:
         pass
     finally:

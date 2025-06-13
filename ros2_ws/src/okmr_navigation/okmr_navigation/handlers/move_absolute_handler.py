@@ -102,9 +102,8 @@ def execute_test_movement(goal_handle, distance):
     return result
 
 
-def _check_motor_cortex_status(node):
-    """Helper to check motor cortex status"""
-    # TODO: Implement service call to motor_cortex_status
+def _check_distance_from_goal(node):
+    #create a client, send request, wait for result
     return None
 
     
