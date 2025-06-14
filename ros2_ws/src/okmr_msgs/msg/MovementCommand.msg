@@ -72,6 +72,9 @@ int32 LOOK_AT = 6
     #possibly useful for gripper, torpedo, dropper tasks
     #how to do this kind of thing with the bottom facing camera?
 
+int32 SET_DEPTH = 7
+    #go down dont #sink
+
 
 
 
