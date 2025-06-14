@@ -247,7 +247,7 @@ class BaseStateMachine(Machine):
                 self.ros_node.destroy_publisher(pub)
             except:
                 pass
-        self._subscriptions.clear()
+        self._publishers.clear()
 
     def cleanup_ros2_timers(self):
         for name in self._timers:
