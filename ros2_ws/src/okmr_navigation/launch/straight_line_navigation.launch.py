@@ -11,15 +11,11 @@ def generate_launch_description():
         ),
         Node(
             package='okmr_navigation',
-            executable='navigator',
-            remappings=[
-                ('/end_goal_pose', '/current_goal_pose'),
-                #remapping so that the navigator outputs current goal pose directly to motor_cortex
-            ],
+            executable='navigator_action_server',
         ),
         Node(
             package='okmr_navigation',
-            executable='motor_cortex',
+            executable='relative_pose_target_server',
         ),
-       ])
+])
 

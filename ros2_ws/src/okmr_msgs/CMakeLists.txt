@@ -13,6 +13,7 @@ find_package(geometry_msgs REQUIRED)
 find_package(std_msgs REQUIRED)
 
 rosidl_generate_interfaces(${PROJECT_NAME}
+    msg/BatteryVoltage.msg
     msg/ImageWithPose.msg
     msg/GoalPose.msg
     msg/SensorReading.msg
@@ -25,8 +26,11 @@ rosidl_generate_interfaces(${PROJECT_NAME}
     srv/Vg2pc.srv
     srv/Matching.srv
     srv/Status.srv
+    srv/GetPose.srv
+    srv/DistanceFromGoal.srv
     msg/VoxelGrid.msg
     msg/Classes.msg
+    action/Movement.action
   DEPENDENCIES sensor_msgs geometry_msgs std_msgs)
 
 if(BUILD_TESTING)

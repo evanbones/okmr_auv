@@ -1,3 +1,7 @@
-bool copy_orientation #determines if the auv should copy the goalPose orientation once it gets close enough to the destination
+bool copy_orientation 
+#determines if the goalPose orientation should be copied
+#if false, only translation is set as a goal
+
 geometry_msgs/Pose pose
+
 std_msgs/Header header

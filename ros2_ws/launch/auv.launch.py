@@ -8,10 +8,12 @@ def generate_launch_description():
     #
     # As you go down the file, the launch sub-files are roughly organized like this:
     #
-    # L3: High Level Control,       (Automated Planner, Navigator)
-    # L2: Mid level control         (Motion Planner, Mapping Systems, Object Detection)
-    # L1: Low Level Control         (PID, Inverse Kinematics)
-    # L0: Hardware Interaction      (Motor Outputs, DVL Driver, Camera Drivers)
+    # L5 = Mission Plan (e.g., root state machaine in Automated Planner) < 1hz
+    # L4 = Behavior Logic (specific task state machines)
+    # L3 = Action Coordinators and Perception (navigator, mapper, object detection)
+    # L2 = PID manager and Action Executors ~50hz
+    # L1 = PID controllers and Arm Controller ~100hz
+    # L0 = hardware I/O (motor/sensor interfaces) ~200hz
 
     automated_planning_dir = PathJoinSubstitution([FindPackageShare('okmr_automated_planning'), 'launch'])
     controls_dir = PathJoinSubstitution([FindPackageShare('okmr_controls'), 'launch'])

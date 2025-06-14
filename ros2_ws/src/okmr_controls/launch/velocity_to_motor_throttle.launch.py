@@ -15,10 +15,10 @@ def generate_launch_description():
         Node(
             package='okmr_controls',
             executable='pid',
-            name='yaw_pid_controller',
+            name='yaw_rate_pid_controller',
             remappings=[
-                ('/PID/XXX/target', '/PID/yaw/target'),
-                ('/PID/XXX/actual', '/PID/yaw/actual'),
+                ('/PID/XXX/target', '/PID/yaw_rate/target'),
+                ('/PID/XXX/actual', '/PID/yaw_rate/actual'),
                 ('/PID_correction/XXX', '/PID_correction/yaw')
             ],
             parameters=[pid_config]
@@ -26,10 +26,10 @@ def generate_launch_description():
         Node(
             package='okmr_controls',
             executable='pid',
-            name='pitch_pid_controller',
+            name='pitch_rate_pid_controller',
             remappings=[
-                ('/PID/XXX/target', '/PID/pitch/target'),
-                ('/PID/XXX/actual', '/PID/pitch/actual'),
+                ('/PID/XXX/target', '/PID/pitch_rate/target'),
+                ('/PID/XXX/actual', '/PID/pitch_rate/actual'),
                 ('/PID_correction/XXX', '/PID_correction/pitch')
             ],
             parameters=[pid_config]
@@ -37,10 +37,10 @@ def generate_launch_description():
         Node(
             package='okmr_controls',
             executable='pid',
-            name='roll_pid_controller',
+            name='roll_rate_pid_controller',
             remappings=[
-                ('/PID/XXX/target', '/PID/roll/target'),
-                ('/PID/XXX/actual', '/PID/roll/actual'),
+                ('/PID/XXX/target', '/PID/roll_rate/target'),
+                ('/PID/XXX/actual', '/PID/roll_rate/actual'),
                 ('/PID_correction/XXX', '/PID_correction/roll')
             ],
             parameters=[pid_config]

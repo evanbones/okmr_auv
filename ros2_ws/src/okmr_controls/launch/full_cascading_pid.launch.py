@@ -15,7 +15,7 @@ def generate_launch_description():
         ),
         
         IncludeLaunchDescription(
-           PathJoinSubstitution([controls_dir, 'position_to_velocity.launch.py'])
+           PathJoinSubstitution([controls_dir, 'pose_to_velocity.launch.py'])
         ),
 
         Node(
