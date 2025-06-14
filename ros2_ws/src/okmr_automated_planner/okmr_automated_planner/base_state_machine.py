@@ -225,7 +225,7 @@ class BaseStateMachine(Machine):
         self._clients.append({service_name: cli})
         return cli
 
-    def send_service_request(service_type, service_name, srv_msg, done_callback):
+    def send_service_request(self, service_type, service_name, srv_msg, done_callback):
         cli = None
         if service_name in self._clients:
             cli = self._clients[service_name]
