@@ -5,6 +5,6 @@ class StateNode(State):
     def __init__(self, name, timeout=-1, sub_machine=None):
         super().__init__(name=name)
         self.timeout = timeout
-        self.sub_machine = sub_machine #Referance to a BaseStateMachine
+        self.sub_machine = sub_machine #Reference to a BaseStateMachine
 
     
