@@ -205,7 +205,7 @@ class BaseStateMachine(Machine):
         matching_pubs = [pub for pub in self._publishers if pub.topic_name == topic_name or pub.topic_name == "/" + topic_name]
         pub = None
         if len(matching_pubs) > 0:
-            pub = self._publishers[topic_name]
+            pub = self.matching_pubs[0]
         else:
             pub = self.add_publisher(msg_type, topic_name)
         pub.publish(msg)
