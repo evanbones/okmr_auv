@@ -202,7 +202,7 @@ class BaseStateMachine(Machine):
         return pub
 
     def publish_on_topic(self, msg_type, topic_name, msg):
-        matching_pubs = [pub for pub in self._publishers if pub.topic_name == topic or pub.topic_name == "/" + topic]
+        matching_pubs = [pub for pub in self._publishers if pub.topic_name == topic_name or pub.topic_name == "/" + topic_name]
         pub = None
         if len(matching_pubs) > 0:
             pub = self._publishers[topic_name]
