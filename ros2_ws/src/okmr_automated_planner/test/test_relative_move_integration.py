@@ -77,6 +77,12 @@ class TestRelativeMoveIntegration(unittest.TestCase):
         # Reset callback tracking for each test
         self.success_called = False
         self.failure_called = False
+        self.acceptance_called = False
+        self.rejection_called = False
+        self.first_goal_success = False
+        self.first_goal_failure = False
+        self.second_goal_success = False
+        self.second_goal_failure = False
         
         # Wait for services to be available
         self.assertTrue(self.get_pose_client.wait_for_service(timeout_sec=15.0))
@@ -261,6 +267,8 @@ class TestRelativeMoveIntegration(unittest.TestCase):
         movement_cmd.command = MovementCommand.MOVE_RELATIVE
         movement_cmd.translation = Vector3(x=0.1, y=0.0, z=0.0)  # Small movement
         movement_cmd.rotation = Vector3(x=0.0, y=0.0, z=0.0)
+        movement_cmd.radius_of_acceptance = 0.15
+        movement_cmd.duration = 10.0
         
         success = self.movement_client.send_movement_command(
             movement_cmd,
@@ -280,12 +288,106 @@ class TestRelativeMoveIntegration(unittest.TestCase):
             rclpy.spin_once(self.node, timeout_sec=0.1)
         
         # Check that one of the callbacks was called
-        self.assertTrue(self.success_called or self.failure_called, 
-                       "Either success or failure callback should be called")
+        self.assertTrue(self.success_called, 
+                       "success callback should be called")
         
         # Movement should no longer be active after completion
         self.assertFalse(self.movement_client.is_movement_active(), 
                         "Movement should not be active after completion")
+    
+    def test_goal_preemption_callback_behavior(self):
+        """Test that old goal callbacks are not called when goals are preempted"""
+        # Initialize with IMU data
+        self.publish_imu_data(duration=2.0)
+        
+        # Reset callback state
+        self.first_goal_success = False
+        self.first_goal_failure = False
+        self.second_goal_success = False
+        self.acceptance_called = False
+        
+        # Create first movement command that won't be reached (large movement)
+        first_cmd = MovementCommand()
+        first_cmd.command = MovementCommand.MOVE_RELATIVE
+        first_cmd.translation = Vector3(x=100.0, y=0.0, z=0.0)  # 100m forward - won't reach
+        first_cmd.rotation = Vector3(x=0.0, y=0.0, z=0.0)
+        
+        # Send first command
+        success = self.movement_client.send_movement_command(
+            first_cmd,
+            on_success=self.on_first_goal_success,
+            on_failure=self.on_first_goal_failure,
+            on_acceptance=self.on_acceptance_callback,
+            on_rejection=self.on_rejection_callback
+        )
+        
+        self.assertTrue(success, "First movement command should be sent successfully")
+        
+        # Wait for first goal to be accepted
+        timeout = 10.0
+        start_time = time.time()
+        while not self.acceptance_called and (time.time() - start_time) < timeout:
+            rclpy.spin_once(self.node, timeout_sec=0.1)
+        
+        self.assertTrue(self.acceptance_called, "First goal should be accepted")
+        
+        # Small delay to let first goal start executing
+        time.sleep(0.5)
+        
+        # Send second command to preempt
+        second_cmd = MovementCommand()
+        second_cmd.command = MovementCommand.MOVE_RELATIVE
+        second_cmd.translation = Vector3(x=100.0, y=0.0, z=0.0)
+        second_cmd.rotation = Vector3(x=0.0, y=0.0, z=0.0)
+        
+        # Reset acceptance flag for second goal
+        self.acceptance_called = False
+        
+        success = self.movement_client.send_movement_command(
+            second_cmd,
+            on_success=self.on_second_goal_success,
+            on_failure=self.on_second_goal_failure,
+            on_acceptance=self.on_acceptance_callback,
+            on_rejection=self.on_rejection_callback
+        )
+        
+        self.assertTrue(success, "Second movement command should be sent successfully")
+        
+        # Wait to check if first goal callback arrives
+        timeout = 1.0
+        start_time = time.time()
+        while (not self.second_goal_success and not self.second_goal_failure and
+               (time.time() - start_time) < timeout):
+            rclpy.spin_once(self.node, timeout_sec=0.1)
+        
+        # Verify that only the second goal's success callback was called
+        self.assertFalse(self.first_goal_success, "First goal SUCCESS callback should NOT be called due to preemption")
+        self.assertFalse(self.first_goal_failure, "First goal FAILURE callback should NOT be called due to preemption")
+        self.assertFalse(self.movement_client.is_movement_active(), "Movement should not be active after completion")
+    
+    def on_acceptance_callback(self):
+        """Callback for goal acceptance"""
+        self.acceptance_called = True
+    
+    def on_rejection_callback(self):
+        """Callback for goal rejection"""
+        self.rejection_called = True
+    
+    def on_first_goal_success(self):
+        """Callback for first goal success - should NOT be called due to preemption"""
+        self.first_goal_success = True
+    
+    def on_first_goal_failure(self):
+        """Callback for first goal failure - should NOT be called due to preemption"""
+        self.first_goal_failure = True
+    
+    def on_second_goal_success(self):
+        """Callback for second goal success - should be called"""
+        self.second_goal_success = True
+    
+    def on_second_goal_failure(self):
+        """Callback for second goal failure"""
+        self.second_goal_failure = True
     
     def test_relative_move_without_pose_service_fails(self):
         """Test that relative move fails gracefully when get_pose service fails"""

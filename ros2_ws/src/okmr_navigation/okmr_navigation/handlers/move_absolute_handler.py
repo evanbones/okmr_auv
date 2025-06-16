@@ -63,9 +63,10 @@ def execute_absolute_movement(goal_handle, goal_pose):
         goal_distances = _call_distance_from_goal_service(node)
         
         #HOW WAS THIS GETTING CALLED AFTER ABORTIN??????
-        if goal_distances is not None and _is_translation_close_enough(goal_distances[0]) and _is_orientation_close_enough(goal_distances[1]):
+        radius = goal_handle.request.command_msg.radius_of_acceptance
+        if goal_distances is not None and _is_translation_close_enough(goal_distances[0], radius) and _is_orientation_close_enough(goal_distances[1]):
             # Movement completed
-            #goal_handle.succeed()
+            goal_handle.succeed()
             result = Movement.Result()
             result.completion_time = feedback_msg.time_elapsed
             result.debug_info = f'Movement completed successfully in {feedback_msg.time_elapsed:.2f}s'

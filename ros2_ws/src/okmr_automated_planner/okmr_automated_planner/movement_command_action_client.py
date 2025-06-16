@@ -26,12 +26,18 @@ class MovementCommandActionClient:
         self.current_goal_handle: Optional[ClientGoalHandle] = None
         self.on_success_callback: Optional[Callable[[], None]] = None
         self.on_failure_callback: Optional[Callable[[], None]] = None
+        self.on_acceptance_callback: Optional[Callable[[], None]] = None
+        self.on_rejection_callback: Optional[Callable[[], None]] = None
+        self.on_cancel_acceptance_callback: Optional[Callable[[], None]] = None
+        self.on_cancel_rejection_callback: Optional[Callable[[], None]] = None
         self.is_active = False
         
     def send_movement_command(self, 
                             movement_command: MovementCommand,
-                            on_success: Callable[[], None],
-                            on_failure: Callable[[], None]) -> bool:
+                            on_success: Optional[Callable[[], None]] = None,
+                            on_failure: Optional[Callable[[], None]] = None,
+                            on_acceptance: Optional[Callable[[], None]] = None,
+                            on_rejection: Optional[Callable[[], None]] = None) -> bool:
         """
         Send a movement command action request.
         
@@ -43,18 +49,21 @@ class MovementCommandActionClient:
         Returns:
             bool: True if action was sent successfully, False otherwise
         """
-        if self.is_active:
-            self.node.get_logger().warn("Movement already in progress, cancelling previous movement")
-            self.cancel_movement()
-            
+        self._cleanup_current_action() #cleanup to ensure no residual callbacks leftover
+        #just in case we send a movement command while one is already running
+        #double check that when we preempt a currently running command that 
+        #self._goal_result_callback isnt called when the previous goal is aborted
+
         # Wait for action server
-        if not self.action_client.wait_for_server(timeout_sec=5.0):
+        if not self.action_client.wait_for_server(timeout_sec=2.0):
             self.node.get_logger().error("Movement action server not available")
             return False
             
         # Store callbacks
         self.on_success_callback = on_success
         self.on_failure_callback = on_failure
+        self.on_acceptance_callback = on_acceptance
+        self.on_rejection_callback = on_rejection
         
         # Create goal
         goal = Movement.Goal()
@@ -67,11 +76,17 @@ class MovementCommandActionClient:
         self.is_active = True
         return True
     
-    def cancel_movement(self) -> None:
+    def cancel_movement(self, 
+                        on_cancel_acceptance: Optional[Callable[[], None]] = None,
+                        on_cancel_rejection: Optional[Callable[[], None]] = None) -> bool:
         """
         Cancel the current movement. The action server will handle freeze logic.
         This will cancel the current action goal if one is active.
         """
+
+        self.on_cancel_acceptance_callback = on_cancel_acceptance
+        self.on_cancel_rejection_callback = on_cancel_rejection
+
         if self.current_goal_handle is not None and self.is_active:
             self.node.get_logger().info("Cancelling current movement action")
             cancel_future = self.current_goal_handle.cancel_goal_async()
@@ -95,10 +110,11 @@ class MovementCommandActionClient:
         goal_handle = future.result()
         if not goal_handle.accepted:
             self.node.get_logger().error("Movement goal was rejected")
-            self._handle_failure()
+            self._handle_rejection()
             return
             
         self.node.get_logger().info("Movement goal accepted")
+        self._handle_acceptance()
         self.current_goal_handle = goal_handle
         
         # Get the result
@@ -109,6 +125,9 @@ class MovementCommandActionClient:
         """Handle the final result from the action."""
         result = future.result().result
         status = future.result().status
+
+        # Note: No need to check goal_id because preempted goals don't get result callbacks
+        # The action server ensures only active goals complete with results
         
         self.node.get_logger().info(f"Movement completed with status: {status}")
         self.node.get_logger().info(f"Debug info: {result.debug_info}")
@@ -123,8 +142,10 @@ class MovementCommandActionClient:
         cancel_response = future.result()
         if cancel_response.return_code == 0:  # ACCEPT
             self.node.get_logger().info("Movement cancellation accepted")
+            self._handle_cancel_acceptance()
         else:
             self.node.get_logger().warn(f"Movement cancellation failed with code: {cancel_response.return_code}")
+            self._handle_cancel_rejection()
     
     def _handle_success(self):
         """Handle successful movement completion."""
@@ -143,12 +164,54 @@ class MovementCommandActionClient:
             except Exception as e:
                 self.node.get_logger().error(f"Error in failure callback: {e}")
         self._cleanup_current_action()
+
+    def _handle_acceptance(self):
+        """Handle a movement request being accepted"""
+        if self.on_acceptance_callback:
+            try:
+                self.on_acceptance_callback()
+            except Exception as e:
+                self.node.get_logger().error(f"Error in acceptance callback: {e}")
     
+    def _handle_rejection(self):
+        """Handle a movement request being rejected""" 
+        if self.on_rejection_callback:
+            try:
+                self.on_rejection_callback()
+                #goals should always be accepted, so if it was rejected, something is up, 
+                #should probably abort the state machine
+            except Exception as e:
+                self.node.get_logger().error(f"Error in rejection callback: {e}")
+        self._cleanup_current_action()#cleanup because we dont want anything else to happen after rejection
+        #assume that if we sent a request, we want that one to override anything else, even if it was rejected
+
+    def _handle_cancel_acceptance(self):
+        """Handle a cancel request being accepted""" 
+        if self.on_cancel_acceptance_callback:
+            try:
+                self.on_cancel_acceptance_callback()
+            except Exception as e:
+                self.node.get_logger().error(f"Error in cancel acceptance callback: {e}")
+        self._cleanup_current_action()#cleanup because we dont care about the result anymore
+
+    def _handle_cancel_rejection(self):
+        """Handle a cancel request being rejected""" 
+        if self.on_cancel_rejection_callback:
+            try:
+                self.on_cancel_rejection_callback()
+            except Exception as e:
+                self.node.get_logger().error(f"Error in cancel rejection callback: {e}")
+        #dont cleanup because the action may still complete
+
     def _cleanup_current_action(self):
         """Clean up the current action state."""
         self.current_goal_handle = None
         self.on_success_callback = None
         self.on_failure_callback = None
+        self.on_acceptance_callback = None
+        self.on_rejection_callback = None
+        self.on_cancel_acceptance_callback = None
+        self.on_cancel_rejection_callback = None
         self.is_active = False
     
     def cleanup(self):

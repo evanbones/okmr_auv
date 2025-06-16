@@ -138,7 +138,7 @@ class BaseStateMachine(Machine):
         self.ros_node.get_logger().info(f"Post State Change \t Machine: {self.machine_name} \t To: {self.state}")
 
     def warn_auto_queued_method(self):
-        queued_func_name = "lost_in_the_sauce"
+        queued_func_name = None
         try:
             queued_func_name = self.queued_method.func.__self__.name
         except:

@@ -197,8 +197,8 @@ class TestFreezeIntegration(unittest.TestCase):
             rclpy.spin_once(self.node, timeout_sec=0.1)
         
         # Check that one of the callbacks was called
-        self.assertTrue(self.success_called or self.failure_called, 
-                       "Either success or failure callback should be called")
+        self.assertTrue(self.success_called, 
+                       "success callback should be called")
         
         # Movement should no longer be active after completion
         self.assertFalse(self.movement_client.is_movement_active(), 

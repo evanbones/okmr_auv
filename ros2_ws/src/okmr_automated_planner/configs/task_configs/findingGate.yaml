@@ -4,7 +4,7 @@ findingGate:
     - { name: scanningCCW }
 
   transitions:
-    - { trigger: gateDetectionOn, source: initialized, dest: scanningCW }
+    - { trigger: exitInitialized, source: initialized, dest: scanningCW }
     - { trigger: scanningCWDone, source: scanningCW, dest: scanningCCW }  #
     - { trigger: scanningCCWDone, source: scanningCCW, dest: scanningCW } # these 2 will loop until timeout
     - { trigger: foundGate, source: '*', dest: done }
