@@ -23,9 +23,10 @@ class StateMachineFactory:
         full_config_path = config_yaml
         if config_base_path:
             full_config_path = os.path.join(config_base_path, config_yaml)
-            ros_node.get_logger().info(f"Using full config path: {full_config_path}")
+            ros_node.get_logger().debug(f"Using full config path: {full_config_path}")
             
         if not os.path.exists(full_config_path):
+            ros_node.get_logger().fatal(f"Config file not found: {full_config_path}")
             raise ValueError(f"Config file not found: {full_config_path}")
             
         # Parse the configuration file
@@ -60,14 +61,28 @@ class StateMachineFactory:
         # Create the appropriate machine instance based on name
         machine_instance = None
         if machine_name == "root":
-            machine_instance = state_machines.MasterStateMachine(
+            machine_instance = state_machines.RootStateMachine(
                 name=machine_name,
                 ros_node=ros_node,
                 states=state_objects,
                 transitions=transitions
             )
-        elif machine_name == "findingGate":
+        elif machine_name == "finding_gate":
             machine_instance = state_machines.FindingGateStateMachine(
+                name=machine_name,
+                ros_node=ros_node,
+                states=state_objects,
+                transitions=transitions
+            )
+        elif machine_name == "finding_marker":
+            machine_instance = state_machines.FindingMarkerStateMachine(
+                name=machine_name,
+                ros_node=ros_node,
+                states=state_objects,
+                transitions=transitions
+            )
+        elif machine_name == "doing_gate_task":
+            machine_instance = state_machines.DoingGateTaskStateMachine(
                 name=machine_name,
                 ros_node=ros_node,
                 states=state_objects,

@@ -7,15 +7,15 @@ class FindingMarkerStateMachine(BaseStateMachine):
 
     def on_enter_initializing(self):
         # start up object detection model
-        self.queued_method = self.initializingDone
+        self.queued_method = self.initializing_done
         pass
 
     def on_enter_initialized(self):
         # add callback waiting for gateFound
-        self.queued_method = self.gateDetectionOn
+        self.queued_method = self.marker_detection_on
         pass
 
-    def on_enter_scanningCW(self):
+    def on_enter_scanning_cw(self):
         movement_msg = MovementCommand()
         movement_msg.command = MovementCommand.SPIN
         movement_msg.rotation_speed = 30.0 #30 deg / sec
@@ -24,7 +24,7 @@ class FindingMarkerStateMachine(BaseStateMachine):
         
         success = self.movement_client.send_movement_command(
             movement_msg,
-            on_success=self.scanningCWDone,
+            on_success=self.scanning_cw_done,
             on_failure=self.handle_movement_failure
         )
         
@@ -32,7 +32,7 @@ class FindingMarkerStateMachine(BaseStateMachine):
             self.ros_node.get_logger().error("Failed to send scanning CW movement command")
             self.abort()
 
-    def on_enter_scanningCCW(self):
+    def on_enter_scanning_ccw(self):
         movement_msg = MovementCommand()
         movement_msg.command = MovementCommand.SPIN
         movement_msg.rotation_speed = -30.0 #-30 deg / sec (counter-clockwise)
@@ -40,7 +40,7 @@ class FindingMarkerStateMachine(BaseStateMachine):
         
         success = self.movement_client.send_movement_command(
             movement_msg,
-            on_success=self.scanningCCWDone,
+            on_success=self.scanning_ccw_done,
             on_failure=self.handle_movement_failure
         )
         
@@ -53,7 +53,7 @@ class FindingMarkerStateMachine(BaseStateMachine):
         self.ros_node.get_logger().error("Movement action failed")
         self.abort()
     
-    def on_enter_settingDepth(self):
+    def on_enter_setting_depth(self):
         movement_msg = MovementCommand()
         movement_msg.command = MovementCommand.SET_DEPTH
         movement_msg.depth = 1.0
@@ -61,7 +61,7 @@ class FindingMarkerStateMachine(BaseStateMachine):
 
         success = self.movement_client.send_movement_command(
             movement_msg,
-            on_success=self.settingDepthDone,
+            on_success=self.setting_depth_done,
             on_failure=self.handle_movement_failure
         )
 

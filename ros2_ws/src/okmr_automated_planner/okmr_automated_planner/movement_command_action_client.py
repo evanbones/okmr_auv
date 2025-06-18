@@ -57,7 +57,7 @@ class MovementCommandActionClient:
         #self._goal_result_callback isnt called when the previous goal is aborted
 
         # Wait for action server
-        if not self.action_client.wait_for_server(timeout_sec=2.0):
+        if not self.action_client.wait_for_server(timeout_sec=0.5):
             self.node.get_logger().error("Movement action server not available")
             return False
             

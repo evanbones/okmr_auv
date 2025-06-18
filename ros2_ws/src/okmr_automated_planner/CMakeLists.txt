@@ -12,8 +12,8 @@ find_package(ament_cmake_python REQUIRED)
 ament_python_install_package(${PROJECT_NAME})
 
 install(
-  DIRECTORY configs/
-  DESTINATION share/${PROJECT_NAME}/configs
+  DIRECTORY state_machine_configs/
+  DESTINATION share/${PROJECT_NAME}/state_machine_configs
 )
 
 install(

@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypename="ROS2 Package Format 3"?>
+<package format="3">
+  <name>okmr_utils</name>
+  <version>0.0.0</version>
+  <description>Utility functions and helpers for OKMR AUV project</description>
+  <maintainer email="todo@todo.todo">TODO</maintainer>
+  <license>TODO: License declaration</license>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+  <buildtool_depend>ament_cmake_python</buildtool_depend>
+
+  <test_depend>ament_lint_auto</test_depend>
+  <test_depend>ament_lint_common</test_depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>

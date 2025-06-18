@@ -1,7 +1,7 @@
 from launch import LaunchDescription
 from launch_ros.actions import Node
-from launch.substitutions import LaunchConfiguration, EnvironmentVariable
-from launch.actions import DeclareLaunchArgument, SetEnvironmentVariable
+from launch.substitutions import LaunchConfiguration, EnvironmentVariable, PathJoinSubstitution, PythonExpression
+from launch.actions import DeclareLaunchArgument, SetEnvironmentVariable, GroupAction
 from ament_index_python.packages import get_package_share_directory
 import os
 
@@ -24,22 +24,42 @@ def generate_launch_description():
         description='Folder to use for configs within the share. Default is dev'
     )
     
-    master_config_arg = DeclareLaunchArgument(
-        'master_config',
-        default_value='master.yaml',
-        description='Name of the master configuration file (relative to config_base_path/config_folder)'
+    root_config_arg = DeclareLaunchArgument(
+        'root_config',
+        default_value='root.yaml',
+        description='Name of the root configuration file (relative to config_base_path/config_folder)'
     )
-    
+
+    param_file_arg = DeclareLaunchArgument(
+        'param_file',
+        default_value='params.yaml',
+        description='Name of the ros2 parameter file defining settings for state machines(relative to config_base_path/config_folder)'
+    )
+
+    debug_arg = DeclareLaunchArgument(
+        'debug',
+        default_value='false',
+        description='Enable debug logging for automated_planner node'
+    )
+        
     # Create the automated planner node
     automated_planner_node = Node(
         package='okmr_automated_planner',
         executable='automated_planner',
         name='automated_planner',
         parameters=[
-            {'config_base_path':  os.path.join(LaunchConfiguration('config_share_path'), LaunchConfiguration('config_folder'))},
-            {'master_config': LaunchConfiguration('master_config')}
+            {'config_base_path': PathJoinSubstitution([LaunchConfiguration('config_share_path'), LaunchConfiguration('config_folder')])},
+            {'root_config': LaunchConfiguration('root_config')},
+            PathJoinSubstitution([LaunchConfiguration('config_share_path'), LaunchConfiguration('config_folder'), LaunchConfiguration('param_file')])
         ],
-        output='screen'
+        output='screen',
+        ros_arguments=[
+            '--log-level', 
+            PythonExpression(['"debug" if "', LaunchConfiguration('debug'), '" == "true" else "info"']),
+            '--log-level', 'rcl:=warn',  # Suppress noisy RCL debug messages
+            '--log-level', 'rcl_action:=warn',  # Suppress RCL action client messages
+            '--log-level', 'rmw_fastrtps_cpp:=warn'  # Suppress FastRTPS sub topic messages
+        ]
     )
     
     # Set colorized output for better log readability
@@ -51,7 +71,10 @@ def generate_launch_description():
     # Return the launch description
     return LaunchDescription([
         colorized_output,
-        config_base_path_arg,
-        master_config_arg,
+        config_share_path_arg,
+        config_folder_arg,
+        param_file_arg,
+        root_config_arg,
+        debug_arg,
         automated_planner_node
     ])
