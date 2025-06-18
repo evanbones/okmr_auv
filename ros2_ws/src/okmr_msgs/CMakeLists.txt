@@ -16,6 +16,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
     msg/BatteryVoltage.msg
     msg/ImageWithPose.msg
     msg/GoalPose.msg
+    msg/GoalVelocity.msg
     msg/SensorReading.msg
     msg/MovementCommand.msg
     msg/MotorThrottle.msg

@@ -1,0 +1,12 @@
+findingMarker:
+  states:
+    - { name: scanningCW }
+    - { name: scanningCCW }
+    - { name: settingDepth }
+
+  transitions:
+    - { trigger: markerDetectionOn, source: initialized, dest: settingDepth}
+    - { trigger: settingDepthDone, source: settingDepth, dest: scanningCW }  
+    - { trigger: scanningCWDone, source: scanningCW, dest: scanningCCW } 
+    - { trigger: scanningCCWDone, source: scanningCCW, dest: scanningCW } # these 2 will loop until timeout
+    - { trigger: foundMarker, source: '*', dest: done }

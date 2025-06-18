@@ -1,0 +1,20 @@
+findingGate:
+  states:
+    - { name: scanningCW }
+    - { name: scanningCCW }
+    - { name: initializeLookingAtGate }
+    - { name: lookingAtGate }
+    - { name: validatingGateFound }
+    - { name: integratingGateData }
+
+  transitions:
+    - { trigger: exitInitialized, source: initialized, dest: scanningCW }
+    - { trigger: scanningCWDone, source: scanningCW, dest: scanningCCW }
+    - { trigger: scanningCCWDone, source: scanningCCW, dest: scanningCW }
+    - { trigger: lookAtGate, source: '*', dest: initializeLookingAtGate }
+    - { trigger: initializeLookingAtGateDone, source: initializeLookingAtGate, dest: lookingAtGate }
+    - { trigger: lookingAtGateDone, source: lookingAtGate, dest: validatingGateFound }
+    - { trigger: resumingScanningCW, source: validatingGateFound, dest: scanningCW }
+    - { trigger: resumingScanningCCW, source: validatingGateFound, dest: scanningCCW }
+    - { trigger: gateFound, source: validatingGateFound, dest: integratingGateData }
+    - { trigger: integratingGateDataDone, source: integratingGateData, dest: done }

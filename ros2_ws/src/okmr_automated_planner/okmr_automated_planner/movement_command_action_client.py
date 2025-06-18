@@ -30,6 +30,7 @@ class MovementCommandActionClient:
         self.on_rejection_callback: Optional[Callable[[], None]] = None
         self.on_cancel_acceptance_callback: Optional[Callable[[], None]] = None
         self.on_cancel_rejection_callback: Optional[Callable[[], None]] = None
+        self.on_feedback_callback: Optional[Callable[[object], None]] = None
         self.is_active = False
         
     def send_movement_command(self, 
@@ -37,7 +38,8 @@ class MovementCommandActionClient:
                             on_success: Optional[Callable[[], None]] = None,
                             on_failure: Optional[Callable[[], None]] = None,
                             on_acceptance: Optional[Callable[[], None]] = None,
-                            on_rejection: Optional[Callable[[], None]] = None) -> bool:
+                            on_rejection: Optional[Callable[[], None]] = None,
+                            on_feedback: Optional[Callable[[object], None]] = None) -> bool:
         """
         Send a movement command action request.
         
@@ -64,6 +66,7 @@ class MovementCommandActionClient:
         self.on_failure_callback = on_failure
         self.on_acceptance_callback = on_acceptance
         self.on_rejection_callback = on_rejection
+        self.on_feedback_callback = on_feedback
         
         # Create goal
         goal = Movement.Goal()
@@ -117,6 +120,10 @@ class MovementCommandActionClient:
         self._handle_acceptance()
         self.current_goal_handle = goal_handle
         
+        # Set up feedback callback if provided
+        if self.on_feedback_callback:
+            goal_handle.get_feedback_async(self._feedback_callback)
+        
         # Get the result
         get_result_future = goal_handle.get_result_async()
         get_result_future.add_done_callback(self._get_result_callback)
@@ -136,6 +143,14 @@ class MovementCommandActionClient:
             self._handle_success()
         else:
             self._handle_failure()
+    
+    def _feedback_callback(self, feedback_msg):
+        """Handle feedback from the action server."""
+        if self.on_feedback_callback:
+            try:
+                self.on_feedback_callback(feedback_msg.feedback)
+            except Exception as e:
+                self.node.get_logger().error(f"Error in feedback callback: {e}")
     
     def _cancel_response_callback(self, future):
         """Handle the response to a cancel request."""
@@ -212,6 +227,7 @@ class MovementCommandActionClient:
         self.on_rejection_callback = None
         self.on_cancel_acceptance_callback = None
         self.on_cancel_rejection_callback = None
+        self.on_feedback_callback = None
         self.is_active = False
     
     def cleanup(self):

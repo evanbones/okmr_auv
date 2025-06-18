@@ -6,23 +6,28 @@ from ament_index_python.packages import get_package_share_directory
 import os
 
 def generate_launch_description():
+    # The configs will be installed to share/okmr_automated_planner/state_machine_configs
+    # by default use the dev folder
     pkg_share = get_package_share_directory('okmr_automated_planner')
-    
-    # The configs will be installed to share/okmr_automated_planner/configs
-    default_config_base_path = os.path.join(pkg_share, 'configs')
-    default_master_config = 'master.yaml'
+    config_share_path = os.path.join(pkg_share, 'state_machine_configs')
     
     # Launch arguments
-    config_base_path_arg = DeclareLaunchArgument(
-        'config_base_path',
-        default_value=default_config_base_path,
-        description='Base directory for all configuration files'
+    config_share_path_arg = DeclareLaunchArgument(
+        'config_share_path',
+        default_value=config_share_path,
+        description='Share directory to prepend to config_folder parameter. Usually shouldnt be touched unless you didnt install the config folder before launching (not recommended)'
+    )
+
+    config_folder_arg = DeclareLaunchArgument(
+        'config_folder',
+        default_value='dev',
+        description='Folder to use for configs within the share. Default is dev'
     )
     
     master_config_arg = DeclareLaunchArgument(
         'master_config',
-        default_value=default_master_config,
-        description='Name of the master configuration file (relative to config_base_path)'
+        default_value='master.yaml',
+        description='Name of the master configuration file (relative to config_base_path/config_folder)'
     )
     
     # Create the automated planner node
@@ -31,7 +36,7 @@ def generate_launch_description():
         executable='automated_planner',
         name='automated_planner',
         parameters=[
-            {'config_base_path': LaunchConfiguration('config_base_path')},
+            {'config_base_path':  os.path.join(LaunchConfiguration('config_share_path'), LaunchConfiguration('config_folder'))},
             {'master_config': LaunchConfiguration('master_config')}
         ],
         output='screen'

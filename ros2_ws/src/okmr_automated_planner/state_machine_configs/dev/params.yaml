@@ -1,0 +1,6 @@
+#in this file define the parameters that the state machines actually use
+#ex. speed setpoints, confidence thresholds, etc
+#master_path and base_config_path are defined inside the automated_planner.launch.py
+automated_planner:
+  ros__parameters:
+    state_timeout_check_period: 0.5

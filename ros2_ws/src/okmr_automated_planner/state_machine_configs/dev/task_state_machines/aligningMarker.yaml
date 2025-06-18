@@ -1,6 +1,6 @@
 aligningMarker:
   states:
-    - {name: findingMarker, config_path: "task_configs/findingMarker.yaml", timeout: 30} # this state is used to find the marker
+    - {name: findingMarker, config_path: "task_state_machines/findingMarker.yaml", timeout: 30} # this state is used to find the marker
     - {name: orientingWithMarker, timeout: 30} # this state is used to align the marker
 
   transitions:

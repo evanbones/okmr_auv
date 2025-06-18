@@ -10,9 +10,6 @@ from rcl_interfaces.msg import ParameterDescriptor
 class AutomatedPlannerNode(Node):
     #hardcoded parameters to declare on startup
     PARAMETERS = [
-        {'name': 'low_battery_voltage', 'value': 14.5, 'descriptor': 'voltage to start printing warnings at'},
-        {'name': 'min_battery_voltage', 'value': 14.0, 'descriptor': 'min voltage before aborting master state machine'},
-        {'name': 'max_battery_voltage', 'value': 17.0, 'descriptor': 'max voltage before aborting master state machine'},
         {'name': 'state_timeout_check_period', 'value': 0.5, 'descriptor': 'How often to check if the current state should timeout'},
         {'name': 'config_base_path', 'value': '', 'descriptor': 'Base path for all configuration files'},
         {'name': 'master_config', 'value': 'master.yaml', 'descriptor': 'Master configuration file name (relative to config_base_path)'}
@@ -50,10 +47,9 @@ class AutomatedPlannerNode(Node):
 def main():
     rclpy.init()
     master_node = AutomatedPlannerNode()
-    config_base_path = master_node.get_config_base_path()
+    config_base_path = master_node.get_config_base_path()#auto generated getter method
     master_config = master_node.get_master_config()
     root_state_machine = None
-    #root state machine is the only SM that is not a StateNode, all sub machines are also states
 
     master_node.get_logger().info(f"Using config base path: {config_base_path}")
     master_node.get_logger().info(f"Using master config: {master_config}")

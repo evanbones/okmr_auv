@@ -13,10 +13,12 @@ its features didnt fully match up with our needs
  - linear transitions: doingThingDone
 
 ## Code structure:
+### state_machines
+This folder contains all state machine implementations
 
 ### base_state_machine.py
 This file defines the BaseStateMachine, the superclass to all state machines used in the package.
 
-It contains
+It contains all the common methods that the state machine implementations need
 
 Run with --ros-args --log-level DEBUG --log-level rcl:=INFO to see all debug info (timers)

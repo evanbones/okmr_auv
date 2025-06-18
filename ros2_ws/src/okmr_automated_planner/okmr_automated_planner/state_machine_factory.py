@@ -2,8 +2,7 @@ import os
 from okmr_automated_planner.machine_config_file_parser import MachineConfigFileParser
 from okmr_automated_planner.state_node import StateNode
 from okmr_automated_planner.base_state_machine import BaseStateMachine
-from okmr_automated_planner.master_state_machine import MasterStateMachine
-from okmr_automated_planner.task_state_machines.finding_gate_state_machine import FindingGateStateMachine
+from okmr_automated_planner import state_machines
 
 class StateMachineFactory:
     @staticmethod
@@ -60,15 +59,15 @@ class StateMachineFactory:
             
         # Create the appropriate machine instance based on name
         machine_instance = None
-        if machine_name == "master":
-            machine_instance = MasterStateMachine(
+        if machine_name == "root":
+            machine_instance = state_machines.MasterStateMachine(
                 name=machine_name,
                 ros_node=ros_node,
                 states=state_objects,
                 transitions=transitions
             )
         elif machine_name == "findingGate":
-            machine_instance = FindingGateStateMachine(
+            machine_instance = state_machines.FindingGateStateMachine(
                 name=machine_name,
                 ros_node=ros_node,
                 states=state_objects,

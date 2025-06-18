@@ -1,0 +1,23 @@
+master:
+  states:
+    - { name: initializing, timeout: 30} #if initialization is taking too long we should abort
+    - { name: sinking, timeout: 30}
+    - { name: findingGate, config_path: "task_state_machines/findingGate.yaml", timeout: 5 }
+      #- { name: passingGate, config_path: "task_configs/passingGate.yaml", timeout: 60 }
+    - { name: passingGate, timeout: 60 }
+      #- { name: findingMarker, config_path: "task_configs/findingMarker.yaml", timeout: 30}
+    - { name: findingMarker, timeout: 30}
+    - { name: arbitratingTask, timeout: 15}
+    - { name: surfacing }
+    - { name: surfaced }
+
+  transitions:
+    - { trigger: missionStartReceived, source: initialized, dest: sinking }
+    - { trigger: sinkingDone, source: sinking, dest: findingGate }
+    - { trigger: findingGateDone, source: findingGate, dest: passingGate }
+    - { trigger: passingGateDone, source: passingGate, dest: findingMarker }
+    - { trigger: findingMarkerDone, source: findingMarker, dest: arbitratingTask }
+    - { trigger: arbitratingTaskDone, source: arbitratingTask, dest: surfacing } #TODO: update this line to go into next tasks
+    - { trigger: surfacingDone, source: surfacing, dest: uninitialized }
+    - { trigger: abort, source: '*', dest:  aborted}
+
