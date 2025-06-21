@@ -19,17 +19,12 @@ find_package(okmr_msgs REQUIRED)
 add_executable(dead_reckoning
   src/dead_reckoning.cpp)
 
-add_executable(motion_planner
-  src/motion_planner.cpp)
-
 add_executable(relative_pose_target_server
   src/relative_pose_target_server.cpp)
 
 ament_target_dependencies(relative_pose_target_server rclcpp std_msgs okmr_msgs tf2 tf2_geometry_msgs)
-ament_target_dependencies(dead_reckoning rclcpp std_msgs okmr_msgs tf2 tf2_geometry_msgs)
-ament_target_dependencies(motion_planner rclcpp std_msgs sensor_msgs okmr_msgs geometry_msgs tf2_geometry_msgs tf2)
 
-target_include_directories(motion_planner PUBLIC include)
+ament_target_dependencies(dead_reckoning rclcpp std_msgs okmr_msgs tf2 tf2_geometry_msgs)
 
 ament_python_install_package(${PROJECT_NAME})
 

@@ -1,0 +1,41 @@
+requirements:
+need to develop 3 control layer classes
+use control_toolbox for pid implmentation
+
+each control layer is one object subscribing to one message (except accel which subscribes to vel and accel for feedforward) 
+
+okmr_msgs/RelativePose (new message needed for representing translation and angle)
+geo_msgs/Twist for target and actual velocities
+Accel for target and actual accel
+Wrench for thrust output (no wrench error since its not measurable)
+Wrench -> MotorThrust is not pid, its the thrust allocator 
+MotorThrust -> MotorThrottle is the thrust to throttle controller that uses the blue robotics datasheet
+NOTE: NEED TO CREATE NEW MESSAGE FOR MOTORTHRUST AND CORRESPONDING GOAL MOTORTHRUST
+GOALMOTORTHROTTLE
+
+parent class that defines the 6 pid controllers inside each layer, and all ros2 parameters that are common
+to every pid controller (so we make an x_linear, x_angular, y_linear, y_angular, etc.)
+parameters for P I D gains for each controller, as well as I clamp)
+
+parameters must be live tuneable, so we need to implement an on_parameter_... callback that gets called whe we call the parameter service
+
+pair<vector3 (output), vector3 (output)> update(pair<vector3(error), vector3 (error)>) 
+method calls update on all 6 pid controllers with their corresponding error values and the same dt for all
+
+update is called on a timer defined by a frequency parameter
+
+accel controller will subclass the parent class and add feedforward functionality
+will need to add corresponding ros2 parameters for feedforward terms
+(different term parmeters for every controller, 6axis * 2 (kDrag and kMass))
+do not create a buoyancy term for each controller, instead just tune heave to have negative kMass, which will be self adapting. Then, when doing pitch / roll setpoints that are non 0, pid can correct for any flaws
+
+thrust allocator is sperate from all pid controllers and gets its own class, where we will do the 
+matrix math needed to solve for the thrust allocation matrix
+
+thrust - throttle controller also gets its own class which will convert per motor thrust into throttle (-1 to 1, need to map from 1100 - 1900)
+
+1. create a basic control layer class with pids
+2. compile and test
+3. begin adding ros2 features like subscribtions, parameters
+4. compile and test each feature or colelction fo features
+5. test basic tuning using param tuning gui

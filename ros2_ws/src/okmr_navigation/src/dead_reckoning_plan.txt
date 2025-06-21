@@ -1,0 +1,57 @@
+need to update dead reckoning node to publish pose vel and accel
+pose already published under /pose
+velocity needs to go from SensorReading to Twist publihsed on /velocity
+acceleration is not publihsed yet, but needs to be published on /acceleration
+
+need to update the velocity estiamte to use the dvl as main source, but between dvl feedback, integrate linear accel  for a 200hz velocity estiamte
+can also be a complemetnary filter type (dvl will most likely be > 0.995 coeffcient but still useful to tune)
+so on dvl velocity callback, we do like linear vel estimate = dvl vel * alpha + lin_vel_essiamte * (1-alpha)
+and on imu lin accel callback, do lin vel estiamte += lin vel * dt
+
+explore dvl absolute depth publishing before implementing anything
+might end up using dvl depth as an absolute or very high alpha value sensor for z axis
+can be calcaulted using psi / bar / pressure
+
+linear acceleration estiamte will be from imu, but also from dvl velocity derivative
+- linear acceelration from imu needs to be smoothed (low pass filter?) (fast moving average?)
+- combine derivative of dvl velocity with imu accel using complementary filter
+- derivative of dvl velocity needs to be smoothed / moving averaged even if by only 3-4 frames
+- dvl is 8hz so derivaive can be noisy
+- complementary filter between dvl and imu accel needs to be tuneable
+- linear acceleration will always include the gravity vector
+- gravity vector is currently used to estiamte the roll and pitch of the auv to prevent drift
+- need to subtract the estimated gravity vector in body frame from the linear acceleration
+in order to get body frame acceleration 
+
+angular acceleration will need to be derivative of the imu angular velcoity
+- most likely need some kind of smoothing / moving average to smooth it out
+- needs to be live parameter tuneable
+- take derivative of the smoothed angular velocity value (publish unfiltered version)
+
+make all estimates member variables
+on callback, update those estimates
+
+on timer, publish those estimate (most likely 200hz to match imu, but should also be tuneable)
+
+all parameters must be live tuneable through ros2 parameter service
+
+final interface:
+dvl input
+imu input
+---
+pose output
+twist output
+accel output
+
+can use Leaky integrators / Exponential movnig average for everything that needs to be smoothed
+do complemetary filters on lin velocioty
+do complemtary filters on lin acceleration
+do leaky integrator on angular vel (high alpha)
+do leaky integrator on angular accel (medium alpha?)
+
+maintain similar pose calcualtions to now, they work well enough
+may need to add the dvl pressure /depth estiamte for some complemtnary filter action on z axis
+do not use pressure for heave vel
+
+need to update dvl message to match actual published info
+need to update dvl driver to publihs as one message not on 3 topics
