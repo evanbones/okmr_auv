@@ -1,5 +1,0 @@
-# Request - empty (no parameters needed)
----
-# Response
-geometry_msgs/PoseStamped pose
-bool success

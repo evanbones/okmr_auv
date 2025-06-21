@@ -17,6 +17,10 @@ rosidl_generate_interfaces(${PROJECT_NAME}
     msg/ImageWithPose.msg
     msg/GoalPose.msg
     msg/GoalVelocity.msg
+    msg/GoalAccel.msg
+    msg/GoalWrench.msg
+    msg/GoalThrottle.msg
+    msg/ControlMode.msg
     msg/SensorReading.msg
     msg/MovementCommand.msg
     msg/MotorThrottle.msg
@@ -27,7 +31,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
     srv/Vg2pc.srv
     srv/Matching.srv
     srv/Status.srv
-    srv/GetPose.srv
+    srv/GetPoseTwistAccel.srv
     srv/DistanceFromGoal.srv
     msg/VoxelGrid.msg
     msg/Classes.msg

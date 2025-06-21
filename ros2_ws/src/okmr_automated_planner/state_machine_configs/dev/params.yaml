@@ -1,6 +1,20 @@
 #in this file define the parameters that the state machines actually use
 #ex. speed setpoints, confidence thresholds, etc
-#master_path and base_config_path are defined inside the automated_planner.launch.py
+#root_path and base_config_path are defined inside the automated_planner.launch.py
+
 automated_planner:
   ros__parameters:
-    state_timeout_check_period: 0.5
+
+    state_timeout_check_period: 0.1
+
+    finding_gate:
+      frame_confidence_threshold: 0.8
+      validation_frame_threshold: 10
+      max_scan_attempts: 3
+      scan_speed: 30.0
+      scan_angle: 360.0
+
+    finding_marker:
+      scan_speed: 30.0
+      scan_duration: 14.0
+      set_depth: 1.0

@@ -1,0 +1,75 @@
+## REVISED Implementation Plan for Target Servers
+
+### Overview
+After initial implementation attempt, it's clear that the target server architecture needs to be reconsidered to better align with the overall system vision. The current approach may be overly complex and not match the intended control flow.
+
+### Current Status
+- ✅ Message definitions created (GoalAccel.msg, GoalWrench.msg, GoalThrottle.msg)
+- ✅ CMakeLists.txt updated to include new messages
+- ⏸️ Implementation paused for architectural review
+
+### Key Concerns Identified
+1. **Complexity vs. Simplicity:** The target server pattern may introduce unnecessary complexity
+2. **Control Flow:** The interaction between Python action handlers and C++ target servers needs clearer definition
+3. **System Architecture:** The overall vision for how control modes should interact is not fully aligned
+4. **Integration Overhead:** Multiple target servers may create integration and maintenance burden
+
+### Recommended Next Steps for Future Implementation
+
+#### Phase 1: Architectural Review
+**Before any further implementation:**
+1. **Define Control Flow:** Clearly map out how movement commands flow from:
+   - Python action handlers → Target servers → PID controllers → Motors
+2. **Simplify Architecture:** Consider if target servers are necessary or if direct PID publishing is sufficient
+3. **Control Mode Strategy:** Determine if centralized control mode arbitration is the best approach
+4. **Integration Points:** Define clean interfaces between Python and C++ components
+
+#### Phase 2: Simplified Approach Consideration
+**Alternative approaches to evaluate:**
+1. **Direct PID Publishing:** Python handlers publish directly to PID setpoints
+2. **Unified Target Server:** Single configurable server instead of multiple specialized ones
+3. **State Machine Approach:** Higher-level state management instead of low-level target servers
+4. **Hybrid Approach:** Minimal target servers for safety with Python handling logic
+
+#### Phase 3: Core Requirements Definition
+**Essential features that any implementation must provide:**
+1. **Safety Shutoffs:** Automatic stopping on communication loss or timeout
+2. **Control Mode Arbitration:** Prevention of conflicting control commands
+3. **Duration Management:** Automatic goal completion based on time/distance
+4. **Feedback Systems:** Status reporting for higher-level planners
+5. **Emergency Stops:** Immediate freeze capability
+
+#### Phase 4: Technology Decisions
+**Key decisions needed before implementation:**
+1. **Language Balance:** How much logic in Python vs C++?
+2. **Communication Patterns:** Direct publishing vs service calls vs action servers?
+3. **Safety Implementation:** Where should safety logic reside?
+4. **Configuration Management:** How to handle parameters and tuning?
+
+### Message Definitions (Completed)
+The following message types are ready for use regardless of final architecture:
+- `GoalAccel.msg` - Acceleration commands with duration
+- `GoalWrench.msg` - Force/torque commands with duration  
+- `GoalThrottle.msg` - Direct motor commands with duration
+- `ControlMode.msg` - System control mode arbitration
+
+### Files Created/Modified
+- ✅ `/src/okmr_msgs/msg/GoalAccel.msg`
+- ✅ `/src/okmr_msgs/msg/GoalWrench.msg`
+- ✅ `/src/okmr_msgs/msg/GoalThrottle.msg`
+- ✅ `/src/okmr_msgs/CMakeLists.txt` (updated)
+- ✅ `/plan.txt` (this file)
+
+### Recommendations for Team Discussion
+1. **Review Control Architecture:** Does the target server pattern fit the long-term vision?
+2. **Simplification Opportunities:** Can we achieve the same safety with less complexity?
+3. **Python vs C++ Balance:** What's the optimal distribution of responsibilities?
+4. **Integration Strategy:** How should movement commands flow through the system?
+5. **Safety First:** Where should critical safety logic be implemented?
+
+### Next Session Goals
+1. Clarify overall system architecture vision
+2. Decide on simplified vs complex implementation approach
+3. Define clear interfaces between components
+4. Prioritize safety and simplicity over feature completeness
+5. Create implementation roadmap aligned with team vision

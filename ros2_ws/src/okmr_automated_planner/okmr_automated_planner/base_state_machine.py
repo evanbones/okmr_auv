@@ -7,10 +7,13 @@ class BaseStateMachine(Machine):
     mandatory_states = ['uninitialized','initializing','initialized', 'done', 'aborted']
     mandatory_transitions = [
                                 { 'trigger': 'initialize', 'source': 'uninitialized', 'dest': 'initializing' },
-                                { 'trigger': 'initializingDone', 'source': 'initializing', 'dest': 'initialized' },
+                                { 'trigger': 'initializing_done', 'source': 'initializing', 'dest': 'initialized' },
                                 { 'trigger': 'finish', 'source': '*', 'dest': 'done' },
                                 { 'trigger': 'abort', 'source': '*', 'dest': 'aborted' },
                               ]
+
+    PARAMETERS = []
+
     def __init__(self, 
                  name, 
                  ros_node, 
@@ -30,7 +33,7 @@ class BaseStateMachine(Machine):
         
         self._subscriptions = []
         self._publishers = []
-        self._timers = []
+        self._timers = {}
         self._clients = []
         
         # Initialize movement action client for all state machines
@@ -49,7 +52,16 @@ class BaseStateMachine(Machine):
         
         self.queued_method = None 
         # can be used to more cleanly immediately progress from one state to another
-        #self.queued_method is called after every state change
+        # self.queued_method is called after every state change
+        # ideally, if you want to call a state transition inside an on_enter_state callback, 
+        # do self.queued_method = your_trigger
+        # that way the state transition order is more logical, because it allows
+        # post_state_change to be called before your queued method
+
+        # with that said, using the self.queued_method technique is discouraged
+        # it should only be used in cases where there is no other way to
+        # asynchronously trigger a state change
+        # if you find yourself using self.queued_method, look into reorganizing the flow of your state machine
         
         self.add_mandatory_states()
         self.add_mandatory_transitions()
@@ -67,10 +79,19 @@ class BaseStateMachine(Machine):
 
         self.current_sub_machine = None
 
-        period = self.ros_node.get_state_timeout_check_period()
-        
+        period = self.get_global_parameter(f'state_timeout_check_period')
+
         self.add_timer(f"state_timeout_check", period, self.state_timeout_check_callback)
 
+        for param in self.PARAMETERS:
+            self.ros_node.declare_ros2_parameter(f'{self.machine_name}.{param["name"]}', param['value'], param['descriptor'])
+
+    def get_local_parameter(self, name):
+        return self.ros_node.get_parameter(f'{self.machine_name}.{name}').value
+
+    def get_global_parameter(self, name):
+        return self.ros_node.get_parameter(f'{name}').value
+    
     def get_current_state_node(self):
         #this could cause errors if you dont specifically declare every parameter as a StateNode type
         return self.get_state(self.state)
@@ -78,7 +99,7 @@ class BaseStateMachine(Machine):
     def state_timeout_check_callback(self):
         time_since_state_start = self.get_time_since_state_start()
 
-        self.ros_node.get_logger().debug(f"Time Since State Start {time_since_state_start}" + 
+        self.ros_node.get_logger().debug(f"Time since state start {time_since_state_start}" + 
                                             f"\t Machine: {self.machine_name} \t State: {self.state}")
 
         timeout = self.get_current_state_node().timeout 
@@ -115,6 +136,11 @@ class BaseStateMachine(Machine):
     
     def on_completion(self):
         #to be implemented by sub classes if desired
+        #self.on_completion is to be used for state machine cleanup, 
+        #ex. sending requests to turn off object detection
+        #mainly stuff that needs to be sent to other nodes before moving onto the next state
+        #make sure the method uses synchronous calls or waits for completion, because otherwise
+        #the success and failure callbacks will be called before your request is completed
         pass
 
     def pre_state_change(self):
@@ -122,20 +148,19 @@ class BaseStateMachine(Machine):
 
     def post_state_change(self):
         self.record_state_start_time()
-        self.ros_node.get_logger().info(f"{self.get_current_state_node().timeout}") 
         self.log_post_state_change()
-        self.check_completion()
-        if self.queued_method:
+        #check if the state machine is completed, and if not, call the queued method if one exists
+        if not self.check_completion() and self.queued_method:
             self.warn_auto_queued_method()
             method = self.queued_method
             self.queued_method = None
             method()
 
     def log_pre_state_change(self):
-        self.ros_node.get_logger().info(f"Pre State Change  \t Machine: {self.machine_name} \t From: {self.state}")
+        self.ros_node.get_logger().debug(f"Pre State Change  \t Machine: {self.machine_name} \t From: {self.state}")
 
     def log_post_state_change(self):
-        self.ros_node.get_logger().info(f"Post State Change \t Machine: {self.machine_name} \t To: {self.state}")
+        self.ros_node.get_logger().debug(f"Post State Change \t Machine: {self.machine_name} \t To: {self.state}")
 
     def warn_auto_queued_method(self):
         queued_func_name = None
@@ -146,11 +171,12 @@ class BaseStateMachine(Machine):
                 queued_func_name = self.queued_method.__name__
             except:
                 pass
-        self.ros_node.get_logger().warn(f"Auto Queued Method\t Machine: {self.machine_name} \t From: {self.state} \t To: {queued_func_name} \t (NOT recommended outside of testing)")
+        self.ros_node.get_logger().warn(f"Auto Queued: ({self.machine_name}) {self.state} -> {queued_func_name}")
 
     def check_completion(self):
-        if self.state == 'done' or self.state == 'aborted':
+        if self.is_done() or self.is_aborted():
             self.on_completion()
+            
             self.cleanup_ros2_resources()
             if self.current_sub_machine and not self.current_sub_machine.is_aborted():
                 self.current_sub_machine.abort()
@@ -161,6 +187,8 @@ class BaseStateMachine(Machine):
                 self.success_callback()
             elif not self.success and self.fail_callback:
                 self.fail_callback()
+            return True
+        return False
     
     def start_current_state_sub_machine(self, success_callback=None, fail_callback=None):
         '''
@@ -212,7 +240,7 @@ class BaseStateMachine(Machine):
 
     def add_timer(self, name: str, duration, callback):
         timer = self.ros_node.create_timer(duration, callback)
-        self._timers.append({"f{self.machine_name}_{name}": timer})
+        self._timers["f{self.machine_name}_{name}"] = timer
         return timer
 
     def remove_timer(self, name):
@@ -254,7 +282,8 @@ class BaseStateMachine(Machine):
             try:
                 self.ros_node.destroy_timer(self._timers[name])
             except:
-                pass
+                self.ros_node.get_logger().error(f"Failed to destroy timer: {name}")
+
         self._timers.clear()
 
     def cleanup_ros2_clients(self):

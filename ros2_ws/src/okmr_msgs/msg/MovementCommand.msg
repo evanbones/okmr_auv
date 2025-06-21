@@ -4,7 +4,10 @@ int32 command
 geometry_msgs/Vector3 translation #for relative move commands
 geometry_msgs/Vector3 rotation 
 
+float32 timeout_sec #max time to complete a command
+
 float32 radius_of_acceptance 
+float32 angle_threshold
 #determines how close we have to be to the goal before its considered done
 #used in rel move and abs move commands
 
@@ -42,20 +45,20 @@ int32 MOVE_ABSOLUTE = 2
     #maybe this method will never need to be implemented who knows
 
 
-int32 SET_VELOCITY #uses goal_velocity to request a velocity based movement, not looking at pose
+int32 SET_VELOCITY = 3 #uses goal_velocity to request a velocity based movement, not looking at pose
 
 #applies to both pitch and roll:
 #will need to selectively enable pid systems 
 #(disable all translation, disable other rotational PID systems, disable dead reckoning)
 #inside the action server, need to check if command goal_velocity.twist.angular.x or .y is non zero
 
-int32 LOOK_AT = 6
+int32 LOOK_AT = 4
     #could be used for looking at a specific location
     #location to look at defined by "pose"
     #possibly useful for gripper, torpedo, dropper tasks
     #how to do this kind of thing with the bottom facing camera?
 
-int32 SET_DEPTH = 7
+int32 SET_DEPTH = 5
     #go down dont #sink
 
 
