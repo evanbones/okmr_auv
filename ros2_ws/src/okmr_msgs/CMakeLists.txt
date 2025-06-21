@@ -27,6 +27,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
     msg/TempReading.msg
     msg/Status.msg
     msg/Dvl.msg
+    msg/RelativePose.msg
     srv/FindObject.srv
     srv/Vg2pc.srv
     srv/Matching.srv
