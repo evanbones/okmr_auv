@@ -2,7 +2,7 @@
 #include "geometry_msgs/msg/pose_stamped.hpp"
 #include "geometry_msgs/msg/quaternion.hpp"
 #include "okmr_msgs/msg/sensor_reading.hpp"
-#include "okmr_msgs/srv/get_pose.hpp"
+#include "okmr_msgs/srv/get_pose_twist_accel.hpp"
 #include "sensor_msgs/msg/imu.hpp"
 #include <tf2/LinearMath/Quaternion.h>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
@@ -41,9 +41,9 @@ class DeadReckoningNode : public rclcpp::Node{
             sync_ = std::make_shared<message_filters::Synchronizer<SyncPolicy>>(SyncPolicy(10), surge_subscriber,sway_subscriber,heave_subscriber);
             sync_->registerCallback(std::bind(&DeadReckoningNode::linear_velocity_callback, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
             
-            get_pose_service = this->create_service<okmr_msgs::srv::GetPose>(
-                "get_pose", 
-                std::bind(&DeadReckoningNode::get_pose_callback, this, std::placeholders::_1, std::placeholders::_2)
+            get_pose_twist_accel_service = this->create_service<okmr_msgs::srv::GetPoseTwistAccel>(
+                "get_pose_twist_accel", 
+                std::bind(&DeadReckoningNode::get_pose_twist_accel_callback, this, std::placeholders::_1, std::placeholders::_2)
             );
 	    }
 
@@ -155,10 +155,39 @@ class DeadReckoningNode : public rclcpp::Node{
         heave=heave_msg->data;
     }
 
-    void get_pose_callback(const std::shared_ptr<okmr_msgs::srv::GetPose::Request> request,
-                          std::shared_ptr<okmr_msgs::srv::GetPose::Response> response) {
+    void get_pose_twist_accel_callback(const std::shared_ptr<okmr_msgs::srv::GetPoseTwistAccel::Request> request,
+                          std::shared_ptr<okmr_msgs::srv::GetPoseTwistAccel::Response> response) {
         (void)request; // Unused parameter
-        response->pose = current_pose;
+        response->pose = current_pose.pose;
+        //add response->twist and accel
+        //add variables to keep track of current twist and accel
+        //update on every estimate
+        //refactor state estimation to be a seperate method, which is called on a timer at a specific frequency (make it a parameter)
+        //change synced subscriber to instead subscribe to a single message of type DvlData (create message type if needed)
+        //then extract the linear_velocity field from that message
+        //on every imu and dvl data callbakc, isntead of running anything, just cache data to the current twist and accel
+        //then on timer callback, use the most recent twist and dt just like we do now.
+        //additionally, on the timer callback estimate the true linear 
+        //here are some notes:
+        //
+        /*add faster velocity estimation using imu accelerometer data
+velocity is set by the dvl, but intermittent estimates can come from the imu
+how do we compensate for gravity? If we blindly add acceleration * dt to the velocity, we will always be making the velocity go down
+add lifecycle managament 
+to enable pausing, intentional startup, etc
+add imu filtering? accelerometer data smoothing? low pass filter?
+how to compensate for gravity in imu acceleromter data?
+need to calculate an estimated gravity vector, projected into the body frame, for use with feedforward controller
+should publish every axis velocity and acceleration separately for pid usage
+publish gravity vector direction?
+calculate gravity vector in body frame
+gb = Rbw mult gw (gb = gravity in body, Rwb = Rotation matrix from world to body (inverse of body to world), gw = gravity in world [0,0,9.81])
+subtract this from raw accelerometer:
+Alinear = Ameasured − gb
+project gravity onto each body axis for feedforward terms:
+gproj = gb ⋅ axis
+this isolates the effect of gravity on each axis
+*/
         response->success = gotFirstTime; // Only return success if we've received at least one IMU measurement
     }
 
@@ -172,7 +201,7 @@ class DeadReckoningNode : public rclcpp::Node{
 	rclcpp::Subscription<sensor_msgs::msg::Imu>::SharedPtr imu_subscription;
 	rclcpp::Publisher<SensorMsg>::SharedPtr roll_publisher, pitch_publisher, yaw_publisher, sway_publisher;
 	rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr pose_publisher;
-    rclcpp::Service<okmr_msgs::srv::GetPose>::SharedPtr get_pose_service;
+    rclcpp::Service<okmr_msgs::srv::GetPoseTwistAccel>::SharedPtr get_pose_twist_accel_service;
     message_filters::Subscriber<SensorMsg> surge_subscriber, sway_subscriber, heave_subscriber;
 
 };

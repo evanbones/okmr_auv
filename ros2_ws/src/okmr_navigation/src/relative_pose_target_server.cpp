@@ -39,7 +39,7 @@ class RelativePoseTargetServer: public rclcpp::Node
                  std::bind(&RelativePoseTargetServer::current_pose_callback, this, _1));
             
             distance_from_goal_service = this->create_service<okmr_msgs::srv::DistanceFromGoal>
-                ("distance_from_goal", 
+                ("distance_from_pose_goal", 
                  std::bind(&RelativePoseTargetServer::distance_from_goal_callback, this, 
                      std::placeholders::_1, std::placeholders::_2));
             //placeholders are used in place of request and response arguments

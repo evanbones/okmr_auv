@@ -1,14 +1,15 @@
 from okmr_msgs.action import Movement
 from okmr_msgs.msg import GoalPose
-from okmr_navigation.handlers.get_pose import get_current_pose
+from okmr_navigation.handlers.get_pose_twist_accel import get_current_pose, get_current_twist
+from okmr_navigation.navigator_action_server import NavigatorActionServer
 import time
 
 
 def handle_freeze(goal_handle):
     """Execute freeze action with monitoring"""
-    node = goal_handle._action_server._node
+    node = NavigatorActionServer.get_instance()
     # Execute the common freeze functionality
-    if not execute_freeze(goal_handle):
+    if not execute_freeze():
         goal_handle.abort()
         result = Movement.Result()
         result.debug_info = 'Failed to execute freeze command'
@@ -16,7 +17,7 @@ def handle_freeze(goal_handle):
     
     # Wait for vehicle to come to complete stop with timeout
     start_time = node.get_clock().now()
-    timeout_duration = goal_handle.request.command_msg.duration
+    timeout_duration = goal_handle.request.command_msg.timeout_sec
     
     while True:
         if goal_handle.is_cancel_requested:
@@ -29,9 +30,8 @@ def handle_freeze(goal_handle):
         current_time = node.get_clock().now()
         elapsed_time = (current_time - start_time).nanoseconds / 1e9
 
-        # TODO: Check if all velocities are under threshold
-        # vehicle_stopped = check_velocities_under_threshold()
-        vehicle_stopped = True  # Placeholder
+        # Check if all velocities are under threshold
+        vehicle_stopped = check_velocities_under_threshold()
         
         if vehicle_stopped:
             goal_handle.succeed()
@@ -53,22 +53,19 @@ def handle_freeze(goal_handle):
             result = Movement.Result()
             result.debug_info = f'Freeze command timed out after {timeout_duration}s'
             return result
-        time.sleep(0.1)
+        time.sleep(1.0 / node.feedback_rate)
 
 
-def execute_freeze(goal_handle):
+def execute_freeze():
     """
     Common freeze implementation:
     1. Put vehicle into position mode
     2. Send absolute movement request at current location
     """
-    node = goal_handle._action_server._node
-    
-    # TODO: Switch to position mode
-    # This would involve calling the appropriate service/topic
+    node = NavigatorActionServer.get_instance()
     
     # Get current pose using service (like relative movement handler)
-    current_pose_stamped = get_current_pose(node)
+    current_pose_stamped = get_current_pose()
     if current_pose_stamped is None:
         node.get_logger().error("Could not get current pose for freeze command")
         return False
@@ -81,35 +78,36 @@ def execute_freeze(goal_handle):
     freeze_goal_pose.copy_orientation = True
     
     # Publish goal pose to freeze vehicle at current position (like absolute handler)
-    goal_publisher = node.create_publisher(GoalPose, '/current_goal_pose', 10)
+    goal_publisher = node.get_publisher('/current_goal_pose', GoalPose, 10)
     goal_publisher.publish(freeze_goal_pose)
-    node.destroy_publisher(goal_publisher)
     
     node.get_logger().info("Freeze command sent - vehicle will hold current position")
     return True
 
-def test_handle_freeze(goal_handle):
-    node = goal_handle._action_server._node
-    start_time = node.get_clock().now()
-        
-    for i in range(20):
-        if goal_handle.is_cancel_requested:
-            goal_handle.canceled()
-            result = Movement.Result()
-            result.debug_info = 'Test freeze command was canceled'
-            return result
-            
-        feedback_msg = Movement.Feedback()
-        feedback_msg.time_elapsed = (node.get_clock().now() - start_time).nanoseconds / 1e9
-        feedback_msg.completion_percentage = (i / 20.0) * 100.0
-            
-        goal_handle.publish_feedback(feedback_msg)
-        time.sleep(0.1)
-        
-    goal_handle.succeed()
-    result = Movement.Result()
-    result.completion_time = (node.get_clock().now() - start_time).nanoseconds / 1e9
-    result.debug_info = 'Test freeze command completed successfully'
-    return result
+def check_velocities_under_threshold():
+    """Check if all velocities are under the freeze threshold"""
+    node = NavigatorActionServer.get_instance()
+    
+    # Get current velocity from the service
+    current_twist = get_current_twist()
+    if current_twist is None:
+        node.get_logger().warn("Could not get current twist for velocity check")
+        return False
+    
+    # Check linear velocities individually
+    linear_vel = current_twist.linear
+    linear_x_ok = abs(linear_vel.x) < node.freeze_linear_velocity_threshold
+    linear_y_ok = abs(linear_vel.y) < node.freeze_linear_velocity_threshold
+    linear_z_ok = abs(linear_vel.z) < node.freeze_linear_velocity_threshold
+    
+    # Check angular velocities individually
+    angular_vel = current_twist.angular
+    angular_x_ok = abs(angular_vel.x) < node.freeze_angular_velocity_threshold
+    angular_y_ok = abs(angular_vel.y) < node.freeze_angular_velocity_threshold
+    angular_z_ok = abs(angular_vel.z) < node.freeze_angular_velocity_threshold
+    
+    # Vehicle is considered stopped if all components are below their respective thresholds
+    return (linear_x_ok and linear_y_ok and linear_z_ok and 
+            angular_x_ok and angular_y_ok and angular_z_ok)
 
     

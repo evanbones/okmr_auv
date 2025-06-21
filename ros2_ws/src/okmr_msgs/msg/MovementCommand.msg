@@ -4,7 +4,10 @@ int32 command
 geometry_msgs/Vector3 translation #for relative move commands
 geometry_msgs/Vector3 rotation 
 
+float32 timeout_sec #max time to complete a command
+
 float32 radius_of_acceptance 
+float32 angle_threshold
 #determines how close we have to be to the goal before its considered done
 #used in rel move and abs move commands
 

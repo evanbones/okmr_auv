@@ -1,7 +1,9 @@
 from okmr_msgs.action import Movement
 from okmr_msgs.msg import GoalPose
-from okmr_navigation.handlers.move_absolute_handler import execute_absolute_movement, execute_test_movement
-from okmr_navigation.handlers.get_pose import get_current_pose
+from okmr_navigation.handlers.move_absolute_handler import handle_move_absolute
+from okmr_navigation.handlers.get_pose_twist_accel import get_current_pose
+from okmr_navigation.navigator_action_server import NavigatorActionServer
+from okmr_navigation.handlers.movement_execution_common import execute_test_movement_common
 import math
 import numpy as np
 from scipy.spatial.transform import Rotation
@@ -10,10 +12,10 @@ from scipy.spatial.transform import Rotation
 def handle_move_relative(goal_handle):
     """Convert relative movement to absolute goal pose and execute"""
     command_msg = goal_handle.request.command_msg
-    node = goal_handle._action_server._node
+    node = NavigatorActionServer.get_instance()
     
     # Get current pose and calculate absolute goal
-    current_pose_stamped = get_current_pose(node)
+    current_pose_stamped = get_current_pose()
     if current_pose_stamped is None:
         goal_handle.abort()
         result = Movement.Result()
@@ -26,22 +28,12 @@ def handle_move_relative(goal_handle):
         command_msg.translation, 
         command_msg.rotation
     )
+
+    # Set the goal_pose inside the goal handle request manually
+    goal_handle.request.command_msg.goal_pose = goal_pose
     
-    return execute_absolute_movement(goal_handle, goal_pose)
-
-
-def test_handle_move_relative(goal_handle):
-    """Test version of relative movement"""
-    command_msg = goal_handle.request.command_msg
-    
-    # Calculate distance for simulation
-    translation = command_msg.translation
-    distance = math.sqrt(translation.x**2 + translation.y**2 + translation.z**2)
-    
-    return execute_test_movement(goal_handle, distance)
-
-
-
+    # Call handle_move_absolute to use the new common implementation
+    return handle_move_absolute(goal_handle)
 
 def _calculate_relative_goal_pose(current_pose, translation, rotation):
     """

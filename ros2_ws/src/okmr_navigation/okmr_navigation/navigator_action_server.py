@@ -1,7 +1,4 @@
-#!/usr/bin/env python3
-
 import rclpy
-
 from threading import Lock
 
 from rclpy.action import ActionServer, CancelResponse, GoalResponse
@@ -11,26 +8,23 @@ from rclpy.executors import MultiThreadedExecutor
 from okmr_msgs.action import Movement
 from okmr_msgs.msg import MovementCommand
 
-from okmr_navigation.handlers.freeze_handler import *
-from okmr_navigation.handlers.move_relative_handler import *
-from okmr_navigation.handlers.move_absolute_handler import *
-from okmr_navigation.handlers.spin_yaw_handler import *
-from okmr_navigation.handlers.barrel_roll_pid_handler import *
-from okmr_navigation.handlers.barrel_roll_throttle_handler import *
-from okmr_navigation.handlers.look_at_handler import *
-from okmr_navigation.handlers.go_to_gate_handler import *
-
-
 class NavigatorActionServer(Node):
+    _instance = None
+    _lock = Lock()
 
-    def __init__(self):
+    def __init__(self, command_handlers, test_command_handlers):
         super().__init__('navigator_action_server')
         
-        self.declare_parameter('test_mode', True)
-        #TODO CHANGE TO FALSE ONCE HARDWARE TESTING
+        self.declare_parameter('test_mode', False)
+        self.declare_parameter('feedback_rate', 10.0)
+        self.declare_parameter('freeze_velocity_threshold', 0.1)
+
+        self.command_handlers = command_handlers
+        self.test_command_handlers = test_command_handlers
         
         self._goal_handle = None #this is the only goal handle allowed to run
         self._goal_lock = Lock()
+        self._publishers = {}  # Dictionary to store reusable publishers
         self._action_server = ActionServer(
             self,
             Movement,
@@ -41,26 +35,28 @@ class NavigatorActionServer(Node):
             goal_callback=self.goal_callback
         )
         
-        self.COMMAND_HANDLERS = {
-            MovementCommand.FREEZE: handle_freeze,
-            MovementCommand.MOVE_RELATIVE: handle_move_relative,
-            MovementCommand.MOVE_ABSOLUTE: handle_move_absolute,
-            MovementCommand.SPIN_YAW: handle_spin_yaw,
-            MovementCommand.BARREL_ROLL_PID: handle_barrel_roll_pid,
-            MovementCommand.LOOK_AT: handle_look_at,
-        }
-        
-        self.TEST_COMMAND_HANDLERS = {
-            MovementCommand.FREEZE: test_handle_freeze,
-            MovementCommand.MOVE_RELATIVE: test_handle_move_relative,
-            MovementCommand.MOVE_ABSOLUTE: test_handle_move_absolute,
-            MovementCommand.SPIN_YAW: test_handle_spin_yaw,
-            MovementCommand.BARREL_ROLL_PID: test_handle_barrel_roll_pid,
-            MovementCommand.LOOK_AT: test_handle_look_at,
-        }
-        
         test_mode = self.get_parameter('test_mode').value
+        self.feedback_rate = self.get_parameter('feedback_rate').value
+        self.freeze_linear_velocity_threshold = self.get_parameter('freeze_linear_velocity_threshold').value
+        self.freeze_angular_velocity_threshold = self.get_parameter('freeze_angular_velocity_threshold').value
+
         self.get_logger().info(f'Navigator Action Server started (test_mode: {test_mode})')
+
+    def get_publisher(self, topic_name, msg_type, qos=10):
+        """Get or create a publisher for the given topic"""
+        if topic_name not in self._publishers:
+            self._publishers[topic_name] = self.create_publisher(msg_type, topic_name, qos)
+        return self._publishers[topic_name]
+
+    @classmethod
+    def get_instance(cls, command_handlers=None, test_command_handlers=None):
+        if cls._instance is None:
+            with cls._lock:
+                if cls._instance is None:
+                    if command_handlers is None or test_command_handlers is None:
+                        raise RuntimeError("NavigatorActionServer instance not created yet. Must provide handlers on first call.")
+                    cls._instance = cls(command_handlers, test_command_handlers)
+        return cls._instance
 
     def goal_callback(self, goal_request):
         """Accept new goals and allow preemption of existing goals."""
@@ -89,7 +85,7 @@ class NavigatorActionServer(Node):
         requested_movement = goal_handle.request.command_msg
         test_mode = self.get_parameter('test_mode').value
         
-        handler_dict = self.TEST_COMMAND_HANDLERS if test_mode else self.COMMAND_HANDLERS
+        handler_dict = self.test_command_handlers if test_mode else self.command_handlers
         
         if requested_movement.command in handler_dict:
             handler = handler_dict[requested_movement.command]
@@ -101,21 +97,4 @@ class NavigatorActionServer(Node):
             result.debug_info = f'Unknown command: {requested_movement.command}'
             return result
     
-def main(args=None):
-    rclpy.init(args=args)
-    
-    navigator_action_server = NavigatorActionServer()
-    
-    try:
-        executor = MultiThreadedExecutor()
-        executor.add_node(navigator_action_server)
-        executor.spin()
-    except KeyboardInterrupt:
-        pass
-    finally:
-        navigator_action_server.destroy_node()
-        rclpy.shutdown()
 
-
-if __name__ == '__main__':
-    main()

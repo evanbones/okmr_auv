@@ -45,7 +45,7 @@ install(DIRECTORY
 )
 
 install(PROGRAMS
-    ${PROJECT_NAME}/navigator_action_server.py
+    ${PROJECT_NAME}/entry_point.py
     DESTINATION lib/${PROJECT_NAME}
     RENAME navigator_action_server
 )
