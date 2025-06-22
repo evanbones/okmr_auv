@@ -58,7 +58,7 @@
 
     <sensor name="IMU" type="imu" rate="200.0">
         <origin xyz="0.15 0.0 0.0" rpy="0.0 0.0 0.0"/>
-        <noise angle="0.1 0.1 0.5" angular_velocity="0.05" yaw_drift="0.001" linear_acceleration="0.05"/>
+        <noise angle="0.1 0.1 0.5" angular_velocity="0.005" yaw_drift="0.001" linear_acceleration="0.05"/>
         <link name="Base"/>
         <ros_publisher topic="/stonefish/imu"/>
     </sensor>
@@ -71,15 +71,15 @@
         <link name="DVLLink"/>
     </sensor>
 
-    <sensor name="FrontCamera_D455" type="camera" rate="90.0">
-        <specs resolution_x="1280" resolution_y="800" horizontal_fov="86.0"/>
+    <sensor name="FrontCamera_D455" type="camera" rate="15.0">
+        <specs resolution_x="640" resolution_y="480" horizontal_fov="86.0"/>
         <origin xyz="0.22 0.0 0.0" rpy="1.57 0.0 1.57"/>
         <link name="Base"/>
         <ros_publisher topic="/stonefish/front_camera/image_raw" />
     </sensor>
 
-    <sensor name="DownCamera_D405" type="camera" rate="90.0">
-        <specs resolution_x="1280" resolution_y="720" horizontal_fov="87.0"/>
+    <sensor name="DownCamera_D405" type="camera" rate="15.0">
+        <specs resolution_x="640" resolution_y="480" horizontal_fov="87.0"/>
         <origin xyz="-0.025 0.0 0.1" rpy="0.78 0.0 1.57"/>
         <link name="Base"/>
         <ros_publisher topic="/stonefish/down_camera/image_raw" />
