@@ -11,4 +11,9 @@ export LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
 
 I'd reccomend adding the export command to your ~/.bashrc or equivlant 
 
-5. TBD
+5. build okmr_stonefish using colcon build
+6. launch the simulation using the desired .scn (scenario) file
+
+```bash
+ros2 launch okmr_stonefish sim.launch.py scenario_name:=simple.scn 
+```
