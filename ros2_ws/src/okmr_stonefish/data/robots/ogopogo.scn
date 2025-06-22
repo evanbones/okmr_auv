@@ -1,0 +1,90 @@
+<?xml version="1.0"?>
+<scenario>
+<robot name="Robot" fixed="false" self_collisions="false">
+    <base_link name="Base" type="cylinder" physics="submerged">
+        <dimensions radius="0.075" height="0.40"/>
+        <origin xyz="0.0 0.0 0.0" rpy="0.0 1.5708 0.0"/>
+        <material name="Hull"/>
+        <look name="Gray"/>
+    </base_link>
+    
+    <link name="LeftStructure" type="box" physics="submerged">
+        <dimensions xyz="0.5 0.075 0.05"/>
+        <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+        <material name="Structure"/>
+        <look name="Blue"/>
+    </link>
+    
+    <link name="RightStructure" type="box" physics="submerged">
+        <dimensions xyz="0.5 0.075 0.05"/>
+        <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+        <material name="Structure"/>
+        <look name="Blue"/>
+    </link>
+    
+    <joint name="LeftStructureJoint" type="fixed">
+        <parent name="Base"/>
+        <child name="LeftStructure"/>
+        <origin xyz="0.0 0.12 0.03" rpy="0.0 0.0 0.0"/>
+    </joint>
+    
+    <joint name="RightStructureJoint" type="fixed">
+        <parent name="Base"/>
+        <child name="RightStructure"/>
+        <origin xyz="0.0 -0.12 0.03" rpy="0.0 0.0 0.0"/>
+    </joint>
+    
+    <link name="DVLLink" type="cylinder" physics="submerged">
+        <dimensions radius="0.035" height="0.08"/>
+        <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+        <material name="DVL"/>
+        <look name="Gray"/>
+    </link>
+    
+    <joint name="DVLJoint" type="fixed">
+        <parent name="Base"/>
+        <child name="DVLLink"/>
+        <origin xyz="-0.06 0.0 0.1" rpy="0.0 0.0 0.0"/>
+    </joint>
+
+    <sensor name="DVL" rate="8.0" type="dvl">
+        <specs beam_angle="30.0" beam_positive_z="true"/>
+        <range velocity="10.0 10.0 10.0" altitude_min="0.1" altitude_max="50.0"/>
+        <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+        <noise velocity_percent= "0.005" velocity="0.00" altitude="0.005" water_velocity_percent="0.005" water_velocity="0.005"/>
+        <link name="DVLLink"/>
+        <ros_publisher topic="/stonefish/dvl"/>
+    </sensor>
+
+    <sensor name="IMU" type="imu" rate="200.0">
+        <origin xyz="0.15 0.0 0.0" rpy="0.0 0.0 0.0"/>
+        <noise angle="0.1 0.1 0.5" angular_velocity="0.05" yaw_drift="0.001" linear_acceleration="0.05"/>
+        <link name="Base"/>
+        <ros_publisher topic="/stonefish/imu"/>
+    </sensor>
+
+    <sensor name="Pressure" rate="1.0" type="pressure">
+        <range pressure="10000.0"/>
+        <noise pressure="0.1"/>
+        <history samples="1"/>
+        <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+        <link name="DVLLink"/>
+    </sensor>
+
+    <sensor name="FrontCamera_D455" type="camera" rate="90.0">
+        <specs resolution_x="1280" resolution_y="800" horizontal_fov="86.0"/>
+        <origin xyz="0.22 0.0 0.0" rpy="1.57 0.0 1.57"/>
+        <link name="Base"/>
+        <ros_publisher topic="/stonefish/front_camera/image_raw" />
+    </sensor>
+
+    <sensor name="DownCamera_D405" type="camera" rate="90.0">
+        <specs resolution_x="1280" resolution_y="720" horizontal_fov="87.0"/>
+        <origin xyz="-0.025 0.0 0.1" rpy="0.78 0.0 1.57"/>
+        <link name="Base"/>
+        <ros_publisher topic="/stonefish/down_camera/image_raw" />
+    </sensor>
+
+    <world_transform xyz="2.0 0.0 2.0" rpy="0.0 1.57 0.0"/>
+</robot>
+</scenario>
