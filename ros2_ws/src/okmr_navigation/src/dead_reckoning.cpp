@@ -1,8 +1,8 @@
 #include "rclcpp/rclcpp.hpp"
 #include "geometry_msgs/msg/pose_stamped.hpp"
 #include "geometry_msgs/msg/quaternion.hpp"
-#include "geometry_msgs/msg/twist.hpp"
-#include "geometry_msgs/msg/accel.hpp"
+#include "geometry_msgs/msg/twist_stamped.hpp"
+#include "geometry_msgs/msg/accel_stamped.hpp"
 #include "geometry_msgs/msg/vector3.hpp"
 #include "okmr_msgs/msg/sensor_reading.hpp"
 #include "okmr_msgs/msg/dvl.hpp"
@@ -12,6 +12,8 @@
 #include "sensor_msgs/msg/imu.hpp"
 #include <tf2/LinearMath/Quaternion.h>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
+#include <tf2_ros/transform_listener.h>
+#include <tf2_ros/buffer.h>
 #include <chrono>
 #include "message_filters/subscriber.h"
 #include "message_filters/synchronizer.h"
@@ -31,8 +33,8 @@ class DeadReckoningNode : public rclcpp::Node{
         
         // Current state messages
         geometry_msgs::msg::PoseStamped current_pose;
-        geometry_msgs::msg::Twist current_twist;
-        geometry_msgs::msg::Accel current_accel;
+        geometry_msgs::msg::TwistStamped current_twist;
+        geometry_msgs::msg::AccelStamped current_accel;
         
         // Cached sensor messages
         sensor_msgs::msg::Imu current_imu_msg;
@@ -58,6 +60,12 @@ class DeadReckoningNode : public rclcpp::Node{
         double dvl_accel_alpha_ = 0.3;
         double angular_vel_filter_alpha_ = 0.7;
         double angular_accel_filter_alpha_ = 0.7;
+        
+        // TF2 for coordinate transforms
+        std::unique_ptr<tf2_ros::Buffer> tf_buffer_;
+        std::shared_ptr<tf2_ros::TransformListener> tf_listener_;
+        std::string imu_frame_id_ = "camera_imu_optical_frame";
+        std::string base_frame_id_ = "base_link";
 
 	    DeadReckoningNode() : Node("dead_reckoning_node") {
             // Declare parameters with descriptors
@@ -102,6 +110,10 @@ class DeadReckoningNode : public rclcpp::Node{
             angular_vel_filter_alpha_ = this->get_parameter("angular_vel_filter_alpha").as_double();
             angular_accel_filter_alpha_ = this->get_parameter("angular_accel_filter_alpha").as_double();
             
+            // Initialize TF2
+            tf_buffer_ = std::make_unique<tf2_ros::Buffer>(this->get_clock());
+            tf_listener_ = std::make_shared<tf2_ros::TransformListener>(*tf_buffer_);
+            
             // Parameter callback
             param_callback_handle_ = this->add_on_set_parameters_callback(
                 std::bind(&DeadReckoningNode::on_parameter_change, this, std::placeholders::_1));
@@ -115,8 +127,8 @@ class DeadReckoningNode : public rclcpp::Node{
 
 		    // Publishers
 	    	pose_publisher = this->create_publisher<geometry_msgs::msg::PoseStamped>("/pose", 10);
-	    	twist_publisher = this->create_publisher<geometry_msgs::msg::Twist>("/velocity", 10);
-	    	accel_publisher = this->create_publisher<geometry_msgs::msg::Accel>("/acceleration", 10);
+	    	twist_publisher = this->create_publisher<geometry_msgs::msg::TwistStamped>("/velocity", 10);
+	    	accel_publisher = this->create_publisher<geometry_msgs::msg::AccelStamped>("/acceleration", 10);
             
             // Services
             get_pose_twist_accel_service = this->create_service<okmr_msgs::srv::GetPoseTwistAccel>(
@@ -169,9 +181,9 @@ class DeadReckoningNode : public rclcpp::Node{
         last_dvl_time = current_dvl_time;
         
         // Apply complementary filter to linear velocity estimate
-        current_twist.linear.x = dvl_velocity_alpha_ * msg->velocity.x + (1.0 - dvl_velocity_alpha_) * current_twist.linear.x;
-        current_twist.linear.y = dvl_velocity_alpha_ * msg->velocity.y + (1.0 - dvl_velocity_alpha_) * current_twist.linear.y;
-        current_twist.linear.z = dvl_velocity_alpha_ * msg->velocity.z + (1.0 - dvl_velocity_alpha_) * current_twist.linear.z;
+        current_twist.twist.linear.x = dvl_velocity_alpha_ * msg->velocity.x + (1.0 - dvl_velocity_alpha_) * current_twist.twist.linear.x;
+        current_twist.twist.linear.y = dvl_velocity_alpha_ * msg->velocity.y + (1.0 - dvl_velocity_alpha_) * current_twist.twist.linear.y;
+        current_twist.twist.linear.z = dvl_velocity_alpha_ * msg->velocity.z + (1.0 - dvl_velocity_alpha_) * current_twist.twist.linear.z;
     }
 
     void get_pose_twist_accel_callback(const std::shared_ptr<okmr_msgs::srv::GetPoseTwistAccel::Request> request,
@@ -179,8 +191,8 @@ class DeadReckoningNode : public rclcpp::Node{
         (void)request; // Unused parameter
         
         response->pose = current_pose.pose;
-        response->twist = current_twist;
-        response->accel = current_accel;
+        response->twist = current_twist.twist;
+        response->accel = current_accel.accel;
         response->success = gotFirstTime; // Only return success if we've received at least one IMU measurement
     }
 
@@ -277,31 +289,58 @@ class DeadReckoningNode : public rclcpp::Node{
         publish_state_estimates(current_time);
     }
 
-    void process_imu_data() {
-        // Extract angular velocities from IMU (preserving original coordinate transforms)
-        double angular_velocity_pitch = 0;
-        double angular_velocity_yaw  = 0;
-        double angular_velocity_roll = 0;
+    geometry_msgs::msg::Vector3 transform_imu_data(const sensor_msgs::msg::Imu& imu_msg, bool is_angular) {
+        try {
+            // Get transform from IMU frame to base_link
+            geometry_msgs::msg::TransformStamped transform = tf_buffer_->lookupTransform(
+                base_frame_id_, imu_msg.header.frame_id, tf2::TimePointZero);
+            
+            // Create a vector3 stamped message for transformation
+            geometry_msgs::msg::Vector3Stamped input_vector, output_vector;
+            input_vector.header = imu_msg.header;
+            
+            if (is_angular) {
+                input_vector.vector = imu_msg.angular_velocity;
+            } else {
+                input_vector.vector = imu_msg.linear_acceleration;
+            }
+            
+            // Transform the vector
+            tf2::doTransform(input_vector, output_vector, transform);
+            return output_vector.vector;
+            
+        } catch (tf2::TransformException &ex) {
+            RCLCPP_WARN(this->get_logger(), "Could not transform IMU data: %s", ex.what());
+            // Fallback to no transformation
+            if (is_angular) {
+                return current_imu_msg.angular_velocity;
+            } else {
+                return current_imu_msg.linear_acceleration;
+            }
+        }
+    }
 
-        // yaw and roll are negative to convert from D455 coordinate plane to standard
-        if(abs(current_imu_msg.angular_velocity.x)>0.01)
-            angular_velocity_pitch = -current_imu_msg.angular_velocity.x;
-        if(abs(current_imu_msg.angular_velocity.y)>0.01)
-            angular_velocity_yaw  = -current_imu_msg.angular_velocity.y;
-        if(abs(current_imu_msg.angular_velocity.z)>0.01)
-            angular_velocity_roll = current_imu_msg.angular_velocity.z;
+    void process_imu_data() {
+        // Transform angular velocities from IMU frame to base_link
+        auto angular_velocity = transform_imu_data(current_imu_msg, true);
+        
+        // Apply deadband threshold (preserving original logic)
+        double angular_velocity_roll = (abs(angular_velocity.x) > 0.01) ? angular_velocity.x : 0.0;
+        double angular_velocity_pitch = (abs(angular_velocity.y) > 0.01) ? angular_velocity.y : 0.0;
+        double angular_velocity_yaw = (abs(angular_velocity.z) > 0.01) ? angular_velocity.z : 0.0;
 
         // Update current twist angular velocity (always published)
-        current_twist.angular.x = angular_velocity_roll;
-        current_twist.angular.y = angular_velocity_pitch;
-        current_twist.angular.z = angular_velocity_yaw;
+        current_twist.twist.angular.x = angular_velocity_roll;
+        current_twist.twist.angular.y = angular_velocity_pitch;
+        current_twist.twist.angular.z = angular_velocity_yaw;
     }
 
     void update_attitude_estimation(double dt) {
-        // Convert coordinate frame from camera IMU to ROS2 format (preserving original)
-        double ax = current_imu_msg.linear_acceleration.z;
-        double ay = -current_imu_msg.linear_acceleration.x;
-        double az = -current_imu_msg.linear_acceleration.y;
+        // Transform linear acceleration from IMU frame to base_link
+        auto linear_accel = transform_imu_data(current_imu_msg, false);
+        double ax = linear_accel.x;
+        double ay = linear_accel.y;
+        double az = linear_accel.z;
 
         // Complementary filter for attitude estimation (preserving original logic)
         double alpha = complementary_filter_alpha_;
@@ -324,9 +363,9 @@ class DeadReckoningNode : public rclcpp::Node{
         }
         
         // Complementary filter for attitude (preserving original)
-        rotation_estimate.y = alpha * (rotation_estimate.y + current_twist.angular.y * dt) + (1 - alpha) * accel_pitch;
-        rotation_estimate.x = alpha * (rotation_estimate.x + current_twist.angular.x * dt) + (1 - alpha) * accel_roll;
-        rotation_estimate.z += current_twist.angular.z * dt;
+        rotation_estimate.y = alpha * (rotation_estimate.y + current_twist.twist.angular.y * dt) + (1 - alpha) * accel_pitch;
+        rotation_estimate.x = alpha * (rotation_estimate.x + current_twist.twist.angular.x * dt) + (1 - alpha) * accel_roll;
+        rotation_estimate.z += current_twist.twist.angular.z * dt;
     }
 
     void integrate_pose(double dt) {
@@ -334,7 +373,7 @@ class DeadReckoningNode : public rclcpp::Node{
         tf2::Quaternion q;
         q.setRPY(rotation_estimate.x, rotation_estimate.y, rotation_estimate.z);
         tf2::Matrix3x3 tf_R(q);
-        tf2::Vector3 rotated_point = tf_R * tf2::Vector3(current_twist.linear.x*dt, current_twist.linear.y*dt, current_twist.linear.z*dt);
+        tf2::Vector3 rotated_point = tf_R * tf2::Vector3(current_twist.twist.linear.x*dt, current_twist.twist.linear.y*dt, current_twist.twist.linear.z*dt);
         translation_estimate.x += rotated_point.x();
         translation_estimate.y += rotated_point.y();
         translation_estimate.z += rotated_point.z();
@@ -347,10 +386,11 @@ class DeadReckoningNode : public rclcpp::Node{
     }
 
     void calculate_accelerations(double dt) {
-        // Convert coordinate frame from camera IMU to ROS2 format
-        double ax = current_imu_msg.linear_acceleration.z;
-        double ay = -current_imu_msg.linear_acceleration.x;
-        double az = -current_imu_msg.linear_acceleration.y;
+        // Transform linear acceleration from IMU frame to base_link
+        auto linear_accel = transform_imu_data(current_imu_msg, false);
+        double ax = linear_accel.x;
+        double ay = linear_accel.y;
+        double az = linear_accel.z;
 
         // Calculate linear acceleration with gravity compensation
         tf2::Quaternion q;
@@ -365,35 +405,35 @@ class DeadReckoningNode : public rclcpp::Node{
         double imu_accel_z = az - gravity_body.z();
 
         // Combine DVL acceleration with IMU acceleration using complementary filter
-        current_accel.linear.x = dvl_accel_alpha_ * dvl_accel.x + (1.0 - dvl_accel_alpha_) * imu_accel_x;
-        current_accel.linear.y = dvl_accel_alpha_ * dvl_accel.y + (1.0 - dvl_accel_alpha_) * imu_accel_y;
-        current_accel.linear.z = dvl_accel_alpha_ * dvl_accel.z + (1.0 - dvl_accel_alpha_) * imu_accel_z;
+        current_accel.accel.linear.x = dvl_accel_alpha_ * dvl_accel.x + (1.0 - dvl_accel_alpha_) * imu_accel_x;
+        current_accel.accel.linear.y = dvl_accel_alpha_ * dvl_accel.y + (1.0 - dvl_accel_alpha_) * imu_accel_y;
+        current_accel.accel.linear.z = dvl_accel_alpha_ * dvl_accel.z + (1.0 - dvl_accel_alpha_) * imu_accel_z;
 
         // Update linear velocity estimate by integrating gravity-compensated IMU acceleration
         // This provides high-frequency velocity updates between DVL measurements
-        current_twist.linear.x += imu_accel_x * dt;
-        current_twist.linear.y += imu_accel_y * dt;
-        current_twist.linear.z += imu_accel_z * dt;
+        current_twist.twist.linear.x += imu_accel_x * dt;
+        current_twist.twist.linear.y += imu_accel_y * dt;
+        current_twist.twist.linear.z += imu_accel_z * dt;
 
         // Calculate angular acceleration (derivative of smoothed angular velocity)
-        smoothed_angular_vel.x = angular_vel_filter_alpha_ * smoothed_angular_vel.x + (1.0 - angular_vel_filter_alpha_) * current_twist.angular.x;
-        smoothed_angular_vel.y = angular_vel_filter_alpha_ * smoothed_angular_vel.y + (1.0 - angular_vel_filter_alpha_) * current_twist.angular.y;
-        smoothed_angular_vel.z = angular_vel_filter_alpha_ * smoothed_angular_vel.z + (1.0 - angular_vel_filter_alpha_) * current_twist.angular.z;
+        smoothed_angular_vel.x = angular_vel_filter_alpha_ * smoothed_angular_vel.x + (1.0 - angular_vel_filter_alpha_) * current_twist.twist.angular.x;
+        smoothed_angular_vel.y = angular_vel_filter_alpha_ * smoothed_angular_vel.y + (1.0 - angular_vel_filter_alpha_) * current_twist.twist.angular.y;
+        smoothed_angular_vel.z = angular_vel_filter_alpha_ * smoothed_angular_vel.z + (1.0 - angular_vel_filter_alpha_) * current_twist.twist.angular.z;
 
-        current_accel.angular.x = angular_accel_filter_alpha_ * current_accel.angular.x + (1.0 - angular_accel_filter_alpha_) * (smoothed_angular_vel.x - prev_angular_vel.x) / dt;
-        current_accel.angular.y = angular_accel_filter_alpha_ * current_accel.angular.y + (1.0 - angular_accel_filter_alpha_) * (smoothed_angular_vel.y - prev_angular_vel.y) / dt;
-        current_accel.angular.z = angular_accel_filter_alpha_ * current_accel.angular.z + (1.0 - angular_accel_filter_alpha_) * (smoothed_angular_vel.z - prev_angular_vel.z) / dt;
+        current_accel.accel.angular.x = angular_accel_filter_alpha_ * current_accel.accel.angular.x + (1.0 - angular_accel_filter_alpha_) * (smoothed_angular_vel.x - prev_angular_vel.x) / dt;
+        current_accel.accel.angular.y = angular_accel_filter_alpha_ * current_accel.accel.angular.y + (1.0 - angular_accel_filter_alpha_) * (smoothed_angular_vel.y - prev_angular_vel.y) / dt;
+        current_accel.accel.angular.z = angular_accel_filter_alpha_ * current_accel.accel.angular.z + (1.0 - angular_accel_filter_alpha_) * (smoothed_angular_vel.z - prev_angular_vel.z) / dt;
 
         prev_angular_vel = smoothed_angular_vel;
     }
 
     void publish_state_estimates(rclcpp::Time current_time) {
         // Update message headers
-        current_pose.header.stamp = current_time.to_msg();
+        current_pose.header.stamp = current_time;
         current_pose.header.frame_id = "map";
-        current_twist.header.stamp = current_time.to_msg();
+        current_twist.header.stamp = current_time;
         current_twist.header.frame_id = "base_link";
-        current_accel.header.stamp = current_time.to_msg();
+        current_accel.header.stamp = current_time;
         current_accel.header.frame_id = "base_link";
 
         // Publish all state estimates
@@ -405,8 +445,8 @@ class DeadReckoningNode : public rclcpp::Node{
 	rclcpp::Subscription<sensor_msgs::msg::Imu>::SharedPtr imu_subscription;
 	rclcpp::Subscription<okmr_msgs::msg::Dvl>::SharedPtr dvl_subscription;
 	rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr pose_publisher;
-	rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr twist_publisher;
-	rclcpp::Publisher<geometry_msgs::msg::Accel>::SharedPtr accel_publisher;
+	rclcpp::Publisher<geometry_msgs::msg::TwistStamped>::SharedPtr twist_publisher;
+	rclcpp::Publisher<geometry_msgs::msg::AccelStamped>::SharedPtr accel_publisher;
     rclcpp::Service<okmr_msgs::srv::GetPoseTwistAccel>::SharedPtr get_pose_twist_accel_service;
     rclcpp::Service<okmr_msgs::srv::SetDeadReckoningEnabled>::SharedPtr set_dead_reckoning_service;
     rclcpp::Service<okmr_msgs::srv::ClearPose>::SharedPtr clear_pose_service;

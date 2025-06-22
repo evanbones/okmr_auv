@@ -8,11 +8,11 @@ VelocityControlLayer::VelocityControlLayer()
     : ControlLayerBase("velocity_control_layer", okmr_msgs::msg::ControlMode::VELOCITY)
 {
     // Subscribe to velocity topics
-    velocity_sub_ = this->create_subscription<geometry_msgs::msg::Twist>(
+    velocity_sub_ = this->create_subscription<geometry_msgs::msg::TwistStamped>(
         "/velocity", 10,
         std::bind(&VelocityControlLayer::velocity_callback, this, std::placeholders::_1));
     
-    velocity_target_sub_ = this->create_subscription<geometry_msgs::msg::Twist>(
+    velocity_target_sub_ = this->create_subscription<geometry_msgs::msg::TwistStamped>(
         "/velocity_target", 10,
         std::bind(&VelocityControlLayer::velocity_target_callback, this, std::placeholders::_1));
     
@@ -27,14 +27,14 @@ VelocityControlLayer::VelocityControlLayer()
     velocity_target_.angular.x = velocity_target_.angular.y = velocity_target_.angular.z = 0.0;
 }
 
-void VelocityControlLayer::velocity_callback(const geometry_msgs::msg::Twist::SharedPtr msg)
+void VelocityControlLayer::velocity_callback(const geometry_msgs::msg::TwistStamped::SharedPtr msg)
 {
-    current_velocity_ = *msg;
+    current_velocity_ = msg->twist;
 }
 
-void VelocityControlLayer::velocity_target_callback(const geometry_msgs::msg::Twist::SharedPtr msg)
+void VelocityControlLayer::velocity_target_callback(const geometry_msgs::msg::TwistStamped::SharedPtr msg)
 {
-    velocity_target_ = *msg;
+    velocity_target_ = msg->twist;
 }
 
 void VelocityControlLayer::update()

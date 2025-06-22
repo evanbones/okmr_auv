@@ -13,7 +13,7 @@ PoseControlLayer::PoseControlLayer()
         std::bind(&PoseControlLayer::pose_target_callback, this, std::placeholders::_1));
     
     // Publisher for velocity target
-    velocity_target_pub_ = this->create_publisher<geometry_msgs::msg::Twist>("/velocity_target", 10);
+    velocity_target_pub_ = this->create_publisher<geometry_msgs::msg::TwistStamped>("/velocity_target", 10);
     
     // Initialize pose messages - current pose is always zero (relative pose origin)
     current_pose_.translation.x = current_pose_.translation.y = current_pose_.translation.z = 0.0;
@@ -48,9 +48,11 @@ void PoseControlLayer::update()
     auto command_output = compute_layer_command(linear_error, angular_error);
     
     // Create and publish velocity target message
-    geometry_msgs::msg::Twist velocity_target;
-    velocity_target.linear = command_output.first;
-    velocity_target.angular = command_output.second;
+    geometry_msgs::msg::TwistStamped velocity_target;
+    velocity_target.header.stamp = this->now();
+    velocity_target.header.frame_id = "base_link";
+    velocity_target.twist.linear = command_output.first;
+    velocity_target.twist.angular = command_output.second;
     
     velocity_target_pub_->publish(velocity_target);
 }

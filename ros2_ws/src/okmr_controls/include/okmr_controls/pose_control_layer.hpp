@@ -4,6 +4,7 @@
 #include "okmr_controls/control_layer_base.hpp"
 #include <okmr_msgs/msg/relative_pose.hpp>
 #include <geometry_msgs/msg/twist.hpp>
+#include <geometry_msgs/msg/twist_stamped.hpp>
 
 namespace okmr_controls
 {
@@ -18,7 +19,7 @@ protected:
 
 private:
     rclcpp::Subscription<okmr_msgs::msg::RelativePose>::SharedPtr pose_target_sub_;
-    rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr velocity_target_pub_;
+    rclcpp::Publisher<geometry_msgs::msg::TwistStamped>::SharedPtr velocity_target_pub_;
     
     okmr_msgs::msg::RelativePose current_pose_;
     okmr_msgs::msg::RelativePose pose_target_;
