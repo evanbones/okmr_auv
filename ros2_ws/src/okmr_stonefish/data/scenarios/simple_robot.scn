@@ -91,21 +91,20 @@
         <joint name="DVLJoint" type="fixed">
             <parent name="Base"/>
             <child name="DVLLink"/>
-            <origin xyz="0.06 0.0 0.1" rpy="0.0 0.0 0.0"/>
+            <origin xyz="-0.06 0.0 0.1" rpy="0.0 0.0 0.0"/>
         </joint>
         <sensor name="DVL" rate="8.0" type="dvl">
             <specs beam_angle="30.0" beam_positive_z="false"/>
-            <range velocity="10.0 10.0 5.0" altitude_min="0.5" altitude_max="50.0"/>
-            <water_layer minimum_layer_size="10.0" boundary_near="10.0" boundary_far="30.0"/>
-            <noise velocity_percent= "0.3" velocity="0.1" altitude="0.03" water_velocity_percent="0.1" water_velocity="0.1"/>
-            <history samples="1"/>
+            <range velocity="10.0 10.0 5.0" altitude_min="0.1" altitude_max="50.0"/>
             <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+            <noise velocity_percent= "0.03" velocity="0.01" altitude="0.03" water_velocity_percent="0.1" water_velocity="0.1"/>
             <link name="DVLLink"/>
+            <ros_publisher topic="/stonefish/dvl"/>
         </sensor>
         <sensor name="IMU" type="imu" rate="200.0">
             <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
             <link name="Base"/>
-            <ros_publisher topic="/camera/camera/imu"/>
+            <ros_publisher topic="/stonefish/imu"/>
         </sensor>
         <world_transform xyz="2.0 0.0 2.0" rpy="0.0 1.57 0.0"/>
 </robot>
