@@ -236,6 +236,10 @@ private:
         relative_pose_target.rotation.x = roll;
         relative_pose_target.rotation.y = pitch;
         relative_pose_target.rotation.z = yaw;
+        //need to update this to be the difference between current orientation and the target orientation
+        //since the pose controller now takes no input for the rotation,
+        //we need to ensure that what it recevies is already the error between current world frame orientation
+        //and the world frame goal orientation
 
         relative_pose_pub_->publish(relative_pose_target);
     }

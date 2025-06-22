@@ -2,16 +2,13 @@ import socket
 import re
 import rclpy
 from rclpy.node import Node
-from okmr_msgs.msg import SensorReading
+from okmr_msgs.msg import Dvl
+from geometry_msgs.msg import Vector3
 
 class DvlDriverNode(Node):
     def __init__(self):
         super().__init__('dvl_driver')
-        self.pidPublisherMap={}
-
-        self.pidPublisherMap["surge"] = self.create_publisher(SensorReading, "/PID/surge/actual", 10)
-        self.pidPublisherMap["sway"] = self.create_publisher(SensorReading, "/PID/sway/actual", 10)
-        self.pidPublisherMap["heave"] = self.create_publisher(SensorReading, "/PID/heave/actual", 10)
+        self.dvl_publisher = self.create_publisher(Dvl, "/dvl", 10)
 
     def udp_server(self):
         # Create a UDP socket
@@ -26,68 +23,59 @@ class DvlDriverNode(Node):
             #print(f"Received message: {} from {dvl_addr}")
 
 
-            # Regular expression to match the desired fields
-            pattern = r"VX=(-?\d+\.\d+),VY=(-?\d+\.\d+),VZ=(-?\d+\.\d+),.*D1=(-?\d+\.\d+),D2=(-?\d+\.\d+),D3=(-?\d+\.\d+),D4=(-?\d+\.\d+)"
+            # Regular expression to match the PNORBT8 message format
+            pattern = r"TIME=(-?\d+\.?\d*),.*?VX=(-?\d+\.\d+),VY=(-?\d+\.\d+),VZ=(-?\d+\.\d+),FOM=(-?\d+\.\d+),D1=(-?\d+\.\d+),D2=(-?\d+\.\d+),D3=(-?\d+\.\d+),D4=(-?\d+\.\d+),BATT=(-?\d+\.\d+),SS=(-?\d+\.\d+),PRESS=(-?\d+\.\d+),TEMP=(-?\d+\.\d+),STAT=(0x[0-9A-Fa-f]+)"
 
             # Find the matches
             matches = re.search(pattern, data)
 
             if matches:
-            # Extracting values
-                vx = float(matches.group(1))
-                vy = float(matches.group(2))
-                vz = float(matches.group(3))
-                depths = []
-                depths.append(float(matches.group(4)))
-                depths.append(float(matches.group(5)))
-                depths.append(float(matches.group(6)))
-                depths.append(float(matches.group(7)))
+                # Extracting values from regex groups
+                time_val = float(matches.group(1))
+                vx = float(matches.group(2))
+                vy = float(matches.group(3))
+                vz = float(matches.group(4))
+                fom = float(matches.group(5))
+                d1 = float(matches.group(6))
+                d2 = float(matches.group(7))
+                d3 = float(matches.group(8))
+                d4 = float(matches.group(9))
+                battery = float(matches.group(10))
+                speed_sound = float(matches.group(11))
+                pressure = float(matches.group(12))
+                temperature = float(matches.group(13))
+                status = int(matches.group(14), 16)  # Convert hex string to int
 
-                depth_avg=0
-                for d in depths:
-                    depth_avg += d / 4.0
-
-                counter = depth_sum = std_dev = 0
-
-                for d in depths:
-                    std_dev += abs(depth_avg - d) / 4.0
-
-                for d in depths:
-                    if(d - depth_avg > std_dev * 1.5):
-                        counter+=1
-                        depth_sum += d
-                if(counter >0):
-                    depth_avg = depth_sum / counter
-                else:
-                    depth_avg=-1.0
-
-                #publish avg dist from bottom
-
-                _time=self.get_clock().now().to_msg()
-                surge_msg=SensorReading()
-                sway_msg=SensorReading()
-                heave_msg=SensorReading()
+                # Create DVL message
+                dvl_msg = Dvl()
+                dvl_msg.header.stamp = self.get_clock().now().to_msg()
+                dvl_msg.header.frame_id = "dvl"
                 
-                surge_msg.header.stamp = _time
-                sway_msg.header.stamp = _time
-                heave_msg.header.stamp = _time
+                # Set velocity (apply coordinate transformations if needed)
+                dvl_msg.velocity.x = vx
+                dvl_msg.velocity.y = -vy  # Transform coordinate system
+                dvl_msg.velocity.z = -vz  # Transform coordinate system
                 
-                if(vx > -32 and vy > -32 and vz > -32):
-                    surge_msg.data = vx
-                    sway_msg.data=-vy
-                    heave_msg.data=-vz
-                else:
-                    surge_msg.data = 0.0
-                    sway_msg.data=0.0
-                    heave_msg.data=0.0
+                # Set environmental data
+                dvl_msg.water_temperature = temperature
+                dvl_msg.pressure = pressure
+                dvl_msg.figure_of_merit = fom
+                
+                # Set beam distances
+                dvl_msg.beam_distances = [d1, d2, d3, d4]
+                
+                # Set additional data
+                dvl_msg.battery_voltage = battery
+                dvl_msg.speed_of_sound = speed_sound
+                dvl_msg.status = status
 
-                self.pidPublisherMap["surge"].publish(surge_msg)
-                self.pidPublisherMap["sway"].publish(sway_msg)
-                self.pidPublisherMap["heave"].publish(heave_msg)
+                # Publish DVL message
+                self.dvl_publisher.publish(dvl_msg)
 
                 # Output the extracted variables
                 #print(f"VX: {vx}, VY: {vy}, VZ: {vz}")
                 #print(f"D1: {d1}, D2: {d2}, D3: {d3}, D4: {d4}")
+                #https://support.nortekgroup.com/hc/en-us/article_attachments/19558106638620
             else:
                 print("No matches found.")
 
