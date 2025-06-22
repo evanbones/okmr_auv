@@ -14,6 +14,7 @@ def generate_launch_description():
         # D455_Z → ROS2_X (Forward)
         # D455_X → ROS2_-Y (Right → -Left) 
         # D455_Y → ROS2_-Z (Down → -Up)
+        #https://github.com/IntelRealSense/realsense-ros?tab=readme-ov-file#ros2robot-vs-opticalcamera-coordination-systems
         Node(
             package='tf2_ros',
             executable='static_transform_publisher',

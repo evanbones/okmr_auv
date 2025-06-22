@@ -1,3 +1,9 @@
 [submodule "ros2_ws/src/realsense-ros"]
 	path = ros2_ws/src/realsense-ros
 	url = https://github.com/IntelRealSense/realsense-ros
+[submodule "simulation/stonefish"]
+	path = simulation/stonefish
+	url = https://github.com/patrykcieslak/stonefish.git
+[submodule "ros2_ws/src/stonefish_ros2"]
+	path = ros2_ws/src/stonefish_ros2
+	url = https://github.com/patrykcieslak/stonefish_ros2.git

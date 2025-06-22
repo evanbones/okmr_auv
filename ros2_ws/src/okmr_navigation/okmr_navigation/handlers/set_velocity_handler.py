@@ -11,15 +11,6 @@ def handle_set_velocity(goal_handle):
         'distance_from_goal'
     )
 
-
-def test_handle_set_velocity(goal_handle):
-    """Test version of velocity movement"""
-    command_msg = goal_handle.request.command_msg
-    goal_velocity = command_msg.goal_velocity
-    
-    return execute_test_movement_common(goal_handle)
-
-
 def _publish_velocity_goal(goal_handle):
     """Publish goal velocity to the velocity target server"""
     node = NavigatorActionServer.get_instance()
