@@ -261,7 +261,24 @@ class DeadReckoningNode : public rclcpp::Node{
         
         last_time = current_time;
 
-        // Step 1: Extract angular velocities from IMU (preserving original coordinate transforms)
+        // Process IMU data and update angular velocities
+        process_imu_data();
+
+        // Process attitude estimation and pose integration if enabled
+        if (is_dead_reckoning_enabled) {
+            update_attitude_estimation(dt);
+            integrate_pose(dt);
+        }
+
+        // Calculate accelerations with gravity compensation
+        calculate_accelerations(dt);
+
+        // Update message headers and publish all data
+        publish_state_estimates(current_time);
+    }
+
+    void process_imu_data() {
+        // Extract angular velocities from IMU (preserving original coordinate transforms)
         double angular_velocity_pitch = 0;
         double angular_velocity_yaw  = 0;
         double angular_velocity_roll = 0;
@@ -278,57 +295,64 @@ class DeadReckoningNode : public rclcpp::Node{
         current_twist.angular.x = angular_velocity_roll;
         current_twist.angular.y = angular_velocity_pitch;
         current_twist.angular.z = angular_velocity_yaw;
+    }
 
-        // Step 2: Convert coordinate frame from camera IMU to ROS2 format (preserving original)
+    void update_attitude_estimation(double dt) {
+        // Convert coordinate frame from camera IMU to ROS2 format (preserving original)
         double ax = current_imu_msg.linear_acceleration.z;
         double ay = -current_imu_msg.linear_acceleration.x;
         double az = -current_imu_msg.linear_acceleration.y;
 
-        if (is_dead_reckoning_enabled) {
-            // Step 3: Dead reckoning enabled - perform attitude estimation and integration
-            
-            // Complementary filter for attitude estimation (preserving original logic)
-            double alpha = complementary_filter_alpha_;
-            
-            double accel_pitch = atan2(-ax, sqrt(ay * ay + az * az));
-            double accel_roll  = atan2(ay, sqrt(ax * ax + az * az));
-            
-            // Don't use accel data when nearly vertical in pitch or roll (preserving original)
-            if (std::abs(accel_pitch) > 80.0 || std::abs(accel_roll) > 80.0) {
-                alpha = 1.0;
-            }
-
-            // Handle upside down cases (preserving original logic)
-            if (az < 0) {  
-                if (accel_pitch > 0) {
-                    accel_pitch = M_PI - accel_pitch;
-                } else {
-                    accel_pitch = -M_PI - accel_pitch;
-                }
-            }
-            
-            // Complementary filter for attitude (preserving original)
-            rotation_estimate.y = alpha * (rotation_estimate.y + angular_velocity_pitch * dt) + (1 - alpha) * accel_pitch;
-            rotation_estimate.x = alpha * (rotation_estimate.x + angular_velocity_roll * dt) + (1 - alpha) * accel_roll;
-            rotation_estimate.z += angular_velocity_yaw * dt;
-
-            // Integrate velocity for pose estimation (preserving original method)
-            tf2::Quaternion q;
-            q.setRPY(rotation_estimate.x, rotation_estimate.y, rotation_estimate.z);
-            tf2::Matrix3x3 tf_R(q);
-            tf2::Vector3 rotated_point = tf_R * tf2::Vector3(current_twist.linear.x*dt, current_twist.linear.y*dt, current_twist.linear.z*dt);
-            translation_estimate.x += rotated_point.x();
-            translation_estimate.y += rotated_point.y();
-            translation_estimate.z += rotated_point.z();
-
-            // Update pose message
-            current_pose.pose.orientation = tf2::toMsg(q);
-            current_pose.pose.position.x = translation_estimate.x;
-            current_pose.pose.position.y = translation_estimate.y;
-            current_pose.pose.position.z = translation_estimate.z;
+        // Complementary filter for attitude estimation (preserving original logic)
+        double alpha = complementary_filter_alpha_;
+        
+        double accel_pitch = atan2(-ax, sqrt(ay * ay + az * az));
+        double accel_roll  = atan2(ay, sqrt(ax * ax + az * az));
+        
+        // Don't use accel data when nearly vertical in pitch or roll (preserving original)
+        if (std::abs(accel_pitch) > 80.0 || std::abs(accel_roll) > 80.0) {
+            alpha = 1.0;
         }
 
-        // Step 4: Calculate linear acceleration (gravity compensation)
+        // Handle upside down cases (preserving original logic)
+        if (az < 0) {  
+            if (accel_pitch > 0) {
+                accel_pitch = M_PI - accel_pitch;
+            } else {
+                accel_pitch = -M_PI - accel_pitch;
+            }
+        }
+        
+        // Complementary filter for attitude (preserving original)
+        rotation_estimate.y = alpha * (rotation_estimate.y + current_twist.angular.y * dt) + (1 - alpha) * accel_pitch;
+        rotation_estimate.x = alpha * (rotation_estimate.x + current_twist.angular.x * dt) + (1 - alpha) * accel_roll;
+        rotation_estimate.z += current_twist.angular.z * dt;
+    }
+
+    void integrate_pose(double dt) {
+        // Integrate velocity for pose estimation (preserving original method)
+        tf2::Quaternion q;
+        q.setRPY(rotation_estimate.x, rotation_estimate.y, rotation_estimate.z);
+        tf2::Matrix3x3 tf_R(q);
+        tf2::Vector3 rotated_point = tf_R * tf2::Vector3(current_twist.linear.x*dt, current_twist.linear.y*dt, current_twist.linear.z*dt);
+        translation_estimate.x += rotated_point.x();
+        translation_estimate.y += rotated_point.y();
+        translation_estimate.z += rotated_point.z();
+
+        // Update pose message
+        current_pose.pose.orientation = tf2::toMsg(q);
+        current_pose.pose.position.x = translation_estimate.x;
+        current_pose.pose.position.y = translation_estimate.y;
+        current_pose.pose.position.z = translation_estimate.z;
+    }
+
+    void calculate_accelerations(double dt) {
+        // Convert coordinate frame from camera IMU to ROS2 format
+        double ax = current_imu_msg.linear_acceleration.z;
+        double ay = -current_imu_msg.linear_acceleration.x;
+        double az = -current_imu_msg.linear_acceleration.y;
+
+        // Calculate linear acceleration with gravity compensation
         tf2::Quaternion q;
         q.setRPY(rotation_estimate.x, rotation_estimate.y, rotation_estimate.z);
         tf2::Matrix3x3 tf_R(q);
@@ -352,17 +376,19 @@ class DeadReckoningNode : public rclcpp::Node{
         current_twist.linear.z += imu_accel_z * dt;
 
         // Calculate angular acceleration (derivative of smoothed angular velocity)
-        smoothed_angular_vel.x = angular_vel_filter_alpha_ * smoothed_angular_vel.x + (1.0 - angular_vel_filter_alpha_) * angular_velocity_roll;
-        smoothed_angular_vel.y = angular_vel_filter_alpha_ * smoothed_angular_vel.y + (1.0 - angular_vel_filter_alpha_) * angular_velocity_pitch;
-        smoothed_angular_vel.z = angular_vel_filter_alpha_ * smoothed_angular_vel.z + (1.0 - angular_vel_filter_alpha_) * angular_velocity_yaw;
+        smoothed_angular_vel.x = angular_vel_filter_alpha_ * smoothed_angular_vel.x + (1.0 - angular_vel_filter_alpha_) * current_twist.angular.x;
+        smoothed_angular_vel.y = angular_vel_filter_alpha_ * smoothed_angular_vel.y + (1.0 - angular_vel_filter_alpha_) * current_twist.angular.y;
+        smoothed_angular_vel.z = angular_vel_filter_alpha_ * smoothed_angular_vel.z + (1.0 - angular_vel_filter_alpha_) * current_twist.angular.z;
 
         current_accel.angular.x = angular_accel_filter_alpha_ * current_accel.angular.x + (1.0 - angular_accel_filter_alpha_) * (smoothed_angular_vel.x - prev_angular_vel.x) / dt;
         current_accel.angular.y = angular_accel_filter_alpha_ * current_accel.angular.y + (1.0 - angular_accel_filter_alpha_) * (smoothed_angular_vel.y - prev_angular_vel.y) / dt;
         current_accel.angular.z = angular_accel_filter_alpha_ * current_accel.angular.z + (1.0 - angular_accel_filter_alpha_) * (smoothed_angular_vel.z - prev_angular_vel.z) / dt;
 
         prev_angular_vel = smoothed_angular_vel;
+    }
 
-        // Step 5: Update message headers and publish
+    void publish_state_estimates(rclcpp::Time current_time) {
+        // Update message headers
         current_pose.header.stamp = current_time.to_msg();
         current_pose.header.frame_id = "map";
         current_twist.header.stamp = current_time.to_msg();

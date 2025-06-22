@@ -76,6 +76,7 @@ class DvlDriverNode(Node):
                 #print(f"VX: {vx}, VY: {vy}, VZ: {vz}")
                 #print(f"D1: {d1}, D2: {d2}, D3: {d3}, D4: {d4}")
                 #https://support.nortekgroup.com/hc/en-us/article_attachments/19558106638620
+                #mode 358
             else:
                 print("No matches found.")
 

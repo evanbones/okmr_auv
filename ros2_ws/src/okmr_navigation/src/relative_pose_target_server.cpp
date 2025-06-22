@@ -232,14 +232,11 @@ private:
         relative_pose_target.translation.y = relative_translation.y;
         relative_pose_target.translation.z = relative_translation.z;
         
-        // Rotation target
-        relative_pose_target.rotation.x = roll;
-        relative_pose_target.rotation.y = pitch;
-        relative_pose_target.rotation.z = yaw;
-        //need to update this to be the difference between current orientation and the target orientation
-        //since the pose controller now takes no input for the rotation,
-        //we need to ensure that what it recevies is already the error between current world frame orientation
-        //and the world frame goal orientation
+        // Rotation target - calculate error between current and target orientation
+        auto current_eulers = euler_from_quaternion(current_pose_msg_.pose.orientation);
+        relative_pose_target.rotation.x = roll - current_eulers.x;
+        relative_pose_target.rotation.y = pitch - current_eulers.y;
+        relative_pose_target.rotation.z = yaw - current_eulers.z;
 
         relative_pose_pub_->publish(relative_pose_target);
     }
