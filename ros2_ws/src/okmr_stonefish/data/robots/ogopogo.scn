@@ -51,15 +51,15 @@
         <specs beam_angle="30.0" beam_positive_z="true"/>
         <range velocity="10.0 10.0 10.0" altitude_min="0.1" altitude_max="50.0"/>
         <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
-        <noise velocity_percent= "0.005" velocity="0.00" altitude="0.005" water_velocity_percent="0.005" water_velocity="0.005"/>
+        <noise velocity_percent= "0.005" velocity="0.005" altitude="0.005" water_velocity_percent="0.005" water_velocity="0.005"/>
         <link name="DVLLink"/>
         <ros_publisher topic="/stonefish/dvl"/>
     </sensor>
 
     <sensor name="IMU" type="imu" rate="200.0">
         <origin xyz="0.15 0.0 0.0" rpy="0.0 0.0 0.0"/>
-        <noise angle="0.0 0.0 0.0" angular_velocity="0.00" yaw_drift="0.00" linear_acceleration="0.00"/>
-        <link name="DVLLink"/>
+        <noise angle="0.0 0.0 0.0" angular_velocity="0.005" yaw_drift="0.001" linear_acceleration="0.005"/>
+        <link name="Base"/>
         <ros_publisher topic="/stonefish/imu"/>
     </sensor>
 

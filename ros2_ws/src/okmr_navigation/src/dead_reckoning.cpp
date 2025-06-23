@@ -439,8 +439,6 @@ class DeadReckoningNode : public rclcpp::Node{
         //unused at the moment because weird readings from sim
 
         //infering the linear velocity from the current acceleration
-        //this is to improve the velocity estimate from 8hz to 200hz, even if theres no new data
-        //with the dvl_accel_alpha set to 1.0, this is pretty much just dvl_vel + dvl_accel * dt
         current_twist.twist.linear.x += current_accel.accel.linear.x * dt;
         current_twist.twist.linear.y += current_accel.accel.linear.z * dt;
         current_twist.twist.linear.z += current_accel.accel.linear.z * dt;
