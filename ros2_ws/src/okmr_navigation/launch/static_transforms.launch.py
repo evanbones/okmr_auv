@@ -27,7 +27,7 @@ def generate_launch_description():
                 # This is a 90° rotation around X, then 90° around Z
                 str(-math.pi/2), '0', str(-math.pi/2),
                 # Parent frame -> Child frame  
-                'camera_imu_optical_frame', 'base_link'
+                'base_link', 'camera_imu_optical_frame'
             ]
         ),
     ])

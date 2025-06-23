@@ -44,5 +44,16 @@ def generate_launch_description():
             package='okmr_stonefish',
             executable='sim_adaptor',
         ),
+        
+        # Include static transforms for coordinate frame conversion
+        IncludeLaunchDescription(
+            PythonLaunchDescriptionSource([
+                PathJoinSubstitution([
+                    FindPackageShare('okmr_stonefish'),
+                    'launch',
+                    'static_transforms.launch.py'
+                ])
+            ])
+        ),
 
     ])

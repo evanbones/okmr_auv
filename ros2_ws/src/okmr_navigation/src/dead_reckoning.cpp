@@ -65,7 +65,6 @@ class DeadReckoningNode : public rclcpp::Node{
         // TF2 for coordinate transforms
         std::unique_ptr<tf2_ros::Buffer> tf_buffer_;
         std::shared_ptr<tf2_ros::TransformListener> tf_listener_;
-        std::string imu_frame_id_ = "camera_imu_optical_frame";
         std::string base_frame_id_ = "base_link";
 
 	    DeadReckoningNode() : Node("dead_reckoning_node") {
@@ -167,12 +166,16 @@ class DeadReckoningNode : public rclcpp::Node{
 	void dvl_callback(const okmr_msgs::msg::Dvl::ConstSharedPtr msg) {
         auto current_dvl_time = this->now();
         
-        // Calculate DVL acceleration using DVL timing
+        // Transform DVL velocity to base_link frame
+        auto transformed_velocity = transform_dvl_data(*msg);
+        
+        // Calculate DVL acceleration using transformed velocities
         if (gotFirstDVLTime && (current_dvl_time - last_dvl_time).seconds() > 0.0) {
             double dvl_dt = (current_dvl_time - last_dvl_time).seconds();
-            dvl_accel.x = (msg->velocity.x - current_dvl_msg.velocity.x) / dvl_dt;
-            dvl_accel.y = (msg->velocity.y - current_dvl_msg.velocity.y) / dvl_dt;
-            dvl_accel.z = (msg->velocity.z - current_dvl_msg.velocity.z) / dvl_dt;
+            auto prev_transformed_velocity = transform_dvl_data(current_dvl_msg);
+            dvl_accel.x = (transformed_velocity.x - prev_transformed_velocity.x) / dvl_dt;
+            dvl_accel.y = (transformed_velocity.y - prev_transformed_velocity.y) / dvl_dt;
+            dvl_accel.z = (transformed_velocity.z - prev_transformed_velocity.z) / dvl_dt;
         } else {
             dvl_accel.x = dvl_accel.y = dvl_accel.z = 0.0;
             gotFirstDVLTime = true;
@@ -183,9 +186,9 @@ class DeadReckoningNode : public rclcpp::Node{
         last_dvl_time = current_dvl_time;
         
         // Apply complementary filter to linear velocity estimate
-        current_twist.twist.linear.x = dvl_velocity_alpha_ * msg->velocity.x + (1.0 - dvl_velocity_alpha_) * current_twist.twist.linear.x;
-        current_twist.twist.linear.y = dvl_velocity_alpha_ * msg->velocity.y + (1.0 - dvl_velocity_alpha_) * current_twist.twist.linear.y;
-        current_twist.twist.linear.z = dvl_velocity_alpha_ * msg->velocity.z + (1.0 - dvl_velocity_alpha_) * current_twist.twist.linear.z;
+        current_twist.twist.linear.x = dvl_velocity_alpha_ * transformed_velocity.x + (1.0 - dvl_velocity_alpha_) * current_twist.twist.linear.x;
+        current_twist.twist.linear.y = dvl_velocity_alpha_ * transformed_velocity.y + (1.0 - dvl_velocity_alpha_) * current_twist.twist.linear.y;
+        current_twist.twist.linear.z = dvl_velocity_alpha_ * transformed_velocity.z + (1.0 - dvl_velocity_alpha_) * current_twist.twist.linear.z;
     }
 
     void get_pose_twist_accel_callback(const std::shared_ptr<okmr_msgs::srv::GetPoseTwistAccel::Request> request,
@@ -312,13 +315,35 @@ class DeadReckoningNode : public rclcpp::Node{
             return output_vector.vector;
             
         } catch (tf2::TransformException &ex) {
-            //RCLCPP_WARN(this->get_logger(), "Could not transform IMU data: %s", ex.what());
+            RCLCPP_WARN(this->get_logger(), "Could not transform IMU data: %s", ex.what());
             // Fallback to no transformation
             if (is_angular) {
                 return current_imu_msg.angular_velocity;
             } else {
                 return current_imu_msg.linear_acceleration;
             }
+        }
+    }
+
+    geometry_msgs::msg::Vector3 transform_dvl_data(const okmr_msgs::msg::Dvl& dvl_msg) {
+        try {
+            // Get transform from DVL frame to base_link
+            geometry_msgs::msg::TransformStamped transform = tf_buffer_->lookupTransform(
+                base_frame_id_, dvl_msg.header.frame_id, tf2::TimePointZero);
+            
+            // Create a vector3 stamped message for transformation
+            geometry_msgs::msg::Vector3Stamped input_vector, output_vector;
+            input_vector.header = dvl_msg.header;
+            input_vector.vector = dvl_msg.velocity;
+            
+            // Transform the vector
+            tf2::doTransform(input_vector, output_vector, transform);
+            return output_vector.vector;
+            
+        } catch (tf2::TransformException &ex) {
+            RCLCPP_WARN(this->get_logger(), "Could not transform DVL data: %s", ex.what());
+            // Fallback to no transformation
+            return dvl_msg.velocity;
         }
     }
 
@@ -411,12 +436,14 @@ class DeadReckoningNode : public rclcpp::Node{
         current_accel.accel.linear.x = dvl_accel_alpha_ * dvl_accel.x + (1.0 - dvl_accel_alpha_) * imu_accel_x;
         current_accel.accel.linear.y = dvl_accel_alpha_ * dvl_accel.y + (1.0 - dvl_accel_alpha_) * imu_accel_y;
         current_accel.accel.linear.z = dvl_accel_alpha_ * dvl_accel.z + (1.0 - dvl_accel_alpha_) * imu_accel_z;
+        //unused at the moment because weird readings from sim
 
-        // Update linear velocity estimate by integrating gravity-compensated IMU acceleration
-        // This provides high-frequency velocity updates between DVL measurements
-        //current_twist.twist.linear.x += imu_accel_x * dt;
-        //current_twist.twist.linear.y += imu_accel_y * dt;
-        //current_twist.twist.linear.z += imu_accel_z * dt;
+        //infering the linear velocity from the current acceleration
+        //this is to improve the velocity estimate from 8hz to 200hz, even if theres no new data
+        //with the dvl_accel_alpha set to 1.0, this is pretty much just dvl_vel + dvl_accel * dt
+        current_twist.twist.linear.x += current_accel.accel.linear.x * dt;
+        current_twist.twist.linear.y += current_accel.accel.linear.z * dt;
+        current_twist.twist.linear.z += current_accel.accel.linear.z * dt;
 
         // Calculate angular acceleration (derivative of smoothed angular velocity)
         smoothed_angular_vel.x = angular_vel_filter_alpha_ * smoothed_angular_vel.x + (1.0 - angular_vel_filter_alpha_) * current_twist.twist.angular.x;
