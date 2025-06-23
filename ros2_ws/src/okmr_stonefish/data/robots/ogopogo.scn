@@ -25,20 +25,20 @@
     <joint name="LeftStructureJoint" type="fixed">
         <parent name="Base"/>
         <child name="LeftStructure"/>
-        <origin xyz="0.0 0.12 0.03" rpy="0.0 0.0 0.0"/>
+        <origin xyz="0.0 0.08 0.03" rpy="0.0 0.0 0.0"/>
     </joint>
     
     <joint name="RightStructureJoint" type="fixed">
         <parent name="Base"/>
         <child name="RightStructure"/>
-        <origin xyz="0.0 -0.12 0.03" rpy="0.0 0.0 0.0"/>
+        <origin xyz="0.0 -0.08 0.03" rpy="0.0 0.0 0.0"/>
     </joint>
     
     <link name="DVLLink" type="cylinder" physics="submerged">
         <dimensions radius="0.035" height="0.08"/>
         <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
         <material name="DVL"/>
-        <look name="Gray"/>
+        <look name="Black"/>
     </link>
     
     <joint name="DVLJoint" type="fixed">
@@ -63,27 +63,142 @@
         <ros_publisher topic="/stonefish/imu"/>
     </sensor>
 
-    <sensor name="Pressure" rate="1.0" type="pressure">
+    <sensor name="Pressure" rate="8.0" type="pressure">
         <range pressure="10000.0"/>
         <noise pressure="0.1"/>
         <history samples="1"/>
         <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
         <link name="DVLLink"/>
+        <ros_publisher topic="/stonefish/pressure" />
     </sensor>
 
     <sensor name="FrontCamera_D455" type="camera" rate="15.0">
-        <specs resolution_x="640" resolution_y="480" horizontal_fov="86.0"/>
+        <specs resolution_x="640" resolution_y="480" horizontal_fov="90.0"/>
         <origin xyz="0.22 0.0 0.0" rpy="1.57 0.0 1.57"/>
         <link name="Base"/>
         <ros_publisher topic="/stonefish/front_camera/image_raw" />
     </sensor>
 
     <sensor name="DownCamera_D405" type="camera" rate="15.0">
-        <specs resolution_x="640" resolution_y="480" horizontal_fov="87.0"/>
+        <specs resolution_x="640" resolution_y="480" horizontal_fov="90.0"/>
         <origin xyz="-0.025 0.0 0.1" rpy="0.78 0.0 1.57"/>
         <link name="Base"/>
         <ros_publisher topic="/stonefish/down_camera/image_raw" />
     </sensor>
+
+    <sensor name="FrontDepthCamera_D455" type="depthcamera" rate="5.0">
+        <specs resolution_x="800" resolution_y="600" horizontal_fov="90.0" depth_min="0.1" depth_max="7.0"/>
+        <noise depth="0.02"/>
+        <origin xyz="0.22 0.0 0.0" rpy="1.57 0.0 1.57"/>
+        <link name="Base"/>
+        <ros_publisher topic="/stonefish/front_depth_camera/depth" />
+    </sensor>
+
+    <sensor name="DownDepthCamera_D405" type="depthcamera" rate="5.0">
+        <specs resolution_x="800" resolution_y="600" horizontal_fov="90.0" depth_min="0.01" depth_max="7.0"/>
+        <noise depth="0.02"/>
+        <origin xyz="-0.025 0.0 0.05" rpy="0.78 0.0 1.57"/>
+        <link name="Base"/>
+        <ros_publisher topic="/stonefish/down_depth_camera/depth" />
+    </sensor>
+
+    <actuator name="ThrusterFRO" type="simple_thruster">
+        <specs lower_thrust_limit="-5.0" upper_thrust_limit="5.0" inverted="false"/>
+        <propeller right="true">
+            <mesh filename="objects/propeller.obj" scale="0.3"/>
+            <material name="Aluminium"/>
+            <look name="Gray"/>
+        </propeller>
+        <origin xyz="0.25 -0.15 0.05" rpy="0.0 0.0 0.52359"/>
+        <link name="Base"/>
+        <watchdog timeout="1.0"/>
+    </actuator>
+
+    <actuator name="ThrusterFLO" type="simple_thruster">
+        <specs lower_thrust_limit="-5.0" upper_thrust_limit="5.0" inverted="false"/>
+        <propeller right="true">
+            <mesh filename="objects/propeller.obj" scale="0.3"/>
+            <material name="Aluminium"/>
+            <look name="Gray"/>
+        </propeller>
+        <origin xyz="0.25 0.15 0.05" rpy="0.0 0.0 -0.52359"/>
+        <link name="Base"/>
+        <watchdog timeout="1.0"/>
+    </actuator>
+
+    <actuator name="ThrusterBRO" type="simple_thruster">
+        <specs lower_thrust_limit="-5.0" upper_thrust_limit="5.0" inverted="false"/>
+        <propeller right="true">
+            <mesh filename="objects/propeller.obj" scale="0.3"/>
+            <material name="Aluminium"/>
+            <look name="Gray"/>
+        </propeller>
+        <origin xyz="-0.25 -0.15 0.05" rpy="0.0 0.0 2.618"/>
+        <link name="Base"/>
+        <watchdog timeout="1.0"/>
+    </actuator>
+
+    <actuator name="ThrusterBLO" type="simple_thruster">
+        <specs lower_thrust_limit="-5.0" upper_thrust_limit="5.0" inverted="false"/>
+        <propeller right="true">
+            <mesh filename="objects/propeller.obj" scale="0.3"/>
+            <material name="Aluminium"/>
+            <look name="Gray"/>
+        </propeller>
+        <origin xyz="-0.25 0.15 0.05" rpy="0.0 0.0 3.66519"/>
+        <link name="Base"/>
+        <watchdog timeout="1.0"/>
+    </actuator>
+
+    <actuator name="ThrusterFRI" type="simple_thruster">
+        <specs lower_thrust_limit="-5.0" upper_thrust_limit="5.0" inverted="false"/>
+        <propeller right="true">
+            <mesh filename="objects/propeller.obj" scale="0.3"/>
+            <material name="Aluminium"/>
+            <look name="Gray"/>
+        </propeller>
+        <origin xyz="0.20 -0.10 0.05" rpy="0.0 1.5708 0.0"/>
+        <link name="Base"/>
+        <watchdog timeout="1.0"/>
+    </actuator>
+
+    <actuator name="ThrusterFLI" type="simple_thruster">
+        <specs lower_thrust_limit="-5.0" upper_thrust_limit="5.0" inverted="false"/>
+        <propeller right="true">
+            <mesh filename="objects/propeller.obj" scale="0.3"/>
+            <material name="Aluminium"/>
+            <look name="Gray"/>
+        </propeller>
+        <origin xyz="0.20 0.10 0.05" rpy="0.0 1.5708 0.0"/>
+        <link name="Base"/>
+        <watchdog timeout="1.0"/>
+    </actuator>
+
+    <actuator name="ThrusterBRI" type="simple_thruster">
+        <specs lower_thrust_limit="-5.0" upper_thrust_limit="5.0" inverted="false"/>
+        <propeller right="true">
+            <mesh filename="objects/propeller.obj" scale="0.3"/>
+            <material name="Aluminium"/>
+            <look name="Gray"/>
+        </propeller>
+        <origin xyz="-0.20 -0.10 0.05" rpy="0.0 1.5708 0.0"/>
+        <link name="Base"/>
+        <watchdog timeout="1.0"/>
+    </actuator>
+
+    <actuator name="ThrusterBLI" type="simple_thruster">
+        <specs lower_thrust_limit="-5.0" upper_thrust_limit="5.0" inverted="false"/>
+        <propeller right="true">
+            <mesh filename="objects/propeller.obj" scale="0.3"/>
+            <material name="Aluminium"/>
+            <look name="Gray"/>
+        </propeller>
+        <origin xyz="-0.20 0.10 0.05" rpy="0.0 1.5708 0.0"/>
+        <link name="Base"/>
+        <watchdog timeout="1.0"/>
+    </actuator>
+    
+    <ros_subscriber thrusters="/stonefish/thruster_setpoints"/>
 
     <world_transform xyz="2.0 0.0 2.0" rpy="0.0 1.57 0.0"/>
 </robot>
