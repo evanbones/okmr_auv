@@ -5,7 +5,7 @@ geometry_msgs/Vector3 velocity  # VX, VY, VZ speeds in m/s
 
 # Environmental measurements
 float32 water_temperature       # Water temperature in deg C
-float32 pressure               # Pressure in dBar
+sensor_msgs/FluidPressure pressure  # Pressure measurement
 float32 figure_of_merit        # Figure of Merit in m/s
 
 # Beam distance measurements (4 beams)

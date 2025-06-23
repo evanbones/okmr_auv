@@ -49,6 +49,7 @@ class DeadReckoningNode : public rclcpp::Node{
         
         // State tracking
         bool gotFirstTime=false;
+        bool gotFirstDVLTime=false;
         bool is_dead_reckoning_enabled=false;
         rclcpp::Time last_time;
         rclcpp::Time last_dvl_time;
@@ -56,8 +57,8 @@ class DeadReckoningNode : public rclcpp::Node{
         // Parameters for filtering
         double update_frequency_ = 200.0;
         double complementary_filter_alpha_ = 0.995;
-        double dvl_velocity_alpha_ = 0.995;
-        double dvl_accel_alpha_ = 0.3;
+        double dvl_velocity_alpha_ = 1.0;
+        double dvl_accel_alpha_ = 1.0;
         double angular_vel_filter_alpha_ = 0.7;
         double angular_accel_filter_alpha_ = 0.7;
         
@@ -121,7 +122,7 @@ class DeadReckoningNode : public rclcpp::Node{
             rclcpp::QoS qos_profile(10);  // Create QoS profile with history depth 10
             qos_profile.reliability(rclcpp::ReliabilityPolicy::BestEffort);
 
-		    imu_subscription = this->create_subscription<sensor_msgs::msg::Imu>("/camera/camera/imu", qos_profile, std::bind(&DeadReckoningNode::imu_callback, this, _1));
+		    imu_subscription = this->create_subscription<sensor_msgs::msg::Imu>("/imu", qos_profile, std::bind(&DeadReckoningNode::imu_callback, this, _1));
 		    
 		    dvl_subscription = this->create_subscription<okmr_msgs::msg::Dvl>("/dvl", 10, std::bind(&DeadReckoningNode::dvl_callback, this, _1));
 
@@ -167,13 +168,14 @@ class DeadReckoningNode : public rclcpp::Node{
         auto current_dvl_time = this->now();
         
         // Calculate DVL acceleration using DVL timing
-        if (gotFirstTime && (current_dvl_time - last_dvl_time).seconds() > 0.0) {
+        if (gotFirstDVLTime && (current_dvl_time - last_dvl_time).seconds() > 0.0) {
             double dvl_dt = (current_dvl_time - last_dvl_time).seconds();
             dvl_accel.x = (msg->velocity.x - current_dvl_msg.velocity.x) / dvl_dt;
             dvl_accel.y = (msg->velocity.y - current_dvl_msg.velocity.y) / dvl_dt;
             dvl_accel.z = (msg->velocity.z - current_dvl_msg.velocity.z) / dvl_dt;
         } else {
             dvl_accel.x = dvl_accel.y = dvl_accel.z = 0.0;
+            gotFirstDVLTime = true;
         }
         
         // Cache DVL data and update timing
@@ -193,7 +195,7 @@ class DeadReckoningNode : public rclcpp::Node{
         response->pose = current_pose.pose;
         response->twist = current_twist.twist;
         response->accel = current_accel.accel;
-        response->success = gotFirstTime; // Only return success if we've received at least one IMU measurement
+        response->success = gotFirstTime & gotFirstDVLTime; // Only return success if we've received at least one IMU and DVL measurement
     }
 
     void set_dead_reckoning_callback(const std::shared_ptr<okmr_msgs::srv::SetDeadReckoningEnabled::Request> request,
@@ -310,7 +312,7 @@ class DeadReckoningNode : public rclcpp::Node{
             return output_vector.vector;
             
         } catch (tf2::TransformException &ex) {
-            RCLCPP_WARN(this->get_logger(), "Could not transform IMU data: %s", ex.what());
+            //RCLCPP_WARN(this->get_logger(), "Could not transform IMU data: %s", ex.what());
             // Fallback to no transformation
             if (is_angular) {
                 return current_imu_msg.angular_velocity;
@@ -353,6 +355,7 @@ class DeadReckoningNode : public rclcpp::Node{
             alpha = 1.0;
         }
 
+        /*
         // Handle upside down cases (preserving original logic)
         if (az < 0) {  
             if (accel_pitch > 0) {
@@ -361,7 +364,7 @@ class DeadReckoningNode : public rclcpp::Node{
                 accel_pitch = -M_PI - accel_pitch;
             }
         }
-        
+        */
         // Complementary filter for attitude (preserving original)
         rotation_estimate.y = alpha * (rotation_estimate.y + current_twist.twist.angular.y * dt) + (1 - alpha) * accel_pitch;
         rotation_estimate.x = alpha * (rotation_estimate.x + current_twist.twist.angular.x * dt) + (1 - alpha) * accel_roll;
@@ -396,7 +399,7 @@ class DeadReckoningNode : public rclcpp::Node{
         tf2::Quaternion q;
         q.setRPY(rotation_estimate.x, rotation_estimate.y, rotation_estimate.z);
         tf2::Matrix3x3 tf_R(q);
-        tf2::Vector3 gravity_world(0, 0, 9.81);
+        tf2::Vector3 gravity_world(0, 0, -9.807);
         tf2::Vector3 gravity_body = tf_R.transpose() * gravity_world;
 
         // Calculate IMU true linear acceleration (subtract gravity)
@@ -411,9 +414,9 @@ class DeadReckoningNode : public rclcpp::Node{
 
         // Update linear velocity estimate by integrating gravity-compensated IMU acceleration
         // This provides high-frequency velocity updates between DVL measurements
-        current_twist.twist.linear.x += imu_accel_x * dt;
-        current_twist.twist.linear.y += imu_accel_y * dt;
-        current_twist.twist.linear.z += imu_accel_z * dt;
+        //current_twist.twist.linear.x += imu_accel_x * dt;
+        //current_twist.twist.linear.y += imu_accel_y * dt;
+        //current_twist.twist.linear.z += imu_accel_z * dt;
 
         // Calculate angular acceleration (derivative of smoothed angular velocity)
         smoothed_angular_vel.x = angular_vel_filter_alpha_ * smoothed_angular_vel.x + (1.0 - angular_vel_filter_alpha_) * current_twist.twist.angular.x;

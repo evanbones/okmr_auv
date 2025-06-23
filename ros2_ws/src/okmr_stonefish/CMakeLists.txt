@@ -24,4 +24,10 @@ install(DIRECTORY
   DESTINATION share/${PROJECT_NAME}/
 )
 
+install(PROGRAMS
+    ${PROJECT_NAME}/sim_adaptor.py
+    DESTINATION lib/${PROJECT_NAME}
+    RENAME sim_adaptor
+)
+
 ament_package()

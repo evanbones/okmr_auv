@@ -24,6 +24,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
     msg/SensorReading.msg
     msg/MovementCommand.msg
     msg/MotorThrottle.msg
+    msg/MotorThrust.msg
     msg/TempReading.msg
     msg/Status.msg
     msg/Dvl.msg
