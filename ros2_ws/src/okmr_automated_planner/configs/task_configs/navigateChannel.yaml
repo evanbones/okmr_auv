@@ -1,0 +1,12 @@
+navigateChannel:
+  states:
+    - {name: movingFoward }
+    - {name: locatingRedMarker}    
+    - {name: movingBesideRedMarker}
+
+  triggers:
+    - { trigger: slalomDetectionOn, source: initialized, dest: movingFoward }
+    - { trigger: movingFowardDone, source: movingFoward, dest: locatingRedMarker }
+    - { trigger: locatingRedMarkerDone, source: locatingRedMarker, dest: movingBesideRedMarker }
+    - { trigger: movingBesideRedMarkerDone, source: movingBesideRedMarker, dest: locatingRedMarker}
+  
