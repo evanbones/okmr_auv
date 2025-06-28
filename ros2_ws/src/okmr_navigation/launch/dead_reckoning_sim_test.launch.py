@@ -18,8 +18,9 @@ def generate_launch_description():
                 ])
             ])
         ),
+
         
-        # Launch the dead reckoning node
+        
         Node(
             package='okmr_navigation',
             executable='dead_reckoning',

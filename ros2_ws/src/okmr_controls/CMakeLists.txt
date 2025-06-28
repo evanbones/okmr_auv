@@ -87,6 +87,12 @@ ament_export_dependencies(rclcpp geometry_msgs okmr_msgs)
 #install python execs
 #install launch and params
 
+install(DIRECTORY
+  launch
+  params
+  DESTINATION share/${PROJECT_NAME}/
+)
+
 if(BUILD_TESTING)
   # Integration tests
   find_package(ament_cmake_ros REQUIRED)

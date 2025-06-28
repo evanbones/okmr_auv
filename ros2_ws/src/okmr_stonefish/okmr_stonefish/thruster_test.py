@@ -14,15 +14,15 @@ class ThrusterTest(Node):
         self.publish_duration = 5.0  # seconds
         
         # Thruster variables
-        self.thruster_fro = 4.0  # Front Right Outer
-        self.thruster_flo = 4.0  # Front Left Outer
-        self.thruster_bro = -4.0  # Back Right Outer
-        self.thruster_blo = -4.0  # Back Left Outer
+        self.thruster_fro = 0.0  # Front Right Outer
+        self.thruster_flo = 0.0  # Front Left Outer
+        self.thruster_bro = 0.0  # Back Right Outer
+        self.thruster_blo = 0.0  # Back Left Outer
 
-        self.thruster_fri = -4.0  # Front Right Inner (Vertical)
-        self.thruster_fli = -4.0  # Front Left Inner (Vertical)
-        self.thruster_bri = -4.0  # Back Right Inner (Vertical)
-        self.thruster_bli = -4.0  # Back Left Inner (Vertical)
+        self.thruster_fri = 4.0  # Front Right Inner (Vertical)
+        self.thruster_fli = 4.0  # Front Left Inner (Vertical)
+        self.thruster_bri = 4.0  # Back Right Inner (Vertical)
+        self.thruster_bli = 4.0  # Back Left Inner (Vertical)
         
         # Create timer for periodic publishing
         self.timer = self.create_timer(1.0 / self.publish_rate, self.publish_thrusters)

@@ -70,7 +70,7 @@ double PidController::compute_command(double error, std::chrono::nanoseconds dt)
     
     // PID command
     cmd_ = p_gain_ * p_error_ + i_gain_ * i_term_ + d_gain_ * d_error_;
-    std::cout<<"Pgain: "<<p_gain_<<" error: "<<error<<" output: "<<cmd_<<'\n';
+    //std::cout<<"Pgain: "<<p_gain_<<" error: "<<error<<" output: "<<cmd_<<'\n';
     
     // Output clamping
     cmd_ = std::clamp(cmd_, u_min_, u_max_);

@@ -17,5 +17,9 @@ def generate_launch_description():
             package='okmr_navigation',
             executable='relative_pose_target_server',
         ),
+        Node(
+            package='okmr_navigation',
+            executable='velocity_target_server',
+        ),
 ])
 
