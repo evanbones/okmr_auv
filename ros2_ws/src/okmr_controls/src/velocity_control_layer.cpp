@@ -17,7 +17,7 @@ VelocityControlLayer::VelocityControlLayer()
         std::bind(&VelocityControlLayer::velocity_target_callback, this, std::placeholders::_1));
     
     // Publisher for acceleration target
-    accel_target_pub_ = this->create_publisher<geometry_msgs::msg::Accel>("/accel_target", 10);
+    accel_target_pub_ = this->create_publisher<geometry_msgs::msg::AccelStamped>("/accel_target", 10);
     
     // Initialize velocity messages
     current_velocity_.linear.x = current_velocity_.linear.y = current_velocity_.linear.z = 0.0;
@@ -57,9 +57,11 @@ void VelocityControlLayer::update()
     auto command_output = compute_layer_command(linear_error, angular_error);
     
     // Create and publish acceleration target message
-    geometry_msgs::msg::Accel accel_target;
-    accel_target.linear = command_output.first;
-    accel_target.angular = command_output.second;
+    geometry_msgs::msg::AccelStamped accel_target;
+    accel_target.header.stamp = this->now();
+    accel_target.header.frame_id = "base_link";
+    accel_target.accel.linear = command_output.first;
+    accel_target.accel.angular = command_output.second;
     
     accel_target_pub_->publish(accel_target);
 }
@@ -70,7 +72,9 @@ int main(int argc, char** argv)
 {
     rclcpp::init(argc, argv);
     auto node = std::make_shared<okmr_controls::VelocityControlLayer>();
-    rclcpp::spin(node);
+    rclcpp::executors::MultiThreadedExecutor executor;
+    executor.add_node(node);
+    executor.spin();
     rclcpp::shutdown();
     return 0;
 }

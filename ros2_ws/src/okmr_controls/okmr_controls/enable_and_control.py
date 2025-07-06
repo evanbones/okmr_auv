@@ -55,13 +55,13 @@ class EnableAndControlNode(Node):
         msg.control_mode = ControlMode.POSE  # Control mode 0
         
         self.control_mode_publisher.publish(msg)
+        rclpy.spin_once(self, timeout_sec = 0.05)
         self.get_logger().info('Control mode set to 0 (POSE)')
     
     def run(self):
         """Execute the sequence: enable dead reckoning, then set control mode 0"""
         if self.enable_dead_reckoning():
             # Small delay to ensure the enable request is processed
-            rclpy.spin_once(self, timeout_sec=0.1)
             self.set_control_mode_0()
             self.get_logger().info('Sequence completed successfully')
         else:
@@ -75,8 +75,8 @@ def main(args=None):
     
     try:
         node.run()
-        # Keep node alive briefly to ensure messages are sent
-        rclpy.spin_once(node, timeout_sec=1.0)
+        for _ in range(20):
+            rclpy.spin_once(node, timeout_sec = 0.05)
     except KeyboardInterrupt:
         pass
     finally:

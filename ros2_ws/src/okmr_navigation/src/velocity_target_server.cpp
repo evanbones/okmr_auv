@@ -5,7 +5,7 @@
 #include "rclcpp/rclcpp.hpp"
 #include "okmr_msgs/msg/goal_velocity.hpp"
 #include "okmr_msgs/msg/control_mode.hpp"
-#include "geometry_msgs/msg/twist.hpp"
+#include "geometry_msgs/msg/twist_stamped.hpp"
 
 using std::placeholders::_1;
 using namespace std::chrono_literals;
@@ -28,23 +28,35 @@ public:
             "/goal_velocity", 10,
             std::bind(&VelocityTargetServer::goal_velocity_callback, this, _1));
 
-        actual_velocity_subscription_ = this->create_subscription<geometry_msgs::msg::Twist>(
+        actual_velocity_subscription_ = this->create_subscription<geometry_msgs::msg::TwistStamped>(
             "/velocity", 10,
             std::bind(&VelocityTargetServer::actual_velocity_callback, this, _1));
 
+        // Create separate callback groups
+        control_mode_callback_group_ = this->create_callback_group(
+            rclcpp::CallbackGroupType::MutuallyExclusive);
+        timer_callback_group_ = this->create_callback_group(
+            rclcpp::CallbackGroupType::MutuallyExclusive);
+        
+        // Subscribe to control mode with separate callback group
+        auto sub_options = rclcpp::SubscriptionOptions();
+        sub_options.callback_group = control_mode_callback_group_;
+        
         control_mode_subscription_ = this->create_subscription<okmr_msgs::msg::ControlMode>(
             "/control_mode", 10,
-            std::bind(&VelocityTargetServer::control_mode_callback, this, _1));
+            std::bind(&VelocityTargetServer::control_mode_callback, this, _1),
+            sub_options);
 
         // Publisher for velocity target
-        velocity_target_pub_ = this->create_publisher<geometry_msgs::msg::Twist>("/velocity_target", 10);
+        velocity_target_pub_ = this->create_publisher<geometry_msgs::msg::TwistStamped>("/velocity_target", 10);
 
         // Timer for regular updates
         auto timer_period = std::chrono::duration_cast<std::chrono::milliseconds>(
             std::chrono::duration<double>(1.0 / update_frequency_));
         
         timer_ = this->create_wall_timer(
-            timer_period, std::bind(&VelocityTargetServer::update, this));
+            timer_period, std::bind(&VelocityTargetServer::update, this),
+            timer_callback_group_);
 
         RCLCPP_INFO(this->get_logger(), "VelocityTargetServer initialized");
     }
@@ -62,15 +74,20 @@ private:
         integrated_angle_ = geometry_msgs::msg::Vector3();
     }
 
-    void actual_velocity_callback(const geometry_msgs::msg::Twist::SharedPtr msg)
+    void actual_velocity_callback(const geometry_msgs::msg::TwistStamped::SharedPtr msg)
     {
-        current_actual_velocity_ = *msg;
+        current_actual_velocity_ = msg->twist;
     }
 
     void control_mode_callback(const okmr_msgs::msg::ControlMode::SharedPtr msg)
     {
+        RCLCPP_INFO(this->get_logger(), "VelocityTargetServer: Control mode callback received: %d", msg->control_mode);
+        
         bool was_enabled = is_enabled_;
         is_enabled_ = (msg->control_mode == okmr_msgs::msg::ControlMode::VELOCITY);
+        
+        RCLCPP_INFO(this->get_logger(), "VelocityTargetServer: enabled: %s -> %s", 
+                    was_enabled ? "true" : "false", is_enabled_ ? "true" : "false");
         
         if (was_enabled && !is_enabled_)
         {
@@ -91,7 +108,8 @@ private:
                 std::chrono::duration<double>(1.0 / update_frequency_));
             
             timer_ = this->create_wall_timer(
-                timer_period, std::bind(&VelocityTargetServer::update, this));
+                timer_period, std::bind(&VelocityTargetServer::update, this),
+                timer_callback_group_);
         }
     }
 
@@ -103,7 +121,9 @@ private:
             return;
         }
 
-        geometry_msgs::msg::Twist velocity_target;
+        geometry_msgs::msg::TwistStamped velocity_target;
+        velocity_target.header.stamp = this->now();
+        velocity_target.header.frame_id = "base_link";
         
         if (!has_active_goal_)
         {
@@ -178,7 +198,7 @@ private:
         else
         {
             // Continue with goal velocity
-            velocity_target = current_goal_velocity_.twist;
+            velocity_target.twist = current_goal_velocity_.twist;
             velocity_target_pub_->publish(velocity_target);
         }
     }
@@ -206,7 +226,8 @@ private:
                 
                 timer_->cancel();
                 timer_ = this->create_wall_timer(
-                    timer_period, std::bind(&VelocityTargetServer::update, this));
+                    timer_period, std::bind(&VelocityTargetServer::update, this),
+                    timer_callback_group_);
             }
         }
         
@@ -227,12 +248,15 @@ private:
     rclcpp::Time last_update_time_;
     
     rclcpp::Subscription<okmr_msgs::msg::GoalVelocity>::SharedPtr goal_velocity_subscription_;
-    rclcpp::Subscription<geometry_msgs::msg::Twist>::SharedPtr actual_velocity_subscription_;
+    rclcpp::Subscription<geometry_msgs::msg::TwistStamped>::SharedPtr actual_velocity_subscription_;
     rclcpp::Subscription<okmr_msgs::msg::ControlMode>::SharedPtr control_mode_subscription_;
     
-    rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr velocity_target_pub_;
+    rclcpp::Publisher<geometry_msgs::msg::TwistStamped>::SharedPtr velocity_target_pub_;
     
     rclcpp::TimerBase::SharedPtr timer_;
+    
+    rclcpp::CallbackGroup::SharedPtr control_mode_callback_group_;
+    rclcpp::CallbackGroup::SharedPtr timer_callback_group_;
     
     OnSetParametersCallbackHandle::SharedPtr param_callback_handle_;
 };
@@ -240,7 +264,10 @@ private:
 int main(int argc, char* argv[])
 {
     rclcpp::init(argc, argv);
-    rclcpp::spin(std::make_shared<VelocityTargetServer>());
+    auto node = std::make_shared<VelocityTargetServer>();
+    rclcpp::executors::MultiThreadedExecutor executor;
+    executor.add_node(node);
+    executor.spin();
     rclcpp::shutdown();
     return 0;
 }

@@ -29,7 +29,8 @@ def generate_launch_description():
                     FindPackageShare('okmr_controls'),
                     'params',
                     'pose_control.yaml'
-                ])
+                ]),
+                {'update_frequency': 200.0}
             ]
         ),
 
@@ -42,7 +43,8 @@ def generate_launch_description():
                     FindPackageShare('okmr_controls'),
                     'params',
                     'velocity_control.yaml'
-                ])
+                ]),
+                {'update_frequency': 200.0}
             ]
         ),
         

@@ -11,6 +11,8 @@ from okmr_navigation.handlers.look_at_handler import *
 from okmr_navigation.handlers.movement_execution_common import execute_test_movement_common
 from okmr_navigation.navigator_action_server import NavigatorActionServer
 
+from okmr_msgs.msg import MovementCommand
+
 COMMAND_HANDLERS = {
             MovementCommand.FREEZE: handle_freeze,
             MovementCommand.MOVE_RELATIVE: handle_move_relative,

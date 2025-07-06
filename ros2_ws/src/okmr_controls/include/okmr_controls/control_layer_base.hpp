@@ -56,6 +56,9 @@ private:
     int8_t required_control_mode_;
     int8_t current_control_mode_;
     
+    rclcpp::CallbackGroup::SharedPtr control_mode_callback_group_;
+    rclcpp::CallbackGroup::SharedPtr timer_callback_group_;
+    
     void control_mode_callback(const okmr_msgs::msg::ControlMode::SharedPtr msg);
     void load_controller_parameters(ControllerIndex idx, const std::string& prefix);
     void update_controller_gains(ControllerIndex idx, const std::string& prefix);

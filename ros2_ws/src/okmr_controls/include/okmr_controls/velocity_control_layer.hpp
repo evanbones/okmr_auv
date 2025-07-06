@@ -4,7 +4,7 @@
 #include "okmr_controls/control_layer_base.hpp"
 #include <geometry_msgs/msg/twist.hpp>
 #include <geometry_msgs/msg/twist_stamped.hpp>
-#include <geometry_msgs/msg/accel.hpp>
+#include <geometry_msgs/msg/accel_stamped.hpp>
 
 namespace okmr_controls
 {
@@ -20,7 +20,7 @@ protected:
 private:
     rclcpp::Subscription<geometry_msgs::msg::TwistStamped>::SharedPtr velocity_sub_;
     rclcpp::Subscription<geometry_msgs::msg::TwistStamped>::SharedPtr velocity_target_sub_;
-    rclcpp::Publisher<geometry_msgs::msg::Accel>::SharedPtr accel_target_pub_;
+    rclcpp::Publisher<geometry_msgs::msg::AccelStamped>::SharedPtr accel_target_pub_;
     
     geometry_msgs::msg::Twist current_velocity_;
     geometry_msgs::msg::Twist velocity_target_;

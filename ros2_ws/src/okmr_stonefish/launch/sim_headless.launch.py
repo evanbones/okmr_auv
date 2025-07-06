@@ -27,14 +27,6 @@ def generate_launch_description():
             output='screen',
             remappings=[
                 ('/stonefish/imu', '/camera1/camera1/imu'),
-                ('/stonefish/front_camera/image_raw/image_color', '/camera1/camera1/image_raw'),
-                ('/stonefish/front_camera/image_raw/camera_info', '/camera1/camera1/camera_info'),
-                ('/stonefish/front_depth_camera/depth/image_depth', '/camera1/camera1/image_depth'),
-                ('/stonefish/front_depth_camera/depth/camera_info', '/camera1/camera1/depth_camera_info'),
-                ('/stonefish/down_camera/image_raw/image_color', '/camera2/camera2/image_raw'),
-                ('/stonefish/down_camera/image_raw/camera_info', '/camera2/camera2/camera_info'),
-                ('/stonefish/down_depth_camera/depth/image_depth', '/camera2/camera2/image_depth'),
-                ('/stonefish/down_depth_camera/depth/camera_info', '/camera2/camera2/depth_camera_info'),
             ]
         ),
         Node(

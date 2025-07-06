@@ -49,9 +49,20 @@ public:
             "/pose", 10, 
             std::bind(&RelativePoseTargetServer::current_pose_callback, this, _1));
 
+        // Create separate callback groups
+        control_mode_callback_group_ = this->create_callback_group(
+            rclcpp::CallbackGroupType::MutuallyExclusive);
+        timer_callback_group_ = this->create_callback_group(
+            rclcpp::CallbackGroupType::MutuallyExclusive);
+        
+        // Subscribe to control mode with separate callback group
+        auto sub_options = rclcpp::SubscriptionOptions();
+        sub_options.callback_group = control_mode_callback_group_;
+        
         control_mode_subscription_ = this->create_subscription<okmr_msgs::msg::ControlMode>(
             "/control_mode", 10,
-            std::bind(&RelativePoseTargetServer::control_mode_callback, this, _1));
+            std::bind(&RelativePoseTargetServer::control_mode_callback, this, _1),
+            sub_options);
         
         distance_from_goal_service_ = this->create_service<okmr_msgs::srv::DistanceFromGoal>(
             "distance_from_pose_goal", 
@@ -66,7 +77,8 @@ public:
             std::chrono::duration<double>(1.0 / update_frequency_));
         
         timer_ = this->create_wall_timer(
-            timer_period, std::bind(&RelativePoseTargetServer::update, this));
+            timer_period, std::bind(&RelativePoseTargetServer::update, this),
+            timer_callback_group_);
     }
 
 private:
@@ -84,8 +96,13 @@ private:
 
     void control_mode_callback(const okmr_msgs::msg::ControlMode::SharedPtr msg)
     {
+        RCLCPP_INFO(this->get_logger(), "RelativePoseTargetServer: Control mode callback received: %d", msg->control_mode);
+        
         bool was_enabled = is_enabled_;
         is_enabled_ = (msg->control_mode == okmr_msgs::msg::ControlMode::POSE);
+        
+        RCLCPP_INFO(this->get_logger(), "RelativePoseTargetServer: enabled: %s -> %s", 
+                    was_enabled ? "true" : "false", is_enabled_ ? "true" : "false");
         
         if (was_enabled && !is_enabled_)
         {
@@ -103,7 +120,8 @@ private:
                 std::chrono::duration<double>(1.0 / update_frequency_));
             
             timer_ = this->create_wall_timer(
-                timer_period, std::bind(&RelativePoseTargetServer::update, this));
+                timer_period, std::bind(&RelativePoseTargetServer::update, this),
+                timer_callback_group_);
         }
     }
 
@@ -264,7 +282,8 @@ private:
                 
                 timer_->cancel();
                 timer_ = this->create_wall_timer(
-                    timer_period, std::bind(&RelativePoseTargetServer::update, this));
+                    timer_period, std::bind(&RelativePoseTargetServer::update, this),
+                    timer_callback_group_);
             }
             else if (param.get_name() == "holding_radius")
             {
@@ -302,13 +321,19 @@ private:
     
     rclcpp::TimerBase::SharedPtr timer_;
     
+    rclcpp::CallbackGroup::SharedPtr control_mode_callback_group_;
+    rclcpp::CallbackGroup::SharedPtr timer_callback_group_;
+    
     OnSetParametersCallbackHandle::SharedPtr param_callback_handle_;
 };
 
 int main(int argc, char* argv[])
 {
     rclcpp::init(argc, argv);
-    rclcpp::spin(std::make_shared<RelativePoseTargetServer>());
+    auto node = std::make_shared<RelativePoseTargetServer>();
+    rclcpp::executors::MultiThreadedExecutor executor;
+    executor.add_node(node);
+    executor.spin();
     rclcpp::shutdown();
     return 0;
 }

@@ -17,18 +17,29 @@ ControlLayerBase::ControlLayerBase(const std::string& node_name, int8_t control_
     param_callback_handle_ = this->add_on_set_parameters_callback(
         std::bind(&ControlLayerBase::on_parameter_change, this, std::placeholders::_1));
     
-    // Subscribe to control mode
+    // Create separate callback groups
+    control_mode_callback_group_ = this->create_callback_group(
+        rclcpp::CallbackGroupType::MutuallyExclusive);
+    timer_callback_group_ = this->create_callback_group(
+        rclcpp::CallbackGroupType::MutuallyExclusive);
+    
+    // Subscribe to control mode with separate callback group
+    auto sub_options = rclcpp::SubscriptionOptions();
+    sub_options.callback_group = control_mode_callback_group_;
+    
     control_mode_sub_ = this->create_subscription<okmr_msgs::msg::ControlMode>(
         "/control_mode", 10,
-        std::bind(&ControlLayerBase::control_mode_callback, this, std::placeholders::_1));
+        std::bind(&ControlLayerBase::control_mode_callback, this, std::placeholders::_1),
+        sub_options);
     
-    // Initialize update timer
+    // Initialize update timer with separate callback group
     auto timer_period = std::chrono::duration_cast<std::chrono::milliseconds>(
         std::chrono::duration<double>(1.0 / update_frequency_));
     
     update_timer_ = this->create_wall_timer(
         timer_period,
-        std::bind(&ControlLayerBase::update, this));
+        std::bind(&ControlLayerBase::update, this),
+        timer_callback_group_);
 }
 
 ControlLayerBase::~ControlLayerBase()
@@ -63,6 +74,9 @@ void ControlLayerBase::control_mode_callback(const okmr_msgs::msg::ControlMode::
 {
     int8_t new_mode = msg->control_mode;
     
+    RCLCPP_INFO(this->get_logger(), "Control mode callback received: %d (required: %d, current: %d)", 
+                new_mode, required_control_mode_, current_control_mode_);
+    
     if (new_mode != current_control_mode_)
     {
         bool was_enabled = is_enabled_;
@@ -71,6 +85,10 @@ void ControlLayerBase::control_mode_callback(const okmr_msgs::msg::ControlMode::
         //control mode 0 (pose) is only enabled when its pose mode
         //but control mode 5 (throttle) is always enabled, even if its control mode 1,2,3,etc
         //thats why we use the <= sign, to keep downstream controllers on
+        
+        RCLCPP_INFO(this->get_logger(), "Control mode changed: %d -> %d, enabled: %s -> %s", 
+                    current_control_mode_, new_mode, was_enabled ? "true" : "false", 
+                    is_enabled_ ? "true" : "false");
         
         if (was_enabled && !is_enabled_)
         {
@@ -81,6 +99,10 @@ void ControlLayerBase::control_mode_callback(const okmr_msgs::msg::ControlMode::
         {
             RCLCPP_INFO(this->get_logger(), "Control layer enabled");
         }
+    }
+    else
+    {
+        RCLCPP_DEBUG(this->get_logger(), "Control mode unchanged: %d", new_mode);
     }
 }
 
@@ -220,7 +242,8 @@ ControlLayerBase::on_parameter_change(const std::vector<rclcpp::Parameter>& para
             update_timer_->cancel();
             update_timer_ = this->create_wall_timer(
                 timer_period,
-                std::bind(&ControlLayerBase::update, this));
+                std::bind(&ControlLayerBase::update, this),
+                timer_callback_group_);
         }
         else
         {
