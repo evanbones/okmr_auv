@@ -1,13 +1,10 @@
-float64 fli
-float64 fri
-float64 bli
-float64 bri
-float64 flo
-float64 fro
-float64 blo
-float64 bro
-# names are a little confusing, 
-# fli = front left inner motor
-# bro = back right outer motor
-# etc, b = back. f= front, r = right, l =left, i =inner, o= outer
+float64[8] throttle
+# throttle[0] = fli (front left inner motor)
+# throttle[1] = fri (front right inner motor)
+# throttle[2] = bli (back left inner motor)
+# throttle[3] = bri (back right inner motor)
+# throttle[4] = flo (front left outer motor)
+# throttle[5] = fro (front right outer motor)
+# throttle[6] = blo (back left outer motor)
+# throttle[7] = bro (back right outer motor)
 std_msgs/Header header
