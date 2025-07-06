@@ -81,18 +81,15 @@ class SimAdaptor(Node):
         """Convert OKMR MotorThrust to Float64MultiArray for Stonefish thrusters"""
         thrust_array = Float64MultiArray()
         
-        # Map OKMR motor names to Stonefish thruster order
-        # Based on the thruster configuration in ogopogo.scn:
-        # ThrusterFRO, ThrusterFLO, ThrusterBRO, ThrusterBLO, ThrusterFRI, ThrusterFLI, ThrusterBRI, ThrusterBLI
         thrust_array.data = [
-            msg.fro,  # Front Right Outer
-            msg.flo,  # Front Left Outer  
-            msg.bro,  # Back Right Outer
-            msg.blo,  # Back Left Outer
-            msg.fri,  # Front Right Inner (Vertical)
-            msg.fli,  # Front Left Inner (Vertical)
-            msg.bri,  # Back Right Inner (Vertical)
-            msg.bli   # Back Left Inner (Vertical)
+            msg.thrust[0],  # Front Left Inner (fli)
+            msg.thrust[1],  # Front Right Inner (fri)
+            msg.thrust[2],  # Back Left Inner (bli)
+            msg.thrust[3],  # Back Right Inner (bri)
+            msg.thrust[4],  # Front Left Outer (flo)
+            msg.thrust[5],  # Front Right Outer (fro)
+            msg.thrust[6],  # Back Left Outer (blo)
+            msg.thrust[7]   # Back Right Outer (bro)
         ]
         
         self.thruster_publisher.publish(thrust_array)
