@@ -20,32 +20,22 @@ def generate_launch_description():
             }.items()
         ),
 
-        Node(
-            package='okmr_controls',
-            executable='pose_control_layer_node',
-            output='screen',
-            parameters=[
+        # Launch the full control stack
+        IncludeLaunchDescription(
+            PythonLaunchDescriptionSource([
                 PathJoinSubstitution([
                     FindPackageShare('okmr_controls'),
-                    'params',
-                    'pose_control.yaml'
-                ]),
-                {'update_frequency': 200.0}
-            ]
+                    'launch',
+                    'full_control_stack.launch.py'
+                ])
+            ])
         ),
 
+        # Sim Adaptor (for simulation interface)
         Node(
-            package='okmr_controls',
-            executable='velocity_control_layer_node',
+            package='okmr_stonefish',
+            executable='sim_adaptor',
             output='screen',
-            parameters=[
-                PathJoinSubstitution([
-                    FindPackageShare('okmr_controls'),
-                    'params',
-                    'velocity_control.yaml'
-                ]),
-                {'update_frequency': 200.0}
-            ]
         ),
         
         # Launch the dead reckoning node

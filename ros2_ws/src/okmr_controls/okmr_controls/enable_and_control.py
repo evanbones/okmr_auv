@@ -2,7 +2,7 @@
 
 import rclpy
 from rclpy.node import Node
-from okmr_msgs.srv import SetDeadReckoningEnabled
+from okmr_msgs.srv import SetDeadReckoningEnabled, EnableThrustAllocation
 from okmr_msgs.msg import ControlMode
 
 
@@ -16,6 +16,12 @@ class EnableAndControlNode(Node):
             '/set_dead_reckoning_enabled'
         )
         
+        # Create service client for thrust allocator enable
+        self.thrust_allocator_client = self.create_client(
+            EnableThrustAllocation,
+            '/thrust_allocator/enable'
+        )
+        
         # Create publisher for control mode
         self.control_mode_publisher = self.create_publisher(
             ControlMode, 
@@ -23,11 +29,14 @@ class EnableAndControlNode(Node):
             10
         )
         
-        # Wait for service to be available
+        # Wait for services to be available
         while not self.dead_reckoning_client.wait_for_service(timeout_sec=1.0):
             self.get_logger().info('Waiting for dead reckoning service...')
         
-        self.get_logger().info('Dead reckoning service available')
+        while not self.thrust_allocator_client.wait_for_service(timeout_sec=1.0):
+            self.get_logger().info('Waiting for thrust allocator service...')
+        
+        self.get_logger().info('All services available')
         
     def enable_dead_reckoning(self):
         """Send enable request to dead reckoning node"""
@@ -49,6 +58,26 @@ class EnableAndControlNode(Node):
             self.get_logger().error('Failed to call dead reckoning service')
             return False
     
+    def enable_thrust_allocator(self):
+        """Send enable request to thrust allocator node"""
+        request = EnableThrustAllocation.Request()
+        request.enable = True
+        
+        future = self.thrust_allocator_client.call_async(request)
+        rclpy.spin_until_future_complete(self, future)
+        
+        if future.result() is not None:
+            response = future.result()
+            if response.success:
+                self.get_logger().info(f'Thrust allocator enabled: {response.message}')
+                return True
+            else:
+                self.get_logger().error(f'Failed to enable thrust allocator: {response.message}')
+                return False
+        else:
+            self.get_logger().error('Failed to call thrust allocator service')
+            return False
+    
     def set_control_mode_0(self):
         """Send control mode 0 (POSE) message"""
         msg = ControlMode()
@@ -59,13 +88,16 @@ class EnableAndControlNode(Node):
         self.get_logger().info('Control mode set to 0 (POSE)')
     
     def run(self):
-        """Execute the sequence: enable dead reckoning, then set control mode 0"""
-        if self.enable_dead_reckoning():
-            # Small delay to ensure the enable request is processed
+        """Execute the sequence: enable dead reckoning, enable thrust allocator, then set control mode 0"""
+        dead_reckoning_ok = self.enable_dead_reckoning()
+        thrust_allocator_ok = self.enable_thrust_allocator()
+        
+        if dead_reckoning_ok and thrust_allocator_ok:
+            # Small delay to ensure the enable requests are processed
             self.set_control_mode_0()
             self.get_logger().info('Sequence completed successfully')
         else:
-            self.get_logger().error('Failed to enable dead reckoning, skipping control mode')
+            self.get_logger().error('Failed to enable all components, skipping control mode')
 
 
 def main(args=None):

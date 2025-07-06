@@ -13,6 +13,7 @@ find_package(std_msgs REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(okmr_msgs REQUIRED)
+find_package(Eigen3 REQUIRED)
 
 # Include directories
 include_directories(include)
@@ -56,12 +57,37 @@ ament_target_dependencies(pose_control_layer_node
 )
 target_link_libraries(pose_control_layer_node control_layer_base)
 
+# Create acceleration control layer executable
+add_executable(accel_control_layer_node
+  src/accel_control_layer.cpp
+)
+ament_target_dependencies(accel_control_layer_node
+  rclcpp
+  geometry_msgs
+  okmr_msgs
+)
+target_link_libraries(accel_control_layer_node control_layer_base)
+
+# Create thrust allocator executable
+add_executable(thrust_allocator_node
+  src/thrust_allocator.cpp
+)
+ament_target_dependencies(thrust_allocator_node
+  rclcpp
+  geometry_msgs
+  okmr_msgs
+  Eigen3
+)
+target_link_libraries(thrust_allocator_node Eigen3::Eigen)
+
 ament_python_install_package(${PROJECT_NAME})
 
 # Install C++ executables
 install(TARGETS
   velocity_control_layer_node
   pose_control_layer_node
+  accel_control_layer_node
+  thrust_allocator_node
   DESTINATION lib/${PROJECT_NAME}
 )
 

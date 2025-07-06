@@ -76,7 +76,6 @@ void ThrustAllocator::wrench_target_callback(const geometry_msgs::msg::WrenchSta
     motor_thrust_msg.header.frame_id = "base_link";
     
     // Assign thrust values to motors array
-    motor_thrust_msg.thrust.resize(8);
     for (int i = 0; i < 8; ++i) {
         motor_thrust_msg.thrust[i] = motor_thrusts(i);
     }
@@ -136,8 +135,8 @@ void ThrustAllocator::setup_allocation_matrix()
 
 Eigen::MatrixXf ThrustAllocator::pseudoInverse(const Eigen::MatrixXf& A, float tol)
 {
-    // Compute thin SVD
-    Eigen::BDCSVD<Eigen::MatrixXf> svd(A, Eigen::ComputeThinU | Eigen::ComputeThinV);
+    // Compute thin SVD using modern Eigen API
+    Eigen::BDCSVD<Eigen::MatrixXf, Eigen::ComputeThinU | Eigen::ComputeThinV> svd(A);
 
     const auto& singularValues = svd.singularValues();
     Eigen::VectorXf invS = singularValues;

@@ -35,6 +35,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
     srv/Status.srv
     srv/GetPoseTwistAccel.srv
     srv/SetDeadReckoningEnabled.srv
+    srv/EnableThrustAllocation.srv
     srv/ClearPose.srv
     srv/DistanceFromGoal.srv
     msg/VoxelGrid.msg

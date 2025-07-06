@@ -1,0 +1,53 @@
+thrust_allocator:
+  ros__parameters:
+    # Motor configuration based on ogopogo.scn from okmr_stonefish/data/robots
+    # 8 thrusters: 4 inner (vertical) + 4 outer (horizontal angled)
+    # Positions are in meters from center of mass, directions are unit vectors
+    
+    # Motor 0 - ThrusterFLI (Front Left Inner)
+    # Position: xyz="0.20 0.10 0.05" rpy="0.0 -1.5708 0.0"
+    # Direction: Vertical thrust (Z-axis up)
+    motor_0_position: [0.20, 0.10, 0.05]
+    motor_0_direction: [0.0, 0.0, -1.0]
+    
+    # Motor 1 - ThrusterFRI (Front Right Inner)  
+    # Position: xyz="0.20 -0.10 0.05" rpy="0.0 -1.5708 0.0"
+    # Direction: Vertical thrust (Z-axis up)
+    motor_1_position: [0.20, -0.10, 0.05]
+    motor_1_direction: [0.0, 0.0, -1.0]
+    
+    # Motor 2 - ThrusterBLI (Back Left Inner)
+    # Position: xyz="-0.20 0.10 0.05" rpy="0.0 -1.5708 0.0"
+    # Direction: Vertical thrust (Z-axis up)
+    motor_2_position: [-0.20, 0.10, 0.05]
+    motor_2_direction: [0.0, 0.0, -1.0]
+    
+    # Motor 3 - ThrusterBRI (Back Right Inner)
+    # Position: xyz="-0.20 -0.10 0.05" rpy="0.0 -1.5708 0.0"
+    # Direction: Vertical thrust (Z-axis up)
+    motor_3_position: [-0.20, -0.10, 0.05]
+    motor_3_direction: [0.0, 0.0, -1.0]
+    
+    # Motor 4 - ThrusterFLO (Front Left Outer)
+    # Position: xyz="0.25 0.15 0.05" rpy="0.0 0.0 -0.52359"
+    # Direction: Forward + left thrust (-30° Z rotation)
+    motor_4_position: [0.25, 0.15, 0.05]
+    motor_4_direction: [0.866, -0.5, 0.0]
+    
+    # Motor 5 - ThrusterFRO (Front Right Outer)
+    # Position: xyz="0.25 -0.15 0.05" rpy="0.0 0.0 0.52359"
+    # Direction: Forward + right thrust (+30° Z rotation)
+    motor_5_position: [0.25, -0.15, 0.05]
+    motor_5_direction: [0.866, 0.5, 0.0]
+    
+    # Motor 6 - ThrusterBLO (Back Left Outer)
+    # Position: xyz="-0.25 0.15 0.05" rpy="0.0 0.0 3.66519"
+    # Direction: Backward + left thrust (+210° Z rotation)
+    motor_6_position: [-0.25, 0.15, 0.05]
+    motor_6_direction: [-0.866, -0.5, 0.0]
+    
+    # Motor 7 - ThrusterBRO (Back Right Outer)
+    # Position: xyz="-0.25 -0.15 0.05" rpy="0.0 0.0 2.618"
+    # Direction: Backward + right thrust (+150° Z rotation)
+    motor_7_position: [-0.25, -0.15, 0.05]
+    motor_7_direction: [-0.866, 0.5, 0.0]
