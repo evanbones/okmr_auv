@@ -23,11 +23,13 @@ setup(
     license='TODO: License declaration',
     tests_require=['pytest'],
     entry_points={
-        'console_scripts': [
-            "serial_output=okmr_hardware_interface.serial_output_basic:main",
-            "dvl_driver=okmr_hardware_interface.dvl_driver:main",
-            "dvl_dummy_driver=okmr_hardware_interface.dvl_dummy:main",
-            "temp_sensor=okmr_hardware_interface.temp_sensor:main",
-        ],
-    },
+    'console_scripts': [
+        "serial_output=okmr_hardware_interface.serial_output_basic:main",
+        "dvl_driver=okmr_hardware_interface.dvl_driver:main",
+        "dvl_dummy_driver=okmr_hardware_interface.dvl_dummy:main",
+        "temp_sensor=okmr_hardware_interface.temp_sensor:main",
+        "motor_publisher=okmr_hardware_interface.esp32_interaction_driver.motor_publisher:main",
+        "motor_subscriber=okmr_hardware_interface.esp32_interaction_driver.motor_subscriber:main",
+    ],
+},
 )
