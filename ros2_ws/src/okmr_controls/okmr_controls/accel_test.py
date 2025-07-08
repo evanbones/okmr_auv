@@ -16,7 +16,7 @@ class AccelTest(Node):
         # Acceleration variables - Linear (m/s²) and Angular (rad/s²)
         self.linear_x = 0.0  # Forward/Backward acceleration
         self.linear_y = 0.0  # Left/Right acceleration
-        self.linear_z = -1.0  # Up/Down acceleration
+        self.linear_z = 0.0  # Up/Down acceleration
         
         self.angular_x = 0.0  # Roll acceleration
         self.angular_y = 0.0  # Pitch acceleration
@@ -34,6 +34,7 @@ class AccelTest(Node):
         if elapsed >= self.publish_duration:
             self.get_logger().info(f'Publishing completed after {self.publish_duration} seconds')
             self.timer.cancel()
+            self.publish_zeros()
             return
             
         msg = AccelStamped()
@@ -53,6 +54,23 @@ class AccelTest(Node):
         self.publisher.publish(msg)
         self.get_logger().info(f'Published acceleration - Linear: [{self.linear_x:.1f}, {self.linear_y:.1f}, {self.linear_z:.1f}] m/s², '
                              f'Angular: [{self.angular_x:.1f}, {self.angular_y:.1f}, {self.angular_z:.1f}] rad/s² (t={elapsed:.1f}s)')
+
+    def publish_zeros(self):
+        msg = AccelStamped()
+        msg.header.stamp = self.get_clock().now().to_msg()
+        msg.header.frame_id = 'base_link'
+        
+        # Set all acceleration components to zero
+        msg.accel.linear.x = 0.0
+        msg.accel.linear.y = 0.0
+        msg.accel.linear.z = 0.0
+        
+        msg.accel.angular.x = 0.0
+        msg.accel.angular.y = 0.0
+        msg.accel.angular.z = 0.0
+        
+        self.publisher.publish(msg)
+        self.get_logger().info('Published zero acceleration to stop the robot')
 
 def main(args=None):
     rclpy.init(args=args)

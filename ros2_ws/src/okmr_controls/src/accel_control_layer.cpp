@@ -36,7 +36,8 @@ AccelControlLayer::AccelControlLayer()
     // Declare feedforward parameters
     this->declare_parameter("kmass_x", 1.0);
     this->declare_parameter("kmass_y", 1.0);
-    this->declare_parameter("kmass_z", -1.0);  // Negative for buoyancy compensation
+    this->declare_parameter("kmass_z", 1.0); 
+    this->declare_parameter("kbuoyancy", 1.0); 
     this->declare_parameter("kmass_roll", 1.0);
     this->declare_parameter("kmass_pitch", 1.0);
     this->declare_parameter("kmass_yaw", 1.0);
@@ -52,6 +53,7 @@ AccelControlLayer::AccelControlLayer()
     kmass_x_ = this->get_parameter("kmass_x").as_double();
     kmass_y_ = this->get_parameter("kmass_y").as_double();
     kmass_z_ = this->get_parameter("kmass_z").as_double();
+    kbuoyancy_ = this->get_parameter("kbuoyancy").as_double();
     kmass_roll_ = this->get_parameter("kmass_roll").as_double();
     kmass_pitch_ = this->get_parameter("kmass_pitch").as_double();
     kmass_yaw_ = this->get_parameter("kmass_yaw").as_double();
@@ -93,7 +95,8 @@ geometry_msgs::msg::Vector3 AccelControlLayer::calculate_feedforward(
     // Feedforward = Kmass * acceleration + Kdrag * velocity
     feedforward.x = kmass_x_ * acceleration.x + kdrag_x_ * velocity.x;
     feedforward.y = kmass_y_ * acceleration.y + kdrag_y_ * velocity.y;
-    feedforward.z = kmass_z_ * acceleration.z + kdrag_z_ * velocity.z;
+    feedforward.z = kmass_z_ * acceleration.z + kdrag_z_ * velocity.z + kbuoyancy_;
+    //kbuoyancy is simplified to assume that the sub is always upright
     
     return feedforward;
 }
@@ -165,6 +168,8 @@ rcl_interfaces::msg::SetParametersResult AccelControlLayer::parameters_callback(
             kmass_y_ = param.as_double();
         } else if (param.get_name() == "kmass_z") {
             kmass_z_ = param.as_double();
+        } else if (param.get_name() == "kbuoyancy") {
+            kbuoyancy_ = param.as_double();
         } else if (param.get_name() == "kmass_roll") {
             kmass_roll_ = param.as_double();
         } else if (param.get_name() == "kmass_pitch") {

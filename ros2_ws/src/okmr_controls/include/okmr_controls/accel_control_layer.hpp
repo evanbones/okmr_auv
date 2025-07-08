@@ -44,6 +44,7 @@ private:
     geometry_msgs::msg::TwistStamped velocity_target_;
     
     // Feedforward parameters (Kmass and Kdrag for each axis)
+    double kbuoyancy_;
     double kmass_x_, kmass_y_, kmass_z_;
     double kmass_roll_, kmass_pitch_, kmass_yaw_;
     double kdrag_x_, kdrag_y_, kdrag_z_;

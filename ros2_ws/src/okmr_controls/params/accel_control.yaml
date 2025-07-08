@@ -62,7 +62,10 @@ accel_control_layer:
     # Mass/inertia scaling factors for feedforward control
     kmass_x: 0.0      # Linear mass coefficient X
     kmass_y: 0.0      # Linear mass coefficient Y
-    kmass_z: 0.0     # Linear mass coefficient Z (negative for buoyancy compensation)
+    kmass_z: 0.0     # Linear mass coefficient Z
+
+    kbuoyancy: -7.0     # Linear buoyancy coefficient
+
     kmass_roll: 0.0   # Roll inertia coefficient
     kmass_pitch: 0.0  # Pitch inertia coefficient
     kmass_yaw: 0.0    # Yaw inertia coefficient

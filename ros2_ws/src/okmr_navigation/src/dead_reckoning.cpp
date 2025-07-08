@@ -59,7 +59,7 @@ class DeadReckoningNode : public rclcpp::Node{
         double complementary_filter_alpha_ = 0.995;
         double dvl_velocity_alpha_ = 1.0;
         double dvl_accel_alpha_ = 1.0;
-        double dvl_accel_smoothing_alpha_ = 0.8;
+        double dvl_accel_smoothing_alpha_ = 0.7;
         double angular_vel_filter_alpha_ = 0.7;
         double angular_accel_filter_alpha_ = 0.7;
         
