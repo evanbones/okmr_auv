@@ -1,5 +1,7 @@
 pose_control_layer:
     ros__parameters:
+        x_angular.d_gain: 0.1
         x_angular.p_gain: 0.5
-        x_linear.p_gain: 0.2
-        y_angular.p_gain: 0.5
+        x_linear.p_gain: 1.0
+        y_angular.d_gain: 0.01
+        y_angular.p_gain: 0.1
