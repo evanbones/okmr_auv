@@ -30,14 +30,7 @@ def generate_launch_description():
                 ])
             ])
         ),
-
-        # Sim Adaptor (for simulation interface)
-        Node(
-            package='okmr_stonefish',
-            executable='sim_adaptor',
-            output='screen',
-        ),
-        
+               
         # Launch the dead reckoning node
         IncludeLaunchDescription(
             PathJoinSubstitution([

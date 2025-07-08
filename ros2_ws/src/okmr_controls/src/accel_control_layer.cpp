@@ -16,6 +16,10 @@ AccelControlLayer::AccelControlLayer()
         "/velocity_target", 10,
         std::bind(&AccelControlLayer::velocity_target_callback, this, std::placeholders::_1));
     
+    accel_actual_sub_ = this->create_subscription<geometry_msgs::msg::AccelStamped>(
+        "/acceleration", 10,
+        std::bind(&AccelControlLayer::accel_actual_callback, this, std::placeholders::_1));
+    
     // Publisher for wrench target
     wrench_target_pub_ = this->create_publisher<geometry_msgs::msg::WrenchStamped>("/wrench_target", 10);
     
@@ -72,6 +76,12 @@ void AccelControlLayer::accel_target_callback(const geometry_msgs::msg::AccelSta
 void AccelControlLayer::velocity_target_callback(const geometry_msgs::msg::TwistStamped::SharedPtr msg)
 {
     velocity_target_ = *msg;
+}
+
+void AccelControlLayer::accel_actual_callback(const geometry_msgs::msg::AccelStamped::SharedPtr msg)
+{
+    accel_actual_ = *msg;
+
 }
 
 geometry_msgs::msg::Vector3 AccelControlLayer::calculate_feedforward(

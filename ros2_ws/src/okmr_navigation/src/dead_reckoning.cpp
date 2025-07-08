@@ -59,6 +59,7 @@ class DeadReckoningNode : public rclcpp::Node{
         double complementary_filter_alpha_ = 0.995;
         double dvl_velocity_alpha_ = 1.0;
         double dvl_accel_alpha_ = 1.0;
+        double dvl_accel_smoothing_alpha_ = 0.8;
         double angular_vel_filter_alpha_ = 0.7;
         double angular_accel_filter_alpha_ = 0.7;
         
@@ -91,6 +92,11 @@ class DeadReckoningNode : public rclcpp::Node{
             desc.floating_point_range[0].from_value = 0.0;
             desc.floating_point_range[0].to_value = 1.0;
             this->declare_parameter("dvl_accel_alpha", dvl_accel_alpha_, desc);
+
+            desc.description = "Leaky integrator coefficient for linear acceleration smoothing (higher=more smoothing)";
+            desc.floating_point_range[0].from_value = 0.0;
+            desc.floating_point_range[0].to_value = 1.0;
+            this->declare_parameter("dvl_accel_smoothing_alpha", dvl_accel_smoothing_alpha_, desc);
             
             desc.description = "Leaky integrator coefficient for angular velocity smoothing (higher=more smoothing)";
             desc.floating_point_range[0].from_value = 0.0;
@@ -107,6 +113,7 @@ class DeadReckoningNode : public rclcpp::Node{
             complementary_filter_alpha_ = this->get_parameter("complementary_filter_alpha").as_double();
             dvl_velocity_alpha_ = this->get_parameter("dvl_velocity_alpha").as_double();
             dvl_accel_alpha_ = this->get_parameter("dvl_accel_alpha").as_double();
+            dvl_accel_smoothing_alpha_ = this->get_parameter("dvl_accel_smoothing_alpha").as_double();
             angular_vel_filter_alpha_ = this->get_parameter("angular_vel_filter_alpha").as_double();
             angular_accel_filter_alpha_ = this->get_parameter("angular_accel_filter_alpha").as_double();
             
@@ -168,15 +175,18 @@ class DeadReckoningNode : public rclcpp::Node{
         
         // Transform DVL velocity to base_link frame
         auto transformed_velocity = transform_dvl_data(*msg);
+        geometry_msgs::msg::Vector3 recent_dvl_accel;
         
         // Calculate DVL acceleration using transformed velocities
         if (gotFirstDVLTime && (current_dvl_time - last_dvl_time).seconds() > 0.0) {
             double dvl_dt = (current_dvl_time - last_dvl_time).seconds();
             auto prev_transformed_velocity = transform_dvl_data(current_dvl_msg);
-            dvl_accel.x = (transformed_velocity.x - prev_transformed_velocity.x) / dvl_dt;
-            dvl_accel.y = (transformed_velocity.y - prev_transformed_velocity.y) / dvl_dt;
-            dvl_accel.z = (transformed_velocity.z - prev_transformed_velocity.z) / dvl_dt;
+            recent_dvl_accel.x = (transformed_velocity.x - prev_transformed_velocity.x) / dvl_dt;
+            recent_dvl_accel.y = (transformed_velocity.y - prev_transformed_velocity.y) / dvl_dt;
+            recent_dvl_accel.z = (transformed_velocity.z - prev_transformed_velocity.z) / dvl_dt;
+            //RCLCPP_INFO(this->get_logger(), "%f", dvl_dt);
         } else {
+            recent_dvl_accel.x = recent_dvl_accel.y = recent_dvl_accel.z = 0.0;
             dvl_accel.x = dvl_accel.y = dvl_accel.z = 0.0;
             gotFirstDVLTime = true;
         }
@@ -184,6 +194,16 @@ class DeadReckoningNode : public rclcpp::Node{
         // Cache DVL data and update timing
         current_dvl_msg = *msg;
         last_dvl_time = current_dvl_time;
+
+        //apply dvl smoothing using leaky integrator
+        dvl_accel.x = dvl_accel_smoothing_alpha_ * dvl_accel.x + 
+            (1.0 - dvl_accel_smoothing_alpha_) * recent_dvl_accel.x;
+
+        dvl_accel.y = dvl_accel_smoothing_alpha_ * dvl_accel.y + 
+            (1.0 - dvl_accel_smoothing_alpha_) * recent_dvl_accel.y;
+
+        dvl_accel.z = dvl_accel_smoothing_alpha_ * dvl_accel.z + 
+            (1.0 - dvl_accel_smoothing_alpha_) * recent_dvl_accel.z;
         
         // Apply complementary filter to linear velocity estimate
         current_twist.twist.linear.x = dvl_velocity_alpha_ * transformed_velocity.x + (1.0 - dvl_velocity_alpha_) * current_twist.twist.linear.x;

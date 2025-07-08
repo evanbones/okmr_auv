@@ -16,7 +16,7 @@ class AccelTest(Node):
         # Acceleration variables - Linear (m/s²) and Angular (rad/s²)
         self.linear_x = 0.0  # Forward/Backward acceleration
         self.linear_y = 0.0  # Left/Right acceleration
-        self.linear_z = -10.0  # Up/Down acceleration
+        self.linear_z = -1.0  # Up/Down acceleration
         
         self.angular_x = 0.0  # Roll acceleration
         self.angular_y = 0.0  # Pitch acceleration
