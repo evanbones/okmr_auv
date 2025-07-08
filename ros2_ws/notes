@@ -1,0 +1,20 @@
+update raph node to use new motor message format]
+
+finish the final piece of the low level control chain - thrust to pwm
+resume working on the automated planner once the low level control is verified
+run a demo test plan in simulation that we will do at pool test
+
+
+create a test plan for verifying and fixing the low level control system
+    - start low to high, ground up
+    - zero out all gains
+    - comment out all controllers, test lowest controllers first
+    - set one gain at a time
+
+motor thrust - Success, model fixed
+axis thrust - Success, thrust allocator works
+acceleration
+velocity
+pose
+
+add a pid watchdog which publishes zeros if the time since last target or actual value subscribtion is too large

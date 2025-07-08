@@ -2,12 +2,12 @@
 
 import rclpy
 from rclpy.node import Node
-from std_msgs.msg import Float64MultiArray
+from okmr_msgs.msg import MotorThrust
 
 class ThrusterTest(Node):
     def __init__(self):
         super().__init__('thruster_test')
-        self.publisher = self.create_publisher(Float64MultiArray, '/stonefish/thruster_setpoints', 10)
+        self.publisher = self.create_publisher(MotorThrust, '/motor_thrust', 10)
         
         # Publishing parameters
         self.publish_rate = 10.0  # Hz
@@ -39,8 +39,8 @@ class ThrusterTest(Node):
             self.timer.cancel()
             return
             
-        msg = Float64MultiArray()
-        msg.data = [
+        msg = MotorThrust()
+        msg.thrust = [
             self.thruster_fli,
             self.thruster_fri,
             self.thruster_bli,
@@ -52,7 +52,7 @@ class ThrusterTest(Node):
         ]
         
         self.publisher.publish(msg)
-        self.get_logger().info(f'Published thruster setpoints: {msg.data} (t={elapsed:.1f}s)')
+        self.get_logger().info(f'Published thruster setpoints: {msg.thrust} (t={elapsed:.1f}s)')
 
 def main(args=None):
     rclpy.init(args=args)

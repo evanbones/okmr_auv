@@ -12,11 +12,11 @@ def generate_launch_description():
             PathJoinSubstitution([
                     FindPackageShare('okmr_stonefish'),
                     'launch',
-                    'sim_headless.launch.py'
+                    'sim.launch.py'
 
             ]),
             launch_arguments={
-                'scenario_name': 'simple_headless.scn',
+                'scenario_name': 'simple.scn',
             }.items()
         ),
 
@@ -43,7 +43,7 @@ def generate_launch_description():
             PathJoinSubstitution([
                     FindPackageShare('okmr_navigation'),
                     'launch',
-                    'straight_line_navigation.launch.py'
+                    'full_navigation_stack.launch.py'
 
             ]),
         ),

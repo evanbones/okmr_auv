@@ -22,7 +22,7 @@ accel_control_layer:
       u_max: 50.0
     
     z_linear:
-      p_gain: 1.5
+      p_gain: 1.0
       i_gain: 0.0
       d_gain: 0.0
       i_min: -1.0
@@ -32,7 +32,7 @@ accel_control_layer:
     
     # Angular acceleration controllers (angular acceleration -> torque)
     x_angular:
-      p_gain: 2.0
+      p_gain: 1.0
       i_gain: 0.0
       d_gain: 0.0
       i_min: -1.0
@@ -41,7 +41,7 @@ accel_control_layer:
       u_max: 20.0
     
     y_angular:
-      p_gain: 2.0
+      p_gain: 1.0
       i_gain: 0.0
       d_gain: 0.0
       i_min: -1.0
@@ -50,7 +50,7 @@ accel_control_layer:
       u_max: 20.0
     
     z_angular:
-      p_gain: 1.8
+      p_gain: 1.0
       i_gain: 0.0
       d_gain: 0.0
       i_min: -1.0
@@ -60,17 +60,17 @@ accel_control_layer:
     
     # Feedforward parameters
     # Mass/inertia scaling factors for feedforward control
-    kmass_x: 1.0      # Linear mass coefficient X
-    kmass_y: 1.0      # Linear mass coefficient Y
-    kmass_z: -1.0     # Linear mass coefficient Z (negative for buoyancy compensation)
-    kmass_roll: 1.0   # Roll inertia coefficient
-    kmass_pitch: 1.0  # Pitch inertia coefficient
-    kmass_yaw: 1.0    # Yaw inertia coefficient
+    kmass_x: 0.0      # Linear mass coefficient X
+    kmass_y: 0.0      # Linear mass coefficient Y
+    kmass_z: 0.0     # Linear mass coefficient Z (negative for buoyancy compensation)
+    kmass_roll: 0.0   # Roll inertia coefficient
+    kmass_pitch: 0.0  # Pitch inertia coefficient
+    kmass_yaw: 0.0    # Yaw inertia coefficient
     
     # Drag compensation factors
-    kdrag_x: 0.1      # Linear drag coefficient X
-    kdrag_y: 0.1      # Linear drag coefficient Y
-    kdrag_z: 0.1      # Linear drag coefficient Z
-    kdrag_roll: 0.1   # Roll drag coefficient
-    kdrag_pitch: 0.1  # Pitch drag coefficient
-    kdrag_yaw: 0.1    # Yaw drag coefficient
+    kdrag_x: 0.0      # Linear drag coefficient X
+    kdrag_y: 0.0      # Linear drag coefficient Y
+    kdrag_z: 0.0      # Linear drag coefficient Z
+    kdrag_roll: 0.0   # Roll drag coefficient
+    kdrag_pitch: 0.0  # Pitch drag coefficient
+    kdrag_yaw: 0.0    # Yaw drag coefficient

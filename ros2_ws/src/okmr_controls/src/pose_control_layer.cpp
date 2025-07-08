@@ -9,7 +9,7 @@ PoseControlLayer::PoseControlLayer()
 {
     // Subscribe to pose target topic
     pose_target_sub_ = this->create_subscription<okmr_msgs::msg::RelativePose>(
-        "/relative_pose", 10,
+        "/relative_pose_target", 10,
         std::bind(&PoseControlLayer::pose_target_callback, this, std::placeholders::_1));
     
     // Publisher for velocity target

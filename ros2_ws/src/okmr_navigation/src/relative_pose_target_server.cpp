@@ -70,7 +70,7 @@ public:
                 std::placeholders::_1, std::placeholders::_2));
 
         // Publisher for relative pose target
-        relative_pose_pub_ = this->create_publisher<okmr_msgs::msg::RelativePose>("/relative_pose", 10);
+        relative_pose_pub_ = this->create_publisher<okmr_msgs::msg::RelativePose>("/relative_pose_target", 10);
 
         // Timer for regular updates
         auto timer_period = std::chrono::duration_cast<std::chrono::milliseconds>(
@@ -239,7 +239,7 @@ private:
         {
             yaw = atan2(
                 current_goal_pose_msg_.pose.position.y - current_pose_msg_.pose.position.y,
-                current_goal_pose_msg_.pose.position.x - current_pose_msg_.pose.position.x) * (180.0 / M_PI);
+                current_goal_pose_msg_.pose.position.x - current_pose_msg_.pose.position.x);
         }
 
         // Create and publish RelativePose target message
@@ -252,9 +252,9 @@ private:
         
         // Rotation target - calculate error between current and target orientation
         auto current_eulers = euler_from_quaternion(current_pose_msg_.pose.orientation);
-        relative_pose_target.rotation.x = roll - current_eulers.x;
-        relative_pose_target.rotation.y = pitch - current_eulers.y;
-        relative_pose_target.rotation.z = yaw - current_eulers.z;
+        relative_pose_target.rotation.x = (roll - current_eulers.x) * (180.0 / M_PI);
+        relative_pose_target.rotation.y = (pitch - current_eulers.y) * (180.0 / M_PI);
+        relative_pose_target.rotation.z = (yaw - current_eulers.z) * (180.0 / M_PI);
 
         relative_pose_pub_->publish(relative_pose_target);
     }
