@@ -19,7 +19,7 @@ class AccelTest(Node):
         self.linear_z = 0.0  # Up/Down acceleration
         
         self.angular_x = 0.0  # Roll acceleration
-        self.angular_y = 0.0  # Pitch acceleration
+        self.angular_y = 2.0  # Pitch acceleration
         self.angular_z = 0.0  # Yaw acceleration
         
         # Create timer for periodic publishing

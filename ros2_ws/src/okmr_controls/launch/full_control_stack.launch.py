@@ -64,8 +64,8 @@ def generate_launch_description():
     )
 
     nodes = [
-            #pose_control_node,
-        #velocity_control_node,
+        pose_control_node,
+        velocity_control_node,
         accel_control_node,
         thrust_allocator_node,
     ]
