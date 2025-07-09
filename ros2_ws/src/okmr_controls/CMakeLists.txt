@@ -116,6 +116,7 @@ ament_export_dependencies(rclcpp geometry_msgs okmr_msgs)
 install(DIRECTORY
   launch
   params
+  gui_config
   DESTINATION share/${PROJECT_NAME}/
 )
 

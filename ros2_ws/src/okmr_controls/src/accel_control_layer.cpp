@@ -34,20 +34,20 @@ AccelControlLayer::AccelControlLayer()
     velocity_target_.twist.angular.x = velocity_target_.twist.angular.y = velocity_target_.twist.angular.z = 0.0;
     
     // Declare feedforward parameters
-    this->declare_parameter("kmass_x", 1.0);
-    this->declare_parameter("kmass_y", 1.0);
-    this->declare_parameter("kmass_z", 1.0); 
-    this->declare_parameter("kbuoyancy", 1.0); 
-    this->declare_parameter("kmass_roll", 1.0);
-    this->declare_parameter("kmass_pitch", 1.0);
-    this->declare_parameter("kmass_yaw", 1.0);
+    this->declare_parameter("kmass_x", 0.0);
+    this->declare_parameter("kmass_y", 0.0);
+    this->declare_parameter("kmass_z", 0.0); 
+    this->declare_parameter("kbuoyancy", 0.0); 
+    this->declare_parameter("kmass_roll", 0.0);
+    this->declare_parameter("kmass_pitch", 0.0);
+    this->declare_parameter("kmass_yaw", 0.0);
     
-    this->declare_parameter("kdrag_x", 0.1);
-    this->declare_parameter("kdrag_y", 0.1);
-    this->declare_parameter("kdrag_z", 0.1);
-    this->declare_parameter("kdrag_roll", 0.1);
-    this->declare_parameter("kdrag_pitch", 0.1);
-    this->declare_parameter("kdrag_yaw", 0.1);
+    this->declare_parameter("kdrag_x", 0.0);
+    this->declare_parameter("kdrag_y", 0.0);
+    this->declare_parameter("kdrag_z", 0.0);
+    this->declare_parameter("kdrag_roll", 0.0);
+    this->declare_parameter("kdrag_pitch", 0.0);
+    this->declare_parameter("kdrag_yaw", 0.0);
     
     // Get initial parameter values
     kmass_x_ = this->get_parameter("kmass_x").as_double();

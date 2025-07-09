@@ -140,12 +140,12 @@ void ControlLayerBase::load_controller_parameters(ControllerIndex idx, const std
     this->declare_parameter(prefix + ".d_gain", 0.0);
     
     // Integral limits
-    this->declare_parameter(prefix + ".i_min", -1.0);
-    this->declare_parameter(prefix + ".i_max", 1.0);
+    this->declare_parameter(prefix + ".i_min", 0.0);
+    this->declare_parameter(prefix + ".i_max", 0.0);
     
     // Output limits
-    this->declare_parameter(prefix + ".u_min", -1.0);
-    this->declare_parameter(prefix + ".u_max", 1.0);
+    this->declare_parameter(prefix + ".u_min", 0.0);
+    this->declare_parameter(prefix + ".u_max", 0.0);
     
     // Load initial values
     update_controller_gains(idx, prefix);

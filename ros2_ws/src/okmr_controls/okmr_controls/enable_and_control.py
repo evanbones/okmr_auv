@@ -84,7 +84,8 @@ class EnableAndControlNode(Node):
         msg.control_mode = ControlMode.POSE  # Control mode 0
         
         self.control_mode_publisher.publish(msg)
-        rclpy.spin_once(self, timeout_sec = 0.05)
+        for _ in range(10):
+            rclpy.spin_once(self, timeout_sec = 0.05)
         self.get_logger().info('Control mode set to 0 (POSE)')
     
     def run(self):

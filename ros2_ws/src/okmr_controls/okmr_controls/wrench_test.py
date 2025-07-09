@@ -14,7 +14,7 @@ class WrenchTest(Node):
         self.publish_duration = 5.0  # seconds
         
         # Wrench variables - Force (N) and Torque (Nm)
-        self.force_x = 0.0  # Forward/Backward force
+        self.force_x = 10.0  # Forward/Backward force
         self.force_y = 0.0  # Left/Right force
         self.force_z = 0.0  # Up/Down force
         

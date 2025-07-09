@@ -1,0 +1,10 @@
+x_angular.p_gain:
+    info: ''
+    max: 100.0
+    min: -100.0
+    tuneable: true
+y_angular.p_gain:
+    info: ''
+    max: 100.0
+    min: -100.0
+    tuneable: true
