@@ -200,6 +200,6 @@
     
     <ros_subscriber thrusters="/stonefish/thruster_setpoints"/>
 
-    <world_transform xyz="2.0 0.0 2.0" rpy="0.0 1.57 0.0"/>
+    <world_transform xyz="0.0 0.0 0.0" rpy="0.0 1.57 0.0"/>
 </robot>
 </scenario>

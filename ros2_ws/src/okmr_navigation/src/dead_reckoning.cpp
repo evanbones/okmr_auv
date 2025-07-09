@@ -485,9 +485,21 @@ class DeadReckoningNode : public rclcpp::Node{
         current_accel.header.frame_id = "base_link";
 
         // Publish all state estimates
-        pose_publisher->publish(current_pose);
-        twist_publisher->publish(current_twist);
-        accel_publisher->publish(current_accel);
+        pose_publisher->publish(current_pose); 
+
+        //convert all angular values to degrees from radians
+        geometry_msgs::msg::TwistStamped twist_degrees = current_twist;
+        twist_degrees.twist.angular.x = current_twist.twist.angular.x * 180.0 / M_PI;
+        twist_degrees.twist.angular.y = current_twist.twist.angular.y * 180.0 / M_PI;
+        twist_degrees.twist.angular.z = current_twist.twist.angular.z * 180.0 / M_PI;
+        twist_publisher->publish(twist_degrees);
+        
+        //convert all angular values to degrees from radians
+        geometry_msgs::msg::AccelStamped accel_degrees = current_accel;
+        accel_degrees.accel.angular.x = current_accel.accel.angular.x * 180.0 / M_PI;
+        accel_degrees.accel.angular.y = current_accel.accel.angular.y * 180.0 / M_PI;
+        accel_degrees.accel.angular.z = current_accel.accel.angular.z * 180.0 / M_PI;
+        accel_publisher->publish(accel_degrees);
     }
 
 	rclcpp::Subscription<sensor_msgs::msg::Imu>::SharedPtr imu_subscription;

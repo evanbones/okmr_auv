@@ -11,7 +11,7 @@ class PoseTest(Node):
         
         # Pose variables - Position (m) and Orientation (rad)
         self.position_x = 5.0  # Forward/Backward position
-        self.position_y = 5.0  # Left/Right position
+        self.position_y = 3.0  # Left/Right position
         self.position_z = 0.0  # Up/Down position
         
         

@@ -13,7 +13,8 @@ public:
     
     PidController(double p_gain, double i_gain, double d_gain, 
                   double i_min = -1.0, double i_max = 1.0,
-                  double u_min = -1.0, double u_max = 1.0);
+                  double u_min = -1.0, double u_max = 1.0,
+                  bool clamp_values = false);
     
     ~PidController();
     
@@ -23,10 +24,11 @@ public:
     
     void set_gains(double p_gain, double i_gain, double d_gain, 
                    double i_min = -1.0, double i_max = 1.0,
-                   double u_min = -1.0, double u_max = 1.0);
+                   double u_min = -1.0, double u_max = 1.0,
+                   bool clamp_values = false);
     
     void get_gains(double& p_gain, double& i_gain, double& d_gain, 
-                   double& i_min, double& i_max, double& u_min, double& u_max) const;
+                   double& i_min, double& i_max, double& u_min, double& u_max, bool& clamp_values) const;
 
 private:
     double p_gain_;
@@ -36,6 +38,7 @@ private:
     double i_max_;
     double u_min_;
     double u_max_;
+    bool clamp_values_;
     
     double p_error_;
     double i_term_;

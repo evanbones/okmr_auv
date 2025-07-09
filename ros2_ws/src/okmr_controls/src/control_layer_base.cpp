@@ -147,6 +147,9 @@ void ControlLayerBase::load_controller_parameters(ControllerIndex idx, const std
     this->declare_parameter(prefix + ".u_min", 0.0);
     this->declare_parameter(prefix + ".u_max", 0.0);
     
+    // Clamp values
+    this->declare_parameter(prefix + ".clamp_values", false);
+    
     // Load initial values
     update_controller_gains(idx, prefix);
 }
@@ -160,8 +163,9 @@ void ControlLayerBase::update_controller_gains(ControllerIndex idx, const std::s
     double i_max = this->get_parameter(prefix + ".i_max").as_double();
     double u_min = this->get_parameter(prefix + ".u_min").as_double();
     double u_max = this->get_parameter(prefix + ".u_max").as_double();
+    bool clamp_values = this->get_parameter(prefix + ".clamp_values").as_bool();
     
-    controllers_[idx].set_gains(p_gain, i_gain, d_gain, i_min, i_max, u_min, u_max);
+    controllers_[idx].set_gains(p_gain, i_gain, d_gain, i_min, i_max, u_min, u_max, clamp_values);
 }
 
 void ControlLayerBase::update_controller_gains_from_params(ControllerIndex idx, const std::string& prefix,
@@ -169,7 +173,8 @@ void ControlLayerBase::update_controller_gains_from_params(ControllerIndex idx, 
 {
     // Get current gains
     double p_gain, i_gain, d_gain, i_min, i_max, u_min, u_max;
-    controllers_[idx].get_gains(p_gain, i_gain, d_gain, i_min, i_max, u_min, u_max);
+    bool clamp_values;
+    controllers_[idx].get_gains(p_gain, i_gain, d_gain, i_min, i_max, u_min, u_max, clamp_values);
     
     // Update only the parameters that changed
     for (const auto& param : parameters)
@@ -204,10 +209,14 @@ void ControlLayerBase::update_controller_gains_from_params(ControllerIndex idx, 
         {
             u_max = param.as_double();
         }
+        else if (param_name == prefix + ".clamp_values")
+        {
+            clamp_values = param.as_bool();
+        }
     }
     
     // Set the updated gains
-    controllers_[idx].set_gains(p_gain, i_gain, d_gain, i_min, i_max, u_min, u_max);
+    controllers_[idx].set_gains(p_gain, i_gain, d_gain, i_min, i_max, u_min, u_max, clamp_values);
 }
 
 rcl_interfaces::msg::SetParametersResult

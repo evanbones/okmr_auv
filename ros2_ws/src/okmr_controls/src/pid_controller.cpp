@@ -13,6 +13,7 @@ PidController::PidController()
     , i_max_(1.0)
     , u_min_(-1.0)
     , u_max_(1.0)
+    , clamp_values_(false)
     , p_error_(0.0)
     , i_term_(0.0)
     , d_error_(0.0)
@@ -23,7 +24,7 @@ PidController::PidController()
 }
 
 PidController::PidController(double p_gain, double i_gain, double d_gain, 
-                             double i_min, double i_max, double u_min, double u_max)
+                             double i_min, double i_max, double u_min, double u_max, bool clamp_values)
     : p_gain_(p_gain)
     , i_gain_(i_gain)
     , d_gain_(d_gain)
@@ -31,6 +32,7 @@ PidController::PidController(double p_gain, double i_gain, double d_gain,
     , i_max_(i_max)
     , u_min_(u_min)
     , u_max_(u_max)
+    , clamp_values_(clamp_values)
     , p_error_(0.0)
     , i_term_(0.0)
     , d_error_(0.0)
@@ -73,7 +75,9 @@ double PidController::compute_command(double error, std::chrono::nanoseconds dt)
     //std::cout<<"Pgain: "<<p_gain_<<" error: "<<error<<" output: "<<cmd_<<'\n';
     
     // Output clamping
-    cmd_ = std::clamp(cmd_, u_min_, u_max_);
+    if (clamp_values_) {
+        cmd_ = std::clamp(cmd_, u_min_, u_max_);
+    }
     
     prev_error_ = error;
     
@@ -91,7 +95,7 @@ void PidController::reset()
 }
 
 void PidController::set_gains(double p_gain, double i_gain, double d_gain, 
-                              double i_min, double i_max, double u_min, double u_max)
+                              double i_min, double i_max, double u_min, double u_max, bool clamp_values)
 {
     p_gain_ = p_gain;
     i_gain_ = i_gain;
@@ -100,10 +104,11 @@ void PidController::set_gains(double p_gain, double i_gain, double d_gain,
     i_max_ = i_max;
     u_min_ = u_min;
     u_max_ = u_max;
+    clamp_values_ = clamp_values;
 }
 
 void PidController::get_gains(double& p_gain, double& i_gain, double& d_gain, 
-                              double& i_min, double& i_max, double& u_min, double& u_max) const
+                              double& i_min, double& i_max, double& u_min, double& u_max, bool& clamp_values) const
 {
     p_gain = p_gain_;
     i_gain = i_gain_;
@@ -112,6 +117,7 @@ void PidController::get_gains(double& p_gain, double& i_gain, double& d_gain,
     i_max = i_max_;
     u_min = u_min_;
     u_max = u_max_;
+    clamp_values = clamp_values_;
 }
 
 }  // namespace okmr_controls

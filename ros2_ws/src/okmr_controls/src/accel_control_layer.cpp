@@ -20,6 +20,10 @@ AccelControlLayer::AccelControlLayer()
         "/acceleration", 10,
         std::bind(&AccelControlLayer::accel_actual_callback, this, std::placeholders::_1));
     
+    velocity_actual_sub_ = this->create_subscription<geometry_msgs::msg::TwistStamped>(
+        "/velocity", 10,
+        std::bind(&AccelControlLayer::velocity_actual_callback, this, std::placeholders::_1));
+    
     // Publisher for wrench target
     wrench_target_pub_ = this->create_publisher<geometry_msgs::msg::WrenchStamped>("/wrench_target", 10);
     
@@ -32,6 +36,9 @@ AccelControlLayer::AccelControlLayer()
     
     velocity_target_.twist.linear.x = velocity_target_.twist.linear.y = velocity_target_.twist.linear.z = 0.0;
     velocity_target_.twist.angular.x = velocity_target_.twist.angular.y = velocity_target_.twist.angular.z = 0.0;
+    
+    velocity_actual_.twist.linear.x = velocity_actual_.twist.linear.y = velocity_actual_.twist.linear.z = 0.0;
+    velocity_actual_.twist.angular.x = velocity_actual_.twist.angular.y = velocity_actual_.twist.angular.z = 0.0;
     
     // Declare feedforward parameters
     this->declare_parameter("kmass_x", 0.0);
@@ -83,7 +90,11 @@ void AccelControlLayer::velocity_target_callback(const geometry_msgs::msg::Twist
 void AccelControlLayer::accel_actual_callback(const geometry_msgs::msg::AccelStamped::SharedPtr msg)
 {
     accel_actual_ = *msg;
+}
 
+void AccelControlLayer::velocity_actual_callback(const geometry_msgs::msg::TwistStamped::SharedPtr msg)
+{
+    velocity_actual_ = *msg;
 }
 
 geometry_msgs::msg::Vector3 AccelControlLayer::calculate_feedforward(
@@ -135,8 +146,8 @@ void AccelControlLayer::update()
     auto pid_output = compute_layer_command(linear_error, angular_error);
     
     // Calculate feedforward terms
-    auto linear_feedforward = calculate_feedforward(velocity_target_.twist.linear, accel_target_.accel.linear);
-    auto angular_feedforward = calculate_angular_feedforward(velocity_target_.twist.angular, accel_target_.accel.angular);
+    auto linear_feedforward = calculate_feedforward(velocity_actual_.twist.linear, accel_target_.accel.linear);
+    auto angular_feedforward = calculate_angular_feedforward(velocity_actual_.twist.angular, accel_target_.accel.angular);
     
     // Combine PID output with feedforward
     geometry_msgs::msg::WrenchStamped wrench_target;

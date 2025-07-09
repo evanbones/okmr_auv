@@ -10,7 +10,7 @@ class VelocityTest(Node):
         self.publisher = self.create_publisher(TwistStamped, '/velocity_target', 10)
         
         # Publishing parameters
-        self.publish_rate = 10.0  # Hz
+        self.publish_rate = 400.0  # Hz
         self.publish_duration = 5.0  # seconds
         
         # Velocity variables - Linear (m/s) and Angular (rad/s)
@@ -20,7 +20,7 @@ class VelocityTest(Node):
         
         self.angular_x = 0.0  # Roll velocity
         self.angular_y = 0.0  # Pitch velocity
-        self.angular_z = 0.0  # Yaw velocity
+        self.angular_z = 10.0  # Yaw velocity
         
         # Create timer for periodic publishing
         self.timer = self.create_timer(1.0 / self.publish_rate, self.publish_velocity)

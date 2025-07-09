@@ -14,12 +14,12 @@ class AccelTest(Node):
         self.publish_duration = 5.0  # seconds
         
         # Acceleration variables - Linear (m/s²) and Angular (rad/s²)
-        self.linear_x = 0.0  # Forward/Backward acceleration
+        self.linear_x = -0.05  # Forward/Backward acceleration
         self.linear_y = 0.0  # Left/Right acceleration
         self.linear_z = 0.0  # Up/Down acceleration
         
         self.angular_x = 0.0  # Roll acceleration
-        self.angular_y = 2.0  # Pitch acceleration
+        self.angular_y = 0.0  # Pitch acceleration
         self.angular_z = 0.0  # Yaw acceleration
         
         # Create timer for periodic publishing

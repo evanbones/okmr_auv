@@ -3,16 +3,6 @@ kbuoyancy:
     max: 100.0
     min: -100.0
     tuneable: true
-kdrag_pitch:
-    info: ''
-    max: 100.0
-    min: -100.0
-    tuneable: true
-kdrag_roll:
-    info: ''
-    max: 100.0
-    min: -100.0
-    tuneable: true
 kdrag_x:
     info: ''
     max: 100.0
@@ -45,7 +35,7 @@ kmass_roll:
     tuneable: true
 kmass_x:
     info: ''
-    max: 100.0
+    max: 200.0
     min: -100.0
     tuneable: true
 kmass_y:
@@ -59,96 +49,6 @@ kmass_yaw:
     min: -100.0
     tuneable: true
 kmass_z:
-    info: ''
-    max: 100.0
-    min: -100.0
-    tuneable: true
-x_angular.p_gain:
-    info: ''
-    max: 100.0
-    min: -100.0
-    tuneable: true
-x_angular.u_max:
-    info: ''
-    max: 100.0
-    min: -100.0
-    tuneable: true
-x_angular.u_min:
-    info: ''
-    max: 100.0
-    min: -100.0
-    tuneable: true
-x_linear.p_gain:
-    info: ''
-    max: 100.0
-    min: -100.0
-    tuneable: true
-x_linear.u_max:
-    info: ''
-    max: 100.0
-    min: -100.0
-    tuneable: true
-x_linear.u_min:
-    info: ''
-    max: 100.0
-    min: -100.0
-    tuneable: true
-y_angular.p_gain:
-    info: ''
-    max: 100.0
-    min: -100.0
-    tuneable: true
-y_angular.u_max:
-    info: ''
-    max: 100.0
-    min: -100.0
-    tuneable: true
-y_angular.u_min:
-    info: ''
-    max: 100.0
-    min: -100.0
-    tuneable: true
-y_linear.p_gain:
-    info: ''
-    max: 100.0
-    min: -100.0
-    tuneable: true
-y_linear.u_max:
-    info: ''
-    max: 100.0
-    min: -100.0
-    tuneable: true
-y_linear.u_min:
-    info: ''
-    max: 100.0
-    min: -100.0
-    tuneable: true
-z_angular.p_gain:
-    info: ''
-    max: 100.0
-    min: -100.0
-    tuneable: true
-z_angular.u_max:
-    info: ''
-    max: 100.0
-    min: -100.0
-    tuneable: true
-z_angular.u_min:
-    info: ''
-    max: 100.0
-    min: -100.0
-    tuneable: true
-z_linear.p_gain:
-    info: ''
-    max: 100.0
-    min: -100.0
-    tuneable: true
-z_linear.u_max:
-    info: ''
-    max: 100.0
-    min: -100.0
-    tuneable: true
-z_linear.u_min:
     info: ''
     max: 100.0
     min: -100.0
