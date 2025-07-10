@@ -1,3 +1,4 @@
+std_msgs/Header header
 int8 control_mode
 
 int8 POSE = 0

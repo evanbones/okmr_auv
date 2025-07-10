@@ -15,31 +15,28 @@ class PoseTest(Node):
         self.position_z = 0.0  # Up/Down position
         
         
-        # Publish once after a short delay to ensure publisher is ready
-        self.timer = self.create_timer(0.1, self.publish_pose)
-        
     def publish_pose(self):
         msg = GoalPose()
         
         # Set position components
+        msg.header.stamp = self.get_clock().now().to_msg()
         msg.copy_orientation = False
         msg.pose.position.x = self.position_x
         msg.pose.position.y = self.position_y
         msg.pose.position.z = self.position_z
         
-        self.publisher.publish(msg)
-        rclpy.spin_once(self, timeout_sec = 0.05)
+        for _ in range(5):
+            self.publisher.publish(msg)
+            rclpy.spin_once(self, timeout_sec = 0.1)
 
         self.get_logger().info(f'Published pose - Position: [{self.position_x:.1f}, {self.position_y:.1f}, {self.position_z:.1f}]'
                              )
         
-        # Cancel timer after publishing once
-        self.timer.cancel()
 
 def main(args=None):
     rclpy.init(args=args)
     pose_test = PoseTest()
-    rclpy.spin(pose_test)
+    pose_test.publish_pose()
     rclpy.shutdown()
 
 if __name__ == '__main__':
