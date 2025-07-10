@@ -7,6 +7,7 @@ from okmr_navigation.handlers.movement_execution_common import execute_test_move
 import math
 import numpy as np
 from scipy.spatial.transform import Rotation
+from okmr_utils import rpy_to_quaternion
 
 
 def handle_move_relative(goal_handle):
@@ -54,12 +55,9 @@ def _calculate_relative_goal_pose(current_pose, translation, rotation):
     # Create rotation from current orientation 
     current_rotation = Rotation.from_quat(curr_quat)
     
-    # Create relative rotation from RPY (convert degrees to radians)
-    relative_rotation = Rotation.from_euler('xyz', [
-        math.radians(rotation.x),
-        math.radians(rotation.y), 
-        math.radians(rotation.z)
-    ])
+    # Create relative rotation from RPY using utility function
+    relative_quat = rpy_to_quaternion(rotation.x, rotation.y, rotation.z)
+    relative_rotation = Rotation.from_quat(relative_quat)
     
     # Rotate the relative translation by current orientation
     relative_translation = np.array([translation.x, translation.y, translation.z])
