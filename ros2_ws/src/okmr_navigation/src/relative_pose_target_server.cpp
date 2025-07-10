@@ -34,8 +34,10 @@ public:
         // Declare parameters
         this->declare_parameter("update_frequency", 100.0);
         this->declare_parameter("holding_radius", 1.0);
+        this->declare_parameter("yaw_tolerance", 5.0);  // degrees
         update_frequency_ = this->get_parameter("update_frequency").as_double();
         holding_radius_ = this->get_parameter("holding_radius").as_double();
+        yaw_tolerance_ = this->get_parameter("yaw_tolerance").as_double();
 
         // Parameter callback
         param_callback_handle_ = this->add_on_set_parameters_callback(
@@ -245,16 +247,35 @@ private:
         // Create and publish RelativePose target message
         okmr_msgs::msg::RelativePose relative_pose_target;
         
-        // Translation target (positive values mean we want to move in that direction)
-        relative_pose_target.translation.x = relative_translation.x;
-        relative_pose_target.translation.y = relative_translation.y;
-        relative_pose_target.translation.z = relative_translation.z;
-        
-        // Rotation target - calculate error between current and target orientation
+        // Calculate yaw error
         auto current_eulers = euler_from_quaternion(current_pose_msg_.pose.orientation);
+        double yaw_error = (yaw - current_eulers.z) * (180.0 / M_PI);
+        
+        // Normalize yaw error to [-180, 180]
+        while (yaw_error > 180.0) yaw_error -= 360.0;
+        while (yaw_error < -180.0) yaw_error += 360.0;
+        
+        bool yaw_on_target = std::abs(yaw_error) <= yaw_tolerance_;
+        
+        // Translation target - only publish if yaw is on target when outside holding radius
+        if (xy_trig_dist < holding_radius_ || yaw_on_target)
+        {
+            relative_pose_target.translation.x = relative_translation.x;
+            relative_pose_target.translation.y = relative_translation.y;
+            relative_pose_target.translation.z = relative_translation.z;
+        }
+        else
+        {
+            // Zero translation when yaw is not on target and outside holding radius
+            relative_pose_target.translation.x = 0.0;
+            relative_pose_target.translation.y = 0.0;
+            relative_pose_target.translation.z = 0.0;
+        }
+        
+        // Rotation target - always publish
         relative_pose_target.rotation.x = (roll - current_eulers.x) * (180.0 / M_PI);
         relative_pose_target.rotation.y = (pitch - current_eulers.y) * (180.0 / M_PI);
-        relative_pose_target.rotation.z = (yaw - current_eulers.z) * (180.0 / M_PI);
+        relative_pose_target.rotation.z = yaw_error;
 
         relative_pose_pub_->publish(relative_pose_target);
     }
@@ -295,6 +316,16 @@ private:
                     return result;
                 }
             }
+            else if (param.get_name() == "yaw_tolerance")
+            {
+                yaw_tolerance_ = param.as_double();
+                if (yaw_tolerance_ <= 0.0)
+                {
+                    result.successful = false;
+                    result.reason = "Yaw tolerance must be positive";
+                    return result;
+                }
+            }
         }
         
         return result;
@@ -305,6 +336,7 @@ private:
     bool hold_mode_ = false;
     double update_frequency_;
     double holding_radius_;
+    double yaw_tolerance_;
     bool is_enabled_ = false;
 
     okmr_msgs::msg::GoalPose current_goal_pose_msg_; 

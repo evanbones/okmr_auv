@@ -10,8 +10,8 @@ class PoseTest(Node):
         self.publisher = self.create_publisher(GoalPose, '/current_goal_pose', 10)
         
         # Pose variables - Position (m) and Orientation (rad)
-        self.position_x = 5.0  # Forward/Backward position
-        self.position_y = 3.0  # Left/Right position
+        self.position_x = 0.0  # Forward/Backward position
+        self.position_y = 0.0  # Left/Right position
         self.position_z = 0.0  # Up/Down position
         
         
@@ -28,6 +28,7 @@ class PoseTest(Node):
         msg.pose.position.z = self.position_z
         
         self.publisher.publish(msg)
+        rclpy.spin_once(self, timeout_sec = 0.05)
 
         self.get_logger().info(f'Published pose - Position: [{self.position_x:.1f}, {self.position_y:.1f}, {self.position_z:.1f}]'
                              )
