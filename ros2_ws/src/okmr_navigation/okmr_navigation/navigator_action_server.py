@@ -17,7 +17,8 @@ class NavigatorActionServer(Node):
         
         self.declare_parameter('test_mode', False)
         self.declare_parameter('feedback_rate', 10.0)
-        self.declare_parameter('freeze_velocity_threshold', 0.1)
+        self.declare_parameter('freeze_linear_velocity_threshold', 0.1)
+        self.declare_parameter('freeze_angular_velocity_threshold', 0.1)
 
         self.command_handlers = command_handlers
         self.test_command_handlers = test_command_handlers

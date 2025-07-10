@@ -1,0 +1,179 @@
+# Dead Reckoning Node Manual Test Commands
+
+## 1. Basic Node Functionality
+# Launch static transforms first (required for TF2)
+ros2 launch okmr_navigation static_transforms.launch.py
+
+# Launch the node (in separate terminal)
+ros2 run okmr_navigation dead_reckoning
+
+# Check if node is running
+ros2 node list | grep dead_reckoning
+
+# Check published topics
+ros2 topic list | grep -E "(pose|velocity|acceleration)"
+
+# Check services are available
+ros2 service list | grep -E "(dead_reckoning|clear_pose|get_pose)"
+
+## 2. Topic Monitoring
+# Monitor pose output
+ros2 topic echo /pose
+
+# Monitor velocity output
+ros2 topic echo /velocity
+
+# Monitor acceleration output
+ros2 topic echo /acceleration
+
+# Check publishing rates
+ros2 topic hz /pose
+ros2 topic hz /velocity
+ros2 topic hz /acceleration
+
+## 3. Parameter Testing
+# List all parameters
+ros2 param list /dead_reckoning_node
+
+# Get parameter descriptions
+ros2 param describe /dead_reckoning_node update_frequency
+ros2 param describe /dead_reckoning_node complementary_filter_alpha
+
+# Test parameter changes
+ros2 param set /dead_reckoning_node update_frequency 100.0
+ros2 param set /dead_reckoning_node dvl_velocity_alpha 0.8
+
+# Test invalid parameters (should fail)
+ros2 param set /dead_reckoning_node update_frequency -10.0
+ros2 param set /dead_reckoning_node complementary_filter_alpha 1.5
+
+## 4. Service Testing
+# Test dead reckoning enable/disable
+ros2 service call /set_dead_reckoning_enabled okmr_msgs/srv/SetDeadReckoningEnabled "{enable: true}"
+ros2 service call /set_dead_reckoning_enabled okmr_msgs/srv/SetDeadReckoningEnabled "{enable: false}"
+
+# Test pose clearing
+ros2 service call /clear_pose okmr_msgs/srv/ClearPose "{}"
+
+# Test pose/twist/accel service
+ros2 service call /dead_reckoning_node/get_pose_twist_accel okmr_msgs/srv/GetPoseTwistAccel "{}"
+
+## 5. Synthetic Data Testing
+# Publish fake IMU data (static)
+ros2 topic pub /camera/camera/imu sensor_msgs/msg/Imu "{
+  header: {stamp: {sec: 0, nanosec: 0}, frame_id: 'imu'},
+  linear_acceleration: {x: 0.0, y: 0.0, z: 9.81},
+  angular_velocity: {x: 0.0, y: 0.0, z: 0.0}
+}" --rate 100
+
+# Publish fake IMU data (rotating)
+ros2 topic pub /camera/camera/imu sensor_msgs/msg/Imu "{
+  header: {stamp: {sec: 0, nanosec: 0}, frame_id: 'imu'},
+  linear_acceleration: {x: 0.0, y: 0.0, z: 9.81},
+  angular_velocity: {x: 0.0, y: -0.1, z: 0.0}
+}" --rate 100
+
+# Publish fake DVL data (moving forward)
+ros2 topic pub /dvl okmr_msgs/msg/Dvl "{
+  header: {stamp: {sec: 0, nanosec: 0}, frame_id: 'dvl'},
+  velocity: {x: 1.0, y: 0.0, z: 0.0},
+  water_temperature: 20.0,
+  pressure: 10.0,
+  figure_of_merit: 0.1,
+  beam_distances: [5.0, 5.0, 5.0, 5.0],
+  battery_voltage: 12.0,
+  speed_of_sound: 1500.0,
+  status: 0
+}" --rate 8
+
+## 6. Integration Testing
+# Test complete workflow (run in separate terminals):
+
+# Terminal 1: Start node
+ros2 run okmr_navigation dead_reckoning
+
+# Terminal 2: Enable dead reckoning
+ros2 service call /set_dead_reckoning_enabled okmr_msgs/srv/SetDeadReckoningEnabled "{enable: true}"
+
+# Terminal 3: Start publishing synthetic IMU data
+ros2 topic pub /camera/camera/imu sensor_msgs/msg/Imu "{header: {frame_id: 'imu'}, linear_acceleration: {x: 0.0, y: 0.0, z: 9.81}, angular_velocity: {x: 0.0, y: 0.0, z: 0.0}}" --rate 100
+
+# Terminal 4: Start publishing synthetic DVL data
+ros2 topic pub /dvl okmr_msgs/msg/Dvl "{header: {frame_id: 'dvl'}, velocity: {x: 1.0, y: 0.0, z: 0.0}, water_temperature: 20.0, pressure: 10.0, figure_of_merit: 0.1, beam_distances: [5.0, 5.0, 5.0, 5.0], battery_voltage: 12.0, speed_of_sound: 1500.0, status: 0}" --rate 8
+
+# Terminal 5: Monitor pose integration
+ros2 topic echo /pose --field pose.position
+
+# Clear pose and verify reset
+ros2 service call /clear_pose okmr_msgs/srv/ClearPose "{}"
+
+# Disable dead reckoning and verify pose stops integrating
+ros2 service call /set_dead_reckoning_enabled okmr_msgs/srv/SetDeadReckoningEnabled "{enable: false}"
+
+## 7. Debugging Commands
+# Check for errors in logs
+ros2 node info /dead_reckoning_node
+
+# Check TF2 transforms
+ros2 run tf2_tools view_frames
+ros2 run tf2_ros tf2_echo camera_imu_optical_frame base_link
+
+# Monitor computational load
+top -p $(pgrep -f dead_reckoning)
+
+# Record test data for analysis
+ros2 bag record /pose /velocity /acceleration /camera/camera/imu /dvl /tf_static
+
+## 8. Control Layer Testing
+# Build the workspace first
+colcon build --packages-select okmr_controls
+
+# Test pose control layer
+ros2 run okmr_controls pose_control_layer
+
+# Test velocity control layer
+ros2 run okmr_controls velocity_control_layer
+
+# Publish a relative pose target
+ros2 topic pub /relative_pose okmr_msgs/msg/RelativePose "{
+  translation: {x: 1.0, y: 0.0, z: 0.0},
+  rotation: {x: 0.0, y: 0.0, z: 10.0}
+}"
+
+# Monitor velocity target output
+ros2 topic echo /velocity_target
+
+# Monitor acceleration target output (if velocity layer running)
+ros2 topic echo /accel_target
+
+## 9. Complete System Test
+# Terminal 1: Static transforms
+ros2 launch okmr_navigation static_transforms.launch.py
+
+# Terminal 2: Dead reckoning
+ros2 run okmr_navigation dead_reckoning
+
+# Terminal 2: Pose control layer
+ros2 run okmr_controls pose_control_layer
+
+# Terminal 3: Velocity control layer
+ros2 run okmr_controls velocity_control_layer
+
+# Terminal 4: Enable dead reckoning
+ros2 service call /set_dead_reckoning_enabled okmr_msgs/srv/SetDeadReckoningEnabled "{enable: true}"
+
+# Terminal 5: Publish synthetic sensor data (IMU + DVL as above)
+
+# Terminal 6: Set control mode to POSE
+ros2 topic pub /control_mode okmr_msgs/msg/ControlMode "{control_mode: 0}" --once
+
+# Terminal 7: Publish pose target
+ros2 topic pub /relative_pose okmr_msgs/msg/RelativePose "{
+  translation: {x: 2.0, y: 1.0, z: 0.0},
+  rotation: {x: 0.0, y: 0.0, z: 45.0}
+}"
+
+# Monitor the control chain flow
+ros2 topic echo /relative_pose
+ros2 topic echo /velocity_target
+ros2 topic echo /accel_target

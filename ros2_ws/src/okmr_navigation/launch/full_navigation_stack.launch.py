@@ -8,6 +8,9 @@ def generate_launch_description():
        Node(
             package='okmr_navigation',
             executable='dead_reckoning',
+            remappings=[
+                ('/imu', '/camera1/camera1/imu'),
+            ]
         ),
         Node(
             package='okmr_navigation',
@@ -16,6 +19,16 @@ def generate_launch_description():
         Node(
             package='okmr_navigation',
             executable='relative_pose_target_server',
+            parameters=[
+                {'update_frequency': 100.0}
+            ]
+        ),
+        Node(
+            package='okmr_navigation',
+            executable='velocity_target_server',
+            parameters=[
+                {'update_frequency': 100.0}
+            ]
         ),
 ])
 

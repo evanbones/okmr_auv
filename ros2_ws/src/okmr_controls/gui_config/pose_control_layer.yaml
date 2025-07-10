@@ -1,0 +1,65 @@
+update_frequency:
+    info: ''
+    max: 200.0
+    min: -100.0
+    tuneable: true
+x_angular.p_gain:
+    info: ''
+    max: 100.0
+    min: -100.0
+    tuneable: true
+x_linear.p_gain:
+    info: ''
+    max: 100.0
+    min: -100.0
+    tuneable: true
+x_linear.u_max:
+    info: ''
+    max: 100.0
+    min: -100.0
+    tuneable: true
+x_linear.u_min:
+    info: ''
+    max: 100.0
+    min: -100.0
+    tuneable: true
+y_angular.p_gain:
+    info: ''
+    max: 100.0
+    min: -100.0
+    tuneable: true
+y_linear.p_gain:
+    info: ''
+    max: 100.0
+    min: -100.0
+    tuneable: true
+y_linear.u_max:
+    info: ''
+    max: 100.0
+    min: -100.0
+    tuneable: true
+y_linear.u_min:
+    info: ''
+    max: 100.0
+    min: -100.0
+    tuneable: true
+z_angular.p_gain:
+    info: ''
+    max: 100.0
+    min: -100.0
+    tuneable: true
+z_linear.p_gain:
+    info: ''
+    max: 100.0
+    min: -100.0
+    tuneable: true
+z_linear.u_max:
+    info: ''
+    max: 100.0
+    min: -100.0
+    tuneable: true
+z_linear.u_min:
+    info: ''
+    max: 100.0
+    min: -100.0
+    tuneable: true

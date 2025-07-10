@@ -24,14 +24,19 @@ rosidl_generate_interfaces(${PROJECT_NAME}
     msg/SensorReading.msg
     msg/MovementCommand.msg
     msg/MotorThrottle.msg
+    msg/MotorThrust.msg
     msg/TempReading.msg
     msg/Status.msg
     msg/Dvl.msg
+    msg/RelativePose.msg
     srv/FindObject.srv
     srv/Vg2pc.srv
     srv/Matching.srv
     srv/Status.srv
     srv/GetPoseTwistAccel.srv
+    srv/SetDeadReckoningEnabled.srv
+    srv/EnableThrustAllocation.srv
+    srv/ClearPose.srv
     srv/DistanceFromGoal.srv
     msg/VoxelGrid.msg
     msg/Classes.msg
