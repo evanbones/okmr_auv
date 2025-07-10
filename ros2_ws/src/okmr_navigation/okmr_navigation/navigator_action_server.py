@@ -69,7 +69,7 @@ class NavigatorActionServer(Node):
         # https://github.com/ros2/examples/blob/rolling/rclpy/actions/minimal_action_server/examples_rclpy_minimal_action_server/server_single_goal.py
         #not sure why never mentioned in official tutorials?
         with self._goal_lock:
-            if self._cached_goal_handle is not None and self._goal_handle.is_active:
+            if self._cached_goal_handle is not None and self._cached_goal_handle.is_active:
                 self.get_logger().warn('Aborting previous goal')
                 # Abort the existing goal
                 self._cached_goal_handle.abort()

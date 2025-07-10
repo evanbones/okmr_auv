@@ -97,7 +97,7 @@ class EnableAndControlNode(Node):
         
         if dead_reckoning_ok and thrust_allocator_ok:
             # Small delay to ensure the enable requests are processed
-            self.set_control_mode_0()
+            #self.set_control_mode_0()
             self.get_logger().info('Sequence completed successfully')
         else:
             self.get_logger().error('Failed to enable all components, skipping control mode')

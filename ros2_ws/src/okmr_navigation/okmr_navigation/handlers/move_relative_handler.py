@@ -30,10 +30,11 @@ def handle_move_relative(goal_handle):
         command_msg.rotation
     )
 
+    goal_pose.copy_orientation = command_msg.goal_pose.copy_orientation
+
     # Set the goal_pose inside the goal handle request manually
     goal_handle.request.command_msg.goal_pose = goal_pose
     
-    # Call handle_move_absolute to use the new common implementation
     return handle_move_absolute(goal_handle)
 
 def _calculate_relative_goal_pose(current_pose, translation, rotation):
@@ -79,7 +80,6 @@ def _calculate_relative_goal_pose(current_pose, translation, rotation):
     goal_pose.pose.orientation.y = final_quat[1]
     goal_pose.pose.orientation.z = final_quat[2]
     goal_pose.pose.orientation.w = final_quat[3]
-    goal_pose.copy_orientation = True
     
     return goal_pose
 

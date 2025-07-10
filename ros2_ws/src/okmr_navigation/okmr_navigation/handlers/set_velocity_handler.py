@@ -2,9 +2,13 @@ from okmr_navigation.navigator_action_server import NavigatorActionServer
 from okmr_navigation.handlers.movement_execution_common import (
     execute_movement_with_monitoring, execute_test_movement_common,
    )
+from okmr_navigation.handlers.set_control_mode import set_control_mode
+from okmr_msgs.msg import ControlMode
 
 def handle_set_velocity(goal_handle):
     """Execute velocity-based movement"""
+    set_control_mode(ControlMode.VELOCITY)
+
     return execute_movement_with_monitoring(
         goal_handle,
         _publish_velocity_goal,
