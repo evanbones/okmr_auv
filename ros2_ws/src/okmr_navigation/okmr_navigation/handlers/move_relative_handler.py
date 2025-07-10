@@ -16,8 +16,8 @@ def handle_move_relative(goal_handle):
     node = NavigatorActionServer.get_instance()
     
     # Get current pose and calculate absolute goal
-    current_pose_stamped = get_current_pose()
-    if current_pose_stamped is None:
+    current_pose = get_current_pose()
+    if current_pose is None:
         goal_handle.abort()
         result = Movement.Result()
         result.debug_info = "Could not get current pose"
@@ -25,7 +25,7 @@ def handle_move_relative(goal_handle):
     
     # Create GoalPose from relative movement
     goal_pose = _calculate_relative_goal_pose(
-        current_pose_stamped.pose, 
+        current_pose, 
         command_msg.translation, 
         command_msg.rotation
     )

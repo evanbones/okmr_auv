@@ -85,10 +85,9 @@ class EnableAndControlNode(Node):
         msg.header.frame_id = 'base_link'
         msg.control_mode = ControlMode.POSE  # Control mode 0
         
-        for _ in range(10):
-            msg.header.stamp = self.get_clock().now().to_msg()
-            self.control_mode_publisher.publish(msg)
-            rclpy.spin_once(self, timeout_sec = 0.05)
+        msg.header.stamp = self.get_clock().now().to_msg()
+        self.control_mode_publisher.publish(msg)
+        rclpy.spin_once(self, timeout_sec = 0.05)
         self.get_logger().info('Control mode set to 0 (POSE)')
     
     def run(self):
@@ -110,6 +109,8 @@ def main(args=None):
     node = EnableAndControlNode()
     
     try:
+        for _ in range(20):
+            rclpy.spin_once(node, timeout_sec = 0.1)
         node.run()
         for _ in range(20):
             rclpy.spin_once(node, timeout_sec = 0.05)

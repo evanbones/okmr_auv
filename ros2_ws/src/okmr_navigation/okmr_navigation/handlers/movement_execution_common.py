@@ -28,6 +28,9 @@ def execute_movement_with_monitoring(goal_handle, publish_goal_func, service_nam
     # Monitor execution with feedback
     start_time = node.get_clock().now()
     max_time = goal_handle.request.command_msg.timeout_sec
+    if max_time == 0.0:
+        max_time = 30.0
+        #in case you forget to send a time limit!
     
     while True:
         if not goal_handle.is_active:
@@ -163,8 +166,9 @@ def is_goal_reached(goal_distances, goal_handle):
     command_msg = goal_handle.request.command_msg
     
     # Both pose and velocity movements use the same criteria
-    radius = command_msg.radius_of_acceptance
-    angle_threshold = command_msg.angle_threshold
+    radius = command_msg.radius_of_acceptance if command_msg.radius_of_acceptance != 0.0 else 0.2
+    angle_threshold = command_msg.angle_threshold if command_msg.angle_threshold != 0.0 else 5.0
+    #hardocded default values for radius of acceptance, please dont use outside of testing
     
     return (is_translation_close_enough(translation_diff, radius) and 
             is_orientation_close_enough(orientation_diff, angle_threshold))

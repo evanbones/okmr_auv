@@ -65,16 +65,15 @@ def execute_freeze():
     node = NavigatorActionServer.get_instance()
     
     # Get current pose using service (like relative movement handler)
-    current_pose_stamped = get_current_pose()
-    if current_pose_stamped is None:
+    current_pose = get_current_pose()
+    if current_pose is None:
         node.get_logger().error("Could not get current pose for freeze command")
         return False
     
     # Create goal pose at current location to freeze vehicle
     freeze_goal_pose = GoalPose()
     freeze_goal_pose.header.stamp = node.get_clock().now().to_msg()
-    freeze_goal_pose.header.frame_id = current_pose_stamped.header.frame_id
-    freeze_goal_pose.pose = current_pose_stamped.pose
+    freeze_goal_pose.pose = current_pose
     freeze_goal_pose.copy_orientation = True
     
     # Publish goal pose to freeze vehicle at current position (like absolute handler)
