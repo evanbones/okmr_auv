@@ -4,7 +4,7 @@ from okmr_automated_planner.state_node import StateNode
 from okmr_automated_planner.movement_command_action_client import MovementCommandActionClient
 
 class BaseStateMachine(Machine):
-    mandatory_states = ['uninitialized','initializing','initialized', 'done', 'aborted']
+    mandatory_states = ['uninitialized','initializing', 'done', 'aborted']
     mandatory_transitions = [
                                 { 'trigger': 'initialize', 'source': 'uninitialized', 'dest': 'initializing' },
                                 { 'trigger': 'initializing_done', 'source': 'initializing', 'dest': 'initialized' },
