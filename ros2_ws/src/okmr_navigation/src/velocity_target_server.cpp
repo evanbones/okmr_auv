@@ -5,9 +5,11 @@
 #include "rclcpp/rclcpp.hpp"
 #include "okmr_msgs/msg/goal_velocity.hpp"
 #include "okmr_msgs/msg/control_mode.hpp"
+#include "okmr_msgs/srv/distance_from_goal.hpp"
 #include "geometry_msgs/msg/twist_stamped.hpp"
 
 using std::placeholders::_1;
+using std::placeholders::_2;
 using namespace std::chrono_literals;
 
 class VelocityTargetServer : public rclcpp::Node
@@ -49,6 +51,11 @@ public:
 
         // Publisher for velocity target
         velocity_target_pub_ = this->create_publisher<geometry_msgs::msg::TwistStamped>("/velocity_target", 10);
+
+        // Service for distance from velocity goal
+        distance_service_ = this->create_service<okmr_msgs::srv::DistanceFromGoal>(
+            "distance_from_velocity_goal",
+            std::bind(&VelocityTargetServer::distance_from_velocity_goal_callback, this, _1, _2));
 
         // Timer for regular updates
         auto timer_period = std::chrono::duration_cast<std::chrono::milliseconds>(
@@ -111,6 +118,67 @@ private:
                 timer_period, std::bind(&VelocityTargetServer::update, this),
                 timer_callback_group_);
         }
+    }
+
+    void distance_from_velocity_goal_callback(
+        const std::shared_ptr<okmr_msgs::srv::DistanceFromGoal::Request> request,
+        std::shared_ptr<okmr_msgs::srv::DistanceFromGoal::Response> response)
+    {
+        // Initialize response with zeros
+        response->translation_differences = geometry_msgs::msg::Vector3();
+        response->orientation_differences = geometry_msgs::msg::Vector3();
+        
+        // Only provide distance information if we have an active goal
+        if (!has_active_goal_)
+        {
+            return;
+        }
+        
+        // Calculate target distance from goal velocity * duration
+        geometry_msgs::msg::Vector3 target_distance;
+        target_distance.x = current_goal_velocity_.twist.linear.x * current_goal_velocity_.duration;
+        target_distance.y = current_goal_velocity_.twist.linear.y * current_goal_velocity_.duration;
+        target_distance.z = current_goal_velocity_.twist.linear.z * current_goal_velocity_.duration;
+        
+        // Calculate target angle from goal velocity * duration (degrees)
+        geometry_msgs::msg::Vector3 target_angle;
+        target_angle.x = current_goal_velocity_.twist.angular.x * current_goal_velocity_.duration;
+        target_angle.y = current_goal_velocity_.twist.angular.y * current_goal_velocity_.duration;
+        target_angle.z = current_goal_velocity_.twist.angular.z * current_goal_velocity_.duration;
+        
+        geometry_msgs::msg::Vector3 estimated_distance;
+        geometry_msgs::msg::Vector3 estimated_angle;
+        
+        if (current_goal_velocity_.integrate)
+        {
+            // Use actual integrated values when integration is enabled
+            estimated_distance = integrated_distance_;
+            estimated_angle = integrated_angle_;
+        }
+        else
+        {
+            // Estimate distance based on requested speed * elapsed time
+            auto current_time = this->now();
+            auto elapsed_time = (current_time - goal_start_time_).seconds();
+            
+            estimated_distance.x = current_goal_velocity_.twist.linear.x * elapsed_time;
+            estimated_distance.y = current_goal_velocity_.twist.linear.y * elapsed_time;
+            estimated_distance.z = current_goal_velocity_.twist.linear.z * elapsed_time;
+            
+            estimated_angle.x = current_goal_velocity_.twist.angular.x * elapsed_time;
+            estimated_angle.y = current_goal_velocity_.twist.angular.y * elapsed_time;
+            estimated_angle.z = current_goal_velocity_.twist.angular.z * elapsed_time;
+        }
+        
+        // Calculate remaining distance (target - estimated)
+        response->translation_differences.x = target_distance.x - estimated_distance.x;
+        response->translation_differences.y = target_distance.y - estimated_distance.y;
+        response->translation_differences.z = target_distance.z - estimated_distance.z;
+        
+        // Calculate remaining angle (target - estimated)
+        response->orientation_differences.x = target_angle.x - estimated_angle.x;
+        response->orientation_differences.y = target_angle.y - estimated_angle.y;
+        response->orientation_differences.z = target_angle.z - estimated_angle.z;
     }
 
     void update()
@@ -252,6 +320,7 @@ private:
     rclcpp::Subscription<okmr_msgs::msg::ControlMode>::SharedPtr control_mode_subscription_;
     
     rclcpp::Publisher<geometry_msgs::msg::TwistStamped>::SharedPtr velocity_target_pub_;
+    rclcpp::Service<okmr_msgs::srv::DistanceFromGoal>::SharedPtr distance_service_;
     
     rclcpp::TimerBase::SharedPtr timer_;
     

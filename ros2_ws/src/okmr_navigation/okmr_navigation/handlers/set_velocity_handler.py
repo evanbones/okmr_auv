@@ -3,7 +3,7 @@ from okmr_navigation.handlers.movement_execution_common import (
     execute_movement_with_monitoring, execute_test_movement_common,
    )
 from okmr_navigation.handlers.set_control_mode import set_control_mode
-from okmr_msgs.msg import ControlMode
+from okmr_msgs.msg import ControlMode, GoalVelocity
 
 def handle_set_velocity(goal_handle):
     """Execute velocity-based movement"""
@@ -12,7 +12,7 @@ def handle_set_velocity(goal_handle):
     return execute_movement_with_monitoring(
         goal_handle,
         _publish_velocity_goal,
-        'distance_from_goal'
+        'distance_from_velocity_goal'
     )
 
 def _publish_velocity_goal(goal_handle):
