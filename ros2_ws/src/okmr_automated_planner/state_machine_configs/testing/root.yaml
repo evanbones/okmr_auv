@@ -1,0 +1,18 @@
+root:
+  states:
+    - { name: initializing}
+    - { name: sinking}
+    - { name: moving_forward}
+    - { name: moving_left}
+    - { name: moving_right}
+    - { name: barrel_rolling}
+    - { name: spinning_yaw_90_cw}
+    - { name: spinning_yaw_90_ccw}
+    - { name: surfacing }
+
+  transitions:
+    - { trigger: mission_start_received, source: initialized, dest: sinking }
+    - { trigger: sinking_done, source: sinking, dest: moving_forward}
+    - { trigger: surfacing_done, source: surfacing, dest: initialized }
+    - { trigger: abort, source: '*', dest:  aborted}
+
