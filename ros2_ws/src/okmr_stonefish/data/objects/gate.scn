@@ -1,0 +1,38 @@
+<scenario>
+<static name="gate_box0" type="box">
+        <dimensions xyz="0.1 0.1 0.75"/>
+        <material name="Hull"/>
+        <look name="Red"/>
+        <world_transform xyz="$(arg x) $(arg y) $(arg z)" rpy="0.0 0.0 0.0"/>
+</static>
+<static name="gate_box1" type="box">
+        <dimensions xyz="0.1 0.1 0.75"/>
+        <material name="Hull"/>
+        <look name="Black"/>
+        <world_transform xyz="$(arg x) $(arg y) ${$(arg z) - 0.75}" rpy="0.0 0.0 0.0"/>
+</static>
+<static name="gate_box2" type="box">
+        <dimensions xyz="0.1 3.0 0.1"/>
+        <material name="Hull"/>
+        <look name="Gray"/>
+        <world_transform xyz="$(arg x) ${$(arg y) + 1.5} ${$(arg z) - 1.125}" rpy="0.0 0.0 0.0"/>
+</static>
+<static name="gate_box3" type="box">
+        <dimensions xyz="0.1 0.1 0.75"/>
+        <material name="Hull"/>
+        <look name="Black"/>
+        <world_transform xyz="$(arg x) ${$(arg y) + 3.0} $(arg z)" rpy="0.0 0.0 0.0"/>
+</static>
+<static name="gate_box4" type="box">
+        <dimensions xyz="0.1 0.1 0.75"/>
+        <material name="Hull"/>
+        <look name="Red"/>
+        <world_transform xyz="$(arg x) ${$(arg y) + 3.0} ${$(arg z) - 0.75}" rpy="0.0 0.0 0.0"/>
+</static>
+<static name="gate_box1" type="box">
+        <dimensions xyz="0.1 0.1 0.75"/>
+        <material name="Hull"/>
+        <look name="Red"/>
+        <world_transform xyz="$(arg x) ${$(arg y) + 1.5} ${$(arg z) - 0.8}" rpy="0.0 0.0 0.0"/>
+</static>
+</scenario>
