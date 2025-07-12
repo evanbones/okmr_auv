@@ -164,7 +164,7 @@ def is_goal_reached(goal_distances, goal_handle):
     # Both pose and velocity movements use the same criteria
     radius = command_msg.radius_of_acceptance if command_msg.radius_of_acceptance != 0.0 else 0.2
     angle_threshold = command_msg.angle_threshold if command_msg.angle_threshold != 0.0 else 5.0
-    #hardocded default values for radius of acceptance, please dont use outside of testing
+    #hardcoded default values for radius of acceptance, please dont use outside of testing
     
     return (is_translation_close_enough(translation_diff, radius) and 
             is_orientation_close_enough(orientation_diff, angle_threshold))
