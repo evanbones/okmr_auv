@@ -88,6 +88,21 @@ class StateMachineFactory:
                 states=state_objects,
                 transitions=transitions
             )
+        elif machine_name == "test":
+            machine_instance = state_machines.TestStateMachine(
+                name=machine_name,
+                ros_node=ros_node,
+                states=state_objects,
+                transitions=transitions
+            )
+        elif machine_name == "test_scan":
+            machine_instance = state_machines.TestScanStateMachine(
+                name=machine_name,
+                ros_node=ros_node,
+                states=state_objects,
+                transitions=transitions
+            )
+        #TODO reduce the amount of copy pasting here
         else:
             raise ValueError(f"No implementation found for machine type: {machine_name}")
             

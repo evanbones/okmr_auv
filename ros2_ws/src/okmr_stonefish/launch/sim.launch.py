@@ -27,7 +27,7 @@ def generate_launch_description():
                 '800',
                 'high'
             ],
-            output='screen',
+            output='log',
             remappings=[
                 ('/stonefish/imu', '/camera1/camera1/imu'),
                 ('/stonefish/front_camera/image_raw/image_color', '/camera1/camera1/image_raw'),

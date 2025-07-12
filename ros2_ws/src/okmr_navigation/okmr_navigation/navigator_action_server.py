@@ -23,9 +23,9 @@ class NavigatorActionServer(Node):
         self.command_handlers = command_handlers
         self.test_command_handlers = test_command_handlers
         
-        self._goal_handle = None #this is the only goal handle allowed to run
+        self._cached_goal_handle = None #this is the only goal handle allowed to run
         self._goal_lock = Lock()
-        self._publishers = {}  # Dictionary to store reusable publishers
+        self._cached_publishers = {}  # Dictionary to store reusable publishers
         self._action_server = ActionServer(
             self,
             Movement,
@@ -45,9 +45,9 @@ class NavigatorActionServer(Node):
 
     def get_publisher(self, topic_name, msg_type, qos=10):
         """Get or create a publisher for the given topic"""
-        if topic_name not in self._publishers:
-            self._publishers[topic_name] = self.create_publisher(msg_type, topic_name, qos)
-        return self._publishers[topic_name]
+        if topic_name not in self._cached_publishers:
+            self._cached_publishers[topic_name] = self.create_publisher(msg_type, topic_name, qos)
+        return self._cached_publishers[topic_name]
 
     @classmethod
     def get_instance(cls, command_handlers=None, test_command_handlers=None):
@@ -69,11 +69,11 @@ class NavigatorActionServer(Node):
         # https://github.com/ros2/examples/blob/rolling/rclpy/actions/minimal_action_server/examples_rclpy_minimal_action_server/server_single_goal.py
         #not sure why never mentioned in official tutorials?
         with self._goal_lock:
-            if self._goal_handle is not None and self._goal_handle.is_active:
+            if self._cached_goal_handle is not None and self._cached_goal_handle.is_active:
                 self.get_logger().warn('Aborting previous goal')
                 # Abort the existing goal
-                self._goal_handle.abort()
-            self._goal_handle = goal_handle
+                self._cached_goal_handle.abort()
+            self._cached_goal_handle = goal_handle
 
         goal_handle.execute()#i assume this works because the default handler just calls this anyway
 

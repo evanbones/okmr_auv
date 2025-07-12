@@ -1,4 +1,4 @@
-int32 command
+int8 command
 #defines which of the commands defined below to execute
 
 geometry_msgs/Vector3 translation #for relative move commands
@@ -16,12 +16,12 @@ okmr_msgs/GoalPose goal_pose #for absolute move commands
 
 std_msgs/Header header
 
-int32 FREEZE = 0
+int8 FREEZE = 0
     #hold current pose, stop all movements going on
     #this will automatically set all pid systems into position mode
     #equivlant to a move_relative command with no translation or rotation
 
-int32 MOVE_RELATIVE = 1 
+int8 MOVE_RELATIVE = 1 
     #does a movement relative to the current (at time received) pose, 
     #ex. move 5m forward, rotate 90 degrees cw, etc
     #
@@ -30,7 +30,7 @@ int32 MOVE_RELATIVE = 1
     
     #NOTE: command is relative to the pose the auv was in when the command was received by the action server
 
-int32 MOVE_ABSOLUTE = 2
+int8 MOVE_ABSOLUTE = 2
     #move to the absolute position defined by the goal_pose field
     #can also define translation field, which will move the goal position accordingly
     #direction of translation can be defined by rotation field
@@ -45,21 +45,29 @@ int32 MOVE_ABSOLUTE = 2
     #maybe this method will never need to be implemented who knows
 
 
-int32 SET_VELOCITY = 3 #uses goal_velocity to request a velocity based movement, not looking at pose
+int8 SET_VELOCITY = 3 #uses goal_velocity to request a velocity based movement, not looking at pose
 
 #applies to both pitch and roll:
 #will need to selectively enable pid systems 
 #(disable all translation, disable other rotational PID systems, disable dead reckoning)
 #inside the action server, need to check if command goal_velocity.twist.angular.x or .y is non zero
 
-int32 LOOK_AT = 4
+int8 LOOK_AT = 4
     #could be used for looking at a specific location
     #location to look at defined by "pose"
     #possibly useful for gripper, torpedo, dropper tasks
     #how to do this kind of thing with the bottom facing camera?
 
-int32 SET_DEPTH = 5
+int8 SET_DEPTH = 5
     #go down dont #sink
+
+int8 SURFACE_PASSIVE = 6
+    #surface by turning off all motors
+    #let buoyancy do its thing
+
+int8 BARREL_ROLL = 7
+    #disable dead reckoning, execute barrel roll using goal_velocity, then re-enable dead reckoning
+    #uses goal_velocity field for barrel roll parameters
 
 
 

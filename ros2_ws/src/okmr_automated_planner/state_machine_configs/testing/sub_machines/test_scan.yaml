@@ -1,0 +1,15 @@
+test_scan:
+  states:
+    - { name: moving_forward}
+    - { name: moving_left}
+    - { name: moving_right}
+    - { name: spinning_yaw_cw}
+    - { name: spinning_yaw_ccw}
+
+  transitions:
+    - { trigger: initialized, source: initializing, dest: moving_forward }
+    - { trigger: moving_forward_done, source: moving_forward, dest: moving_left}
+    - { trigger: moving_left_done, source: moving_left, dest: moving_right}
+    - { trigger: moving_right_done, source: moving_right, dest: spinning_yaw_cw}
+    - { trigger: spinning_yaw_cw_done, source: spinning_yaw_cw, dest: spinning_yaw_ccw}
+    - { trigger: spinning_yaw_ccw_done, source: spinning_yaw_ccw, dest: done}

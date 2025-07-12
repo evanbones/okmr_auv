@@ -85,10 +85,9 @@ class EnableAndControlNode(Node):
         msg.header.frame_id = 'base_link'
         msg.control_mode = ControlMode.POSE  # Control mode 0
         
-        for _ in range(10):
-            msg.header.stamp = self.get_clock().now().to_msg()
-            self.control_mode_publisher.publish(msg)
-            rclpy.spin_once(self, timeout_sec = 0.05)
+        msg.header.stamp = self.get_clock().now().to_msg()
+        self.control_mode_publisher.publish(msg)
+        rclpy.spin_once(self, timeout_sec = 0.05)
         self.get_logger().info('Control mode set to 0 (POSE)')
     
     def run(self):
@@ -98,7 +97,7 @@ class EnableAndControlNode(Node):
         
         if dead_reckoning_ok and thrust_allocator_ok:
             # Small delay to ensure the enable requests are processed
-            self.set_control_mode_0()
+            #self.set_control_mode_0()
             self.get_logger().info('Sequence completed successfully')
         else:
             self.get_logger().error('Failed to enable all components, skipping control mode')
@@ -110,6 +109,8 @@ def main(args=None):
     node = EnableAndControlNode()
     
     try:
+        for _ in range(20):
+            rclpy.spin_once(node, timeout_sec = 0.1)
         node.run()
         for _ in range(20):
             rclpy.spin_once(node, timeout_sec = 0.05)

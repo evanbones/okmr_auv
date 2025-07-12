@@ -98,24 +98,24 @@ private:
 
     void control_mode_callback(const okmr_msgs::msg::ControlMode::SharedPtr msg)
     {
-        RCLCPP_INFO(this->get_logger(), "RelativePoseTargetServer: Control mode callback received: %d", msg->control_mode);
+        RCLCPP_DEBUG(this->get_logger(), "RelativePoseTargetServer: Control mode callback received: %d", msg->control_mode);
         
         bool was_enabled = is_enabled_;
         is_enabled_ = (msg->control_mode == okmr_msgs::msg::ControlMode::POSE);
         
-        RCLCPP_INFO(this->get_logger(), "RelativePoseTargetServer: enabled: %s -> %s", 
+        RCLCPP_DEBUG(this->get_logger(), "RelativePoseTargetServer: enabled: %s -> %s", 
                     was_enabled ? "true" : "false", is_enabled_ ? "true" : "false");
         
         if (was_enabled && !is_enabled_)
         {
             // Mode changed from pose to something else - cancel timer
-            RCLCPP_INFO(this->get_logger(), "Pose mode disabled, canceling timer");
+            RCLCPP_DEBUG(this->get_logger(), "Pose mode disabled, canceling timer");
             timer_->cancel();
         }
         else if (!was_enabled && is_enabled_)
         {
             // Mode changed to pose - start timer and set goal to current pose for safety
-            RCLCPP_INFO(this->get_logger(), "Pose mode enabled, starting timer");
+            RCLCPP_DEBUG(this->get_logger(), "Pose mode enabled, starting timer");
             current_goal_pose_msg_.pose = current_pose_msg_.pose;
             
             auto timer_period = std::chrono::duration_cast<std::chrono::milliseconds>(
@@ -160,9 +160,9 @@ private:
         tf2::Matrix3x3(quat).getRPY(roll, pitch, yaw);
 
         geometry_msgs::msg::Vector3 eulers;
-        eulers.x = roll;
-        eulers.y = pitch;
-        eulers.z = yaw;
+        eulers.x = roll * (180.0 / M_PI);
+        eulers.y = pitch * (180.0 / M_PI);
+        eulers.z = yaw * (180.0 / M_PI);
         return eulers;
     }
 
@@ -241,7 +241,7 @@ private:
         {
             yaw = atan2(
                 current_goal_pose_msg_.pose.position.y - current_pose_msg_.pose.position.y,
-                current_goal_pose_msg_.pose.position.x - current_pose_msg_.pose.position.x);
+                current_goal_pose_msg_.pose.position.x - current_pose_msg_.pose.position.x) * (180.0 / M_PI);
         }
 
         // Create and publish RelativePose target message
@@ -249,7 +249,7 @@ private:
         
         // Calculate yaw error
         auto current_eulers = euler_from_quaternion(current_pose_msg_.pose.orientation);
-        double yaw_error = (yaw - current_eulers.z) * (180.0 / M_PI);
+        double yaw_error = (yaw - current_eulers.z);
         
         // Normalize yaw error to [-180, 180]
         while (yaw_error > 180.0) yaw_error -= 360.0;
@@ -273,8 +273,8 @@ private:
         }
         
         // Rotation target - always publish
-        relative_pose_target.rotation.x = (roll - current_eulers.x) * (180.0 / M_PI);
-        relative_pose_target.rotation.y = (pitch - current_eulers.y) * (180.0 / M_PI);
+        relative_pose_target.rotation.x = (roll - current_eulers.x);
+        relative_pose_target.rotation.y = (pitch - current_eulers.y);
         relative_pose_target.rotation.z = yaw_error;
 
         relative_pose_pub_->publish(relative_pose_target);

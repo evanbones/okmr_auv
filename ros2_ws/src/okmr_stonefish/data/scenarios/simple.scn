@@ -16,6 +16,13 @@
         
     </environment>
 
+
+    <include file="objects/gate.scn">
+        <arg name="x" value="3.0"/>
+        <arg name="y" value="-1.5"/>
+        <arg name="z" value="2.0"/>
+    </include>
+
     <static name="SandyFloor" type="plane">
         <material name="Sand"/>
         <look name="SandyTexture"/>
@@ -111,6 +118,7 @@
         <look name="Gray" gray="0.3" roughness="0.4" metalness="0.5"/>
         <look name="Black" gray="0.0" roughness="0.4" metalness="0.5"/>
         <look name="Blue" rgb="0.0 0.3 0.8" roughness="0.4" metalness="0.3"/>
+        <look name="Red" rgb="1.0 0.0 0.0" roughness="0.4" metalness="0.3"/>
         <look name="SandyYellow" rgb="0.95 0.80 0.30" roughness="0.8" metalness="0.0"/>
         <look name="SandyTexture" gray="1.0" roughness="0.1" texture="textures/sand.jpg"/>
     </looks>

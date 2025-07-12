@@ -16,8 +16,8 @@ def handle_move_relative(goal_handle):
     node = NavigatorActionServer.get_instance()
     
     # Get current pose and calculate absolute goal
-    current_pose_stamped = get_current_pose()
-    if current_pose_stamped is None:
+    current_pose = get_current_pose()
+    if current_pose is None:
         goal_handle.abort()
         result = Movement.Result()
         result.debug_info = "Could not get current pose"
@@ -25,15 +25,21 @@ def handle_move_relative(goal_handle):
     
     # Create GoalPose from relative movement
     goal_pose = _calculate_relative_goal_pose(
-        current_pose_stamped.pose, 
+        current_pose, 
         command_msg.translation, 
         command_msg.rotation
     )
+    
+    #if no rotation is defined, we can resume original orientation by setting goal_pose.copy_orientation = True
+    #otherwise, by default it is false if no rotation is specified
+    if command_msg.rotation.x == 0.0 and command_msg.rotation.y == 0.0 and command_msg.rotation.z == 0.0:
+        goal_pose.copy_orientation = command_msg.goal_pose.copy_orientation
+    else:
+        goal_pose.copy_orientation = True
 
     # Set the goal_pose inside the goal handle request manually
     goal_handle.request.command_msg.goal_pose = goal_pose
     
-    # Call handle_move_absolute to use the new common implementation
     return handle_move_absolute(goal_handle)
 
 def _calculate_relative_goal_pose(current_pose, translation, rotation):
@@ -79,7 +85,6 @@ def _calculate_relative_goal_pose(current_pose, translation, rotation):
     goal_pose.pose.orientation.y = final_quat[1]
     goal_pose.pose.orientation.z = final_quat[2]
     goal_pose.pose.orientation.w = final_quat[3]
-    goal_pose.copy_orientation = True
     
     return goal_pose
 

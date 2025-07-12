@@ -79,6 +79,13 @@ class FindingGateStateMachine(BaseStateMachine):
         pass
 
     def on_enter_initialized(self):
+        #reconsider sending the movement request here instead of in on_enter_scanning_cw
+        #maybe initializing -> initialized in redundant?
+        #perhaps initialized state can become a trigger instead
+        #if we make initialize() trigger cause unitialized -> initializing
+        #and once thats done, it calls initialized() (inside some kind of async callback)
+        #then we can define what the initialzied() trigger points to (cw, ccw, etc)
+        #instead of having to hardcode what we do after initialization
         movement_msg = MovementCommand()
         movement_msg.command = MovementCommand.SET_VELOCITY
         movement_msg.goal_velocity = GoalVelocity()
