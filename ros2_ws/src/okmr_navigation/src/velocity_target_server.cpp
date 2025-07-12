@@ -88,18 +88,18 @@ private:
 
     void control_mode_callback(const okmr_msgs::msg::ControlMode::SharedPtr msg)
     {
-        RCLCPP_INFO(this->get_logger(), "VelocityTargetServer: Control mode callback received: %d", msg->control_mode);
+        RCLCPP_DEBUG(this->get_logger(), "VelocityTargetServer: Control mode callback received: %d", msg->control_mode);
         
         bool was_enabled = is_enabled_;
         is_enabled_ = (msg->control_mode == okmr_msgs::msg::ControlMode::VELOCITY);
         
-        RCLCPP_INFO(this->get_logger(), "VelocityTargetServer: enabled: %s -> %s", 
+        RCLCPP_DEBUG(this->get_logger(), "VelocityTargetServer: enabled: %s -> %s", 
                     was_enabled ? "true" : "false", is_enabled_ ? "true" : "false");
         
         if (was_enabled && !is_enabled_)
         {
             // Mode changed from velocity to something else - cancel timer and clear goal
-            RCLCPP_INFO(this->get_logger(), "Velocity mode disabled, canceling timer");
+            RCLCPP_DEBUG(this->get_logger(), "Velocity mode disabled, canceling timer");
             timer_->cancel();
             has_active_goal_ = false;
             current_goal_velocity_.twist = geometry_msgs::msg::Twist(); // Zero velocity
@@ -107,7 +107,7 @@ private:
         else if (!was_enabled && is_enabled_)
         {
             // Mode changed to velocity - start timer and set goal to zero velocity for safety
-            RCLCPP_INFO(this->get_logger(), "Velocity mode enabled, starting timer");
+            RCLCPP_DEBUG(this->get_logger(), "Velocity mode enabled, starting timer");
             has_active_goal_ = false;
             current_goal_velocity_.twist = geometry_msgs::msg::Twist(); // Zero velocity
             

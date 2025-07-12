@@ -51,6 +51,7 @@ class MovementCommandActionClient:
         Returns:
             bool: True if action was sent successfully, False otherwise
         """
+        self.node.get_logger().debug("Cleaning up all movement action callbacks!")
         self._cleanup_current_action() #cleanup to ensure no residual callbacks leftover
         #just in case we send a movement command while one is already running
         #double check that when we preempt a currently running command that 
@@ -62,6 +63,7 @@ class MovementCommandActionClient:
             return False
             
         # Store callbacks
+
         self.on_success_callback = on_success
         self.on_failure_callback = on_failure
         self.on_acceptance_callback = on_acceptance
@@ -96,8 +98,6 @@ class MovementCommandActionClient:
             cancel_future.add_done_callback(self._cancel_response_callback)
         else:
             self.node.get_logger().warn("No active movement to cancel")
-            
-        self._cleanup_current_action()
     
     def is_movement_active(self) -> bool:
         """
@@ -146,6 +146,8 @@ class MovementCommandActionClient:
     
     def _feedback_callback(self, feedback_msg):
         """Handle feedback from the action server."""
+
+        self.node.get_logger().debug(f"percent done: {round(feedback_msg.feedback.completion_percentage, 2)}")
         if self.on_feedback_callback:
             try:
                 self.on_feedback_callback(feedback_msg.feedback)
@@ -164,21 +166,21 @@ class MovementCommandActionClient:
     
     def _handle_success(self):
         """Handle successful movement completion."""
+        self.is_active = False
         if self.on_success_callback:
             try:
                 self.on_success_callback()
             except Exception as e:
                 self.node.get_logger().error(f"Error in success callback: {e}")
-        self._cleanup_current_action()
     
     def _handle_failure(self):
         """Handle failed movement completion.""" 
+        self.is_active = False
         if self.on_failure_callback:
             try:
                 self.on_failure_callback()
             except Exception as e:
                 self.node.get_logger().error(f"Error in failure callback: {e}")
-        self._cleanup_current_action()
 
     def _handle_acceptance(self):
         """Handle a movement request being accepted"""
@@ -190,6 +192,7 @@ class MovementCommandActionClient:
     
     def _handle_rejection(self):
         """Handle a movement request being rejected""" 
+        self.is_active = False
         if self.on_rejection_callback:
             try:
                 self.on_rejection_callback()
@@ -197,17 +200,15 @@ class MovementCommandActionClient:
                 #should probably abort the state machine
             except Exception as e:
                 self.node.get_logger().error(f"Error in rejection callback: {e}")
-        self._cleanup_current_action()#cleanup because we dont want anything else to happen after rejection
-        #assume that if we sent a request, we want that one to override anything else, even if it was rejected
 
     def _handle_cancel_acceptance(self):
         """Handle a cancel request being accepted""" 
+        self.is_active = False
         if self.on_cancel_acceptance_callback:
             try:
                 self.on_cancel_acceptance_callback()
             except Exception as e:
                 self.node.get_logger().error(f"Error in cancel acceptance callback: {e}")
-        self._cleanup_current_action()#cleanup because we dont care about the result anymore
 
     def _handle_cancel_rejection(self):
         """Handle a cancel request being rejected""" 
@@ -220,6 +221,7 @@ class MovementCommandActionClient:
 
     def _cleanup_current_action(self):
         """Clean up the current action state."""
+
         self.current_goal_handle = None
         self.on_success_callback = None
         self.on_failure_callback = None

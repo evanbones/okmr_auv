@@ -14,10 +14,12 @@ def handle_barrel_roll(goal_handle):
         result.debug_info = 'Failed to disable dead reckoning for barrel roll'
         return result
     
-    node.get_logger().info("Dead reckoning disabled, starting barrel roll")
+    node.get_logger().warn("Dead reckoning disabled, starting barrel roll")
     
     # Step 2: Execute barrel roll using existing set velocity handler
     result = handle_set_velocity(goal_handle)
+
+    node.get_logger().info(result.debug_info)
     
     # Step 3: Re-enable dead reckoning
     enable_success = enable_dead_reckoning(node)
@@ -26,12 +28,8 @@ def handle_barrel_roll(goal_handle):
         # If the velocity command succeeded but we failed to re-enable dead reckoning
         goal_handle.abort()
         result = Movement.Result()
-        result.debug_info = 'Barrel roll completed but failed to re-enable dead reckoning'
+        result.debug_info = 'Failed to re-enable dead reckoning'
         return result
-    
-    node.get_logger().info("Barrel roll completed, dead reckoning re-enabled")
-    
-    result.debug_info = 'Barrel roll completed and re-enabled dead reckoning'
     
     return result
 
@@ -50,7 +48,6 @@ def disable_dead_reckoning(node):
     try:
         response = client.call(request)
         if response.success:
-            node.get_logger().info(f'Dead reckoning disabled: {response.message}')
             return True
         else:
             node.get_logger().error(f'Failed to disable dead reckoning: {response.message}')
@@ -74,7 +71,6 @@ def enable_dead_reckoning(node):
     try:
         response = client.call(request)
         if response.success:
-            node.get_logger().info(f'Dead reckoning enabled: {response.message}')
             return True
         else:
             node.get_logger().error(f'Failed to enable dead reckoning: {response.message}')

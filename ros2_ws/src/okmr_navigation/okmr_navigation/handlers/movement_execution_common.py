@@ -136,11 +136,6 @@ def call_distance_service(service_name):
         return None
 
 
-def normalize_angle_deg(angle):
-    """Normalize angle to [-180, 180] degrees"""
-    return (angle + 180) % 360 - 180
-
-
 def is_translation_close_enough(translation_vector, threshold=0.1):
     """Check if translation distance is within threshold"""
     distance = (translation_vector.x**2 + translation_vector.y**2 + translation_vector.z**2)**0.5
@@ -149,9 +144,9 @@ def is_translation_close_enough(translation_vector, threshold=0.1):
 
 def is_orientation_close_enough(rpy_diff, threshold=5.0):
     """Check if orientation difference is within threshold (degrees)"""
-    roll = normalize_angle_deg(rpy_diff.x)
-    pitch = normalize_angle_deg(rpy_diff.y)
-    yaw = normalize_angle_deg(rpy_diff.z)
+    roll = rpy_diff.x
+    pitch = rpy_diff.y
+    yaw = rpy_diff.z
     return abs(roll) < threshold and abs(pitch) < threshold and abs(yaw) < threshold
 
 

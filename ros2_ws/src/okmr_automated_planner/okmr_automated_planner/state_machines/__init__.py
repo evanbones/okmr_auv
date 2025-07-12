@@ -11,5 +11,5 @@ __all__ = [
     'FindingGateStateMachine',
     'FindingMarkerStateMachine',
     'TestStateMachine',
-    'TestScanMachine',
+    'TestScanStateMachine',
 ]

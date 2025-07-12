@@ -18,7 +18,7 @@ class TestStateMachine(BaseStateMachine):
     def on_enter_initializing(self):
         #check system state
         #placeholder queued method
-        self.queued_method = initialized
+        self.queued_method = self.initialized
 
     def mission_command_callback(self, msg):
         """Handle incoming mission command messages"""

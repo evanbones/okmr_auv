@@ -46,8 +46,6 @@ class BaseStateMachine(Machine):
         #ex. call the above method inside on_enter_initialized if you want to track time since initialization
 
         self.record_state_start_time()
-
-        self.success = False
         
         self.queued_method = None 
         # can be used to more cleanly immediately progress from one state to another
@@ -97,9 +95,9 @@ class BaseStateMachine(Machine):
 
     def state_timeout_check_callback(self):
         time_since_state_start = self.get_time_since_state_start()
-
-        self.ros_node.get_logger().debug(f"Time since state start {time_since_state_start}" + 
-                                            f"\t Machine: {self.machine_name} \t State: {self.state}")
+        
+        #self.ros_node.get_logger().debug(f"Time since state start {time_since_state_start}" + 
+        #                                   f"\t Machine: {self.machine_name} \t State: {self.state}")
 
         timeout = self.get_current_state_node().timeout 
 
@@ -177,14 +175,14 @@ class BaseStateMachine(Machine):
             self.on_completion()
             
             self.cleanup_ros2_resources()
-            if self.current_sub_machine and not self.current_sub_machine.is_aborted():
+            if self.current_sub_machine and not (self.current_sub_machine.is_aborted() or self.current_sub_machine.is_done()):
                 self.current_sub_machine.abort()
                 self.current_sub_machine = None
             #optional success and failure callbacks
             #can be used to hand control back to a parent machine
-            if self.success and self.success_callback:
+            if self.is_done() and self.success_callback:
                 self.success_callback()
-            elif not self.success and self.fail_callback:
+            elif self.is_aborted() and self.fail_callback:
                 self.fail_callback()
             return True
         return False
@@ -247,7 +245,7 @@ class BaseStateMachine(Machine):
         self._timers.pop(name)
 
     def add_service_client(self, service_type, service_name):
-        cli = self.create_client(service_type, service_name)
+        cli = self.ros_node.create_client(service_type, service_name)
         #unchecked, service may not exist
         self._clients.append({service_name: cli})
         return cli

@@ -8,4 +8,4 @@ automated_planner:
 
     test_scan:
       move_distance: 1.0
-      scan_angle: 60.0
+      scan_angle: 100.0

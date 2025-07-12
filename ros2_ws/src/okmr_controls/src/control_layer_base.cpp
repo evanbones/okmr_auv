@@ -74,7 +74,7 @@ void ControlLayerBase::control_mode_callback(const okmr_msgs::msg::ControlMode::
 {
     int8_t new_mode = msg->control_mode;
     
-    RCLCPP_INFO(this->get_logger(), "Control mode callback received: %d (required: %d, current: %d)", 
+    RCLCPP_DEBUG(this->get_logger(), "Control mode callback received: %d (required: %d, current: %d)", 
                 new_mode, required_control_mode_, current_control_mode_);
     
     if (new_mode != current_control_mode_)
@@ -86,18 +86,18 @@ void ControlLayerBase::control_mode_callback(const okmr_msgs::msg::ControlMode::
         //but control mode 5 (throttle) is always enabled, even if its control mode 1,2,3,etc
         //thats why we use the <= sign, to keep downstream controllers on
         
-        RCLCPP_INFO(this->get_logger(), "Control mode changed: %d -> %d, enabled: %s -> %s", 
+        RCLCPP_DEBUG(this->get_logger(), "Control mode changed: %d -> %d, enabled: %s -> %s", 
                     current_control_mode_, new_mode, was_enabled ? "true" : "false", 
                     is_enabled_ ? "true" : "false");
         
         if (was_enabled && !is_enabled_)
         {
-            RCLCPP_INFO(this->get_logger(), "Control layer disabled, resetting controllers");
+            RCLCPP_DEBUG(this->get_logger(), "Control layer disabled, resetting controllers");
             reset_controllers();
         }
         else if (!was_enabled && is_enabled_)
         {
-            RCLCPP_INFO(this->get_logger(), "Control layer enabled");
+            RCLCPP_DEBUG(this->get_logger(), "Control layer enabled");
         }
     }
     else

@@ -18,7 +18,7 @@ def set_control_mode(mode):
     
     # Validate mode
     valid_modes = [ControlMode.POSE, ControlMode.VELOCITY, ControlMode.ACCELERATION, 
-                   ControlMode.THRUST, ControlMode.THROTTLE]
+                   ControlMode.THRUST, ControlMode.THROTTLE, ControlMode.OFF]
     
     if mode not in valid_modes:
         node.get_logger().error(f"Invalid control mode: {mode}")
@@ -38,9 +38,10 @@ def set_control_mode(mode):
             ControlMode.VELOCITY: "VELOCITY", 
             ControlMode.ACCELERATION: "ACCELERATION",
             ControlMode.THRUST: "THRUST",
-            ControlMode.THROTTLE: "THROTTLE"
+            ControlMode.THROTTLE: "THROTTLE",
+            ControlMode.OFF: "OFF",
         }
-        if mode == ControlMode.POSE or mode == ControlMode.VELOCITY:
+        if mode in [ControlMode.POSE, ControlMode.VELOCITY, ControlMode.OFF] :
             node.get_logger().info(f"Control mode set to {make_green_log(mode_names.get(mode, 'UNKNOWN'))}")
         else:
             node.get_logger().warn(f"Control mode set to {make_green_log(mode_names.get(mode, 'UNKNOWN'))}. DEBUG ONLY")

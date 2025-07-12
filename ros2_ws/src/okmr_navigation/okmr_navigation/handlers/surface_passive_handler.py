@@ -16,6 +16,8 @@ def handle_surface_passive(goal_handle):
     # Wait for vehicle to come to complete stop with timeout
     start_time = node.get_clock().now()
     timeout_duration = goal_handle.request.command_msg.timeout_sec
+    if timeout_duration == 0.0:
+        timeout_duration = 15.0
     
     while True:
         if goal_handle.is_cancel_requested:

@@ -1,7 +1,8 @@
 from okmr_automated_planner.base_state_machine import BaseStateMachine
 from okmr_utils.logging import make_green_log
+from okmr_msgs.msg import MovementCommand
 
-class TestStateMachine(BaseStateMachine):
+class TestScanStateMachine(BaseStateMachine):
     PARAMETERS = [
         {'name': 'move_distance', 
          'value': 2.0, 'descriptor': 
@@ -18,6 +19,9 @@ class TestStateMachine(BaseStateMachine):
         #parameters
         self.move_distance = self.get_local_parameter("move_distance")
         self.scan_angle = self.get_local_parameter("scan_angle")
+
+    def on_enter_initializing(self):
+        self.queued_method = self.initialized
         
     def on_enter_moving_forward(self):
         movement_msg = MovementCommand()
@@ -38,6 +42,7 @@ class TestStateMachine(BaseStateMachine):
         movement_msg = MovementCommand()
         movement_msg.command = MovementCommand.MOVE_RELATIVE
         movement_msg.translation.y = self.move_distance
+        movement_msg.goal_pose.copy_orientation = True
         
         success = self.movement_client.send_movement_command(
             movement_msg,
@@ -53,6 +58,7 @@ class TestStateMachine(BaseStateMachine):
         movement_msg = MovementCommand()
         movement_msg.command = MovementCommand.MOVE_RELATIVE
         movement_msg.translation.y = -self.move_distance
+        movement_msg.goal_pose.copy_orientation = True
         
         success = self.movement_client.send_movement_command(
             movement_msg,
