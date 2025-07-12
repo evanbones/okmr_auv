@@ -31,8 +31,11 @@ def handle_surface_passive(goal_handle):
 
         # Check if all velocities are under threshold (similar to freeze handler)
         vehicle_stopped = check_velocities_under_threshold()
+
+        surfacing_time_min = 2.0
         
-        if vehicle_stopped:
+        if vehicle_stopped and elapsed_time > surfacing_time_min:
+            #need to give the auv time to start floating
             goal_handle.succeed()
             result = Movement.Result()
             result.completion_time = elapsed_time
