@@ -10,7 +10,7 @@ ControlLayerBase::ControlLayerBase(const std::string& node_name, int8_t control_
     , last_update_time_(std::chrono::steady_clock::now().time_since_epoch())
     , update_frequency_(50.0)
     , required_control_mode_(control_mode)
-    , current_control_mode_(-1)
+    , current_control_mode_(okmr_msgs::msg::ControlMode::OFF)
 {
     declare_parameters();
     

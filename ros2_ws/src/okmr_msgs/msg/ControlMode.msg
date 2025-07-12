@@ -8,3 +8,6 @@ int8 VELOCITY = 1
 int8 ACCELERATION = 2
 int8 THRUST = 3
 int8 THROTTLE = 4
+
+#used for disabling the system
+int8 OFF = 127

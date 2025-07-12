@@ -6,8 +6,7 @@ from okmr_automated_planner.movement_command_action_client import MovementComman
 class BaseStateMachine(Machine):
     mandatory_states = ['uninitialized','initializing', 'done', 'aborted']
     mandatory_transitions = [
-                                { 'trigger': 'initialize', 'source': 'uninitialized', 'dest': 'initializing' },
-                                { 'trigger': 'initializing_done', 'source': 'initializing', 'dest': 'initialized' },
+                                { 'trigger': 'initialize', 'source': 'uninitialized', 'dest': 'initializing'} ,             
                                 { 'trigger': 'finish', 'source': '*', 'dest': 'done' },
                                 { 'trigger': 'abort', 'source': '*', 'dest': 'aborted' },
                               ]

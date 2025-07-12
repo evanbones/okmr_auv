@@ -29,8 +29,13 @@ def handle_move_relative(goal_handle):
         command_msg.translation, 
         command_msg.rotation
     )
-
-    goal_pose.copy_orientation = command_msg.goal_pose.copy_orientation
+    
+    #if no rotation is defined, we can resume original orientation by setting goal_pose.copy_orientation = True
+    #otherwise, by default it is false if no rotation is specified
+    if command_msg.rotation.x == 0.0 and command_msg.rotation.y == 0.0 and command_msg.rotation.z == 0.0:
+        goal_pose.copy_orientation = command_msg.goal_pose.copy_orientation
+    else:
+        goal_pose.copy_orientation = True
 
     # Set the goal_pose inside the goal handle request manually
     goal_handle.request.command_msg.goal_pose = goal_pose

@@ -1,0 +1,11 @@
+automated_planner:
+  ros__parameters:
+
+    state_timeout_check_period: 0.1
+
+    test:
+      barrel_roll_speed: 100.0
+
+    test_scan:
+      move_distance: 1.0
+      scan_angle: 60.0

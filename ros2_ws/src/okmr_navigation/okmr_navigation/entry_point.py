@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-
+#TODO RENAME THIS FILE IN CASE NEW PYTHON NODES ARE ADDED TO THIS PACKAGE
 import rclpy
 from rclpy.executors import MultiThreadedExecutor
 
@@ -8,6 +8,8 @@ from okmr_navigation.handlers.move_relative_handler import *
 from okmr_navigation.handlers.move_absolute_handler import *
 from okmr_navigation.handlers.set_velocity_handler import *
 from okmr_navigation.handlers.look_at_handler import *
+from okmr_navigation.handlers.surface_passive_handler import *
+from okmr_navigation.handlers.barrel_roll_handler import *
 from okmr_navigation.handlers.movement_execution_common import execute_test_movement_common
 from okmr_navigation.navigator_action_server import NavigatorActionServer
 
@@ -19,6 +21,8 @@ COMMAND_HANDLERS = {
             MovementCommand.MOVE_ABSOLUTE: handle_move_absolute,
             MovementCommand.SET_VELOCITY: handle_set_velocity,
             MovementCommand.LOOK_AT: handle_look_at,
+            MovementCommand.SURFACE_PASSIVE: handle_surface_passive,
+            MovementCommand.BARREL_ROLL: handle_barrel_roll,
         }
         
 TEST_COMMAND_HANDLERS = {
@@ -27,6 +31,8 @@ TEST_COMMAND_HANDLERS = {
             MovementCommand.MOVE_ABSOLUTE: execute_test_movement_common,
             MovementCommand.SET_VELOCITY: execute_test_movement_common,
             MovementCommand.LOOK_AT: execute_test_movement_common,
+            MovementCommand.SURFACE_PASSIVE: execute_test_movement_common,
+            MovementCommand.BARREL_ROLL: execute_test_movement_common,
 }
  
 def main(args=None):

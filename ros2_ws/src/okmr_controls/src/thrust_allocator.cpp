@@ -1,11 +1,12 @@
 #include "okmr_controls/thrust_allocator.hpp"
 #include <Eigen/Dense>
+#include "okmr_msgs/msg/control_mode.hpp"
 
 namespace okmr_controls
 {
 
 ThrustAllocator::ThrustAllocator()
-    : Node("thrust_allocator"), is_enabled_(false)
+    : Node("thrust_allocator"), is_enabled_(false), current_control_mode_(okmr_msgs::msg::ControlMode::OFF)
 {
     // Subscribe to wrench target
     wrench_sub_ = this->create_subscription<geometry_msgs::msg::WrenchStamped>(
@@ -15,10 +16,10 @@ ThrustAllocator::ThrustAllocator()
     // Publisher for motor thrust
     motor_thrust_pub_ = this->create_publisher<okmr_msgs::msg::MotorThrust>("/motor_thrust", 10);
     
-    // Enable service
-    enable_service_ = this->create_service<okmr_msgs::srv::EnableThrustAllocation>(
-        "/thrust_allocator/enable",
-        std::bind(&ThrustAllocator::enable_service_callback, this, std::placeholders::_1, std::placeholders::_2));
+    // Subscribe to control mode
+    control_mode_sub_ = this->create_subscription<okmr_msgs::msg::ControlMode>(
+        "/control_mode", 10,
+        std::bind(&ThrustAllocator::control_mode_callback, this, std::placeholders::_1));
     
     // Declare motor configuration parameters
     // Each motor has position (x,y,z) and thrust direction (x,y,z)
@@ -83,15 +84,43 @@ void ThrustAllocator::wrench_target_callback(const geometry_msgs::msg::WrenchSta
     motor_thrust_pub_->publish(motor_thrust_msg);
 }
 
-void ThrustAllocator::enable_service_callback(
-    const std::shared_ptr<okmr_msgs::srv::EnableThrustAllocation::Request> request,
-    std::shared_ptr<okmr_msgs::srv::EnableThrustAllocation::Response> response)
+void ThrustAllocator::control_mode_callback(const okmr_msgs::msg::ControlMode::SharedPtr msg)
 {
-    is_enabled_ = request->enable;
-    response->success = true;
-    response->message = is_enabled_ ? "Thrust allocator enabled" : "Thrust allocator disabled";
+    int8_t new_mode = msg->control_mode;
     
-    RCLCPP_INFO(this->get_logger(), "%s", response->message.c_str());
+    if (new_mode != current_control_mode_)
+    {
+        bool was_enabled = is_enabled_;
+        current_control_mode_ = new_mode;
+        
+        // Enable thrust allocator for THRUST control mode only
+        is_enabled_ = (current_control_mode_ <= okmr_msgs::msg::ControlMode::THRUST);
+        
+        if (was_enabled && !is_enabled_)
+        {
+            RCLCPP_INFO(this->get_logger(), "Thrust allocator disabled, sending zero thrust");
+            
+            // Create and publish "off" motor thrust message
+            okmr_msgs::msg::MotorThrust motor_thrust_msg;
+            motor_thrust_msg.header.stamp = this->now();
+            motor_thrust_msg.header.frame_id = "base_link";
+        
+            // Assign thrust values to motors array
+            for (int i = 0; i < 8; ++i) {
+                motor_thrust_msg.thrust[i] = 0.0;
+            }
+        
+            motor_thrust_pub_->publish(motor_thrust_msg);
+        }
+        else if (!was_enabled && is_enabled_)
+        {
+            RCLCPP_INFO(this->get_logger(), "Thrust allocator enabled");
+        }
+    }
+    else
+    {
+        RCLCPP_DEBUG(this->get_logger(), "Control mode unchanged: %d", new_mode);
+    }
 }
 
 void ThrustAllocator::setup_allocation_matrix()
