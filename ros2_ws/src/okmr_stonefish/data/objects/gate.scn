@@ -29,7 +29,7 @@
         <look name="Red"/>
         <world_transform xyz="$(arg x) ${$(arg y) + 3.0} ${$(arg z) - 0.75}" rpy="0.0 0.0 0.0"/>
 </static>
-<static name="gate_box1" type="box">
+<static name="gate_box5" type="box">
         <dimensions xyz="0.1 0.1 0.75"/>
         <material name="Hull"/>
         <look name="Red"/>
