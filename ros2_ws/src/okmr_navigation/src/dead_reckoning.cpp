@@ -402,7 +402,7 @@ class DeadReckoningNode : public rclcpp::Node{
         double accel_pitch = atan2(-ax, sqrt(ay * ay + az * az));
         double accel_roll  = atan2(ay, az);
 
-        RCLCPP_INFO(this->get_logger(), "pitch: %f \t roll: %f", accel_pitch * 180.0 / M_PI, accel_roll * 180.0 / M_PI);
+        //RCLCPP_INFO(this->get_logger(), "pitch: %f \t roll: %f", accel_pitch * 180.0 / M_PI, accel_roll * 180.0 / M_PI);
         
         if (std::abs(accel_pitch) * 180.0 / M_PI > 80.0 || std::abs(accel_roll) * 180.0 / M_PI > 80.0) {
             //alpha = 1.0;

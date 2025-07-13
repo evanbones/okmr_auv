@@ -3,6 +3,7 @@ test:
     - { name: waiting_for_mission_start}
     - { name: enabling_subsystems}
     - { name: sinking}
+    - { name: roll}
     - { name: test_scan, config_path: "sub_machines/test_scan.yaml" }
     - { name: barrel_rolling}
     - { name: surfacing }
@@ -11,8 +12,9 @@ test:
     - { trigger: initialized, source: initializing, dest: waiting_for_mission_start }
     - { trigger: mission_start_received, source: waiting_for_mission_start, dest:  enabling_subsystems }
     - { trigger: enabling_subsystems_done, source: enabling_subsystems, dest: sinking}
-    - { trigger: sinking_done, source: sinking, dest: test_scan}
+      #- { trigger: sinking_done, source: sinking, dest: test_scan}
+    - { trigger: sinking_done, source: sinking, dest: barrel_rolling}
     - { trigger: test_scan_done, source: test_scan, dest: barrel_rolling}
     - { trigger: barrel_rolling_done, source: barrel_rolling, dest: surfacing}
-    - { trigger: surfacing_done, source: surfacing, dest: done}
+    - { trigger: surfacing_done, source: surfacing, dest: waiting_for_mission_start}
 
