@@ -33,7 +33,7 @@ public:
     {
         // Declare parameters
         this->declare_parameter("update_frequency", 100.0);
-        this->declare_parameter("holding_radius", 1.0);
+        this->declare_parameter("holding_radius", 1.5);
         this->declare_parameter("yaw_tolerance", 5.0);  // degrees
         update_frequency_ = this->get_parameter("update_frequency").as_double();
         holding_radius_ = this->get_parameter("holding_radius").as_double();
