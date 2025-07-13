@@ -18,8 +18,8 @@ protected:
 
 private:
     void accel_target_callback(const geometry_msgs::msg::AccelStamped::SharedPtr msg);
-    void velocity_target_callback(const geometry_msgs::msg::TwistStamped::SharedPtr msg);
     void accel_actual_callback(const geometry_msgs::msg::AccelStamped::SharedPtr msg);
+    void gravity_callback(const geometry_msgs::msg::AccelStamped::SharedPtr msg);
     void velocity_actual_callback(const geometry_msgs::msg::TwistStamped::SharedPtr msg);
     
     // Feedforward calculation
@@ -33,8 +33,8 @@ private:
 
     // Subscriptions
     rclcpp::Subscription<geometry_msgs::msg::AccelStamped>::SharedPtr accel_target_sub_;
-    rclcpp::Subscription<geometry_msgs::msg::TwistStamped>::SharedPtr velocity_target_sub_;
     rclcpp::Subscription<geometry_msgs::msg::AccelStamped>::SharedPtr accel_actual_sub_;
+    rclcpp::Subscription<geometry_msgs::msg::AccelStamped>::SharedPtr gravity_sub_;
     rclcpp::Subscription<geometry_msgs::msg::TwistStamped>::SharedPtr velocity_actual_sub_;
     
     // Publisher
@@ -43,7 +43,7 @@ private:
     // Current state
     geometry_msgs::msg::AccelStamped accel_target_;
     geometry_msgs::msg::AccelStamped accel_actual_;
-    geometry_msgs::msg::TwistStamped velocity_target_;
+    geometry_msgs::msg::AccelStamped gravity_;
     geometry_msgs::msg::TwistStamped velocity_actual_;
     
     // Feedforward parameters (Kmass and Kdrag for each axis)

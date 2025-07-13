@@ -35,6 +35,7 @@ class DeadReckoningNode : public rclcpp::Node{
         geometry_msgs::msg::PoseStamped current_pose;
         geometry_msgs::msg::TwistStamped current_twist;
         geometry_msgs::msg::AccelStamped current_accel;
+        geometry_msgs::msg::AccelStamped gravity_body;
         
         // Cached sensor messages
         sensor_msgs::msg::Imu current_imu_msg;
@@ -136,6 +137,7 @@ class DeadReckoningNode : public rclcpp::Node{
 	    	pose_publisher = this->create_publisher<geometry_msgs::msg::PoseStamped>("/pose", 10);
 	    	twist_publisher = this->create_publisher<geometry_msgs::msg::TwistStamped>("/velocity", 10);
 	    	accel_publisher = this->create_publisher<geometry_msgs::msg::AccelStamped>("/acceleration", 10);
+	    	gravity_publisher = this->create_publisher<geometry_msgs::msg::AccelStamped>("/gravity", 10);
             
             // Services
             get_pose_twist_accel_service = this->create_service<okmr_msgs::srv::GetPoseTwistAccel>(
@@ -301,9 +303,11 @@ class DeadReckoningNode : public rclcpp::Node{
         // Process IMU data and update angular velocities
         process_imu_data();
 
-        // Process attitude estimation and pose integration if enabled
+        
+        update_attitude_estimation(dt);
+
         if (is_dead_reckoning_enabled) {
-            update_attitude_estimation(dt);
+            // Process pose integration if enabled
             integrate_pose(dt);
         }
 
@@ -371,7 +375,7 @@ class DeadReckoningNode : public rclcpp::Node{
         // Transform angular velocities from IMU frame to base_link
         auto angular_velocity = transform_imu_data(current_imu_msg, true);
         
-        // Apply deadband threshold (preserving original logic)
+        // TODO make these a parameter
         double angular_velocity_roll = (abs(angular_velocity.x) > 0.01) ? angular_velocity.x : 0.0;
         double angular_velocity_pitch = (abs(angular_velocity.y) > 0.01) ? angular_velocity.y : 0.0;
         double angular_velocity_yaw = (abs(angular_velocity.z) > 0.01) ? angular_velocity.z : 0.0;
@@ -398,30 +402,20 @@ class DeadReckoningNode : public rclcpp::Node{
         double accel_pitch = atan2(-ax, sqrt(ay * ay + az * az));
         double accel_roll  = atan2(ay, az);
 
-        //RCLCPP_INFO(this->get_logger(), "pitch: %f \t roll: %f", accel_pitch, accel_roll);
+        RCLCPP_INFO(this->get_logger(), "pitch: %f \t roll: %f", accel_pitch * 180.0 / M_PI, accel_roll * 180.0 / M_PI);
         
-        if (std::abs(accel_pitch) > 70.0 || std::abs(accel_roll) > 70.0) {
-            alpha = 1.0;
+        if (std::abs(accel_pitch) * 180.0 / M_PI > 80.0 || std::abs(accel_roll) * 180.0 / M_PI > 80.0) {
+            //alpha = 1.0;
         }
 
-        /*
-        // Handle upside down cases (preserving original logic)
-        if (az < 0) {  
-            if (accel_pitch > 0) {
-                accel_pitch = M_PI - accel_pitch;
-            } else {
-                accel_pitch = -M_PI - accel_pitch;
-            }
-        }
-        */
-        // Complementary filter for attitude (preserving original)
+        // Complementary filter for attitude
         rotation_estimate.y = alpha * (rotation_estimate.y + current_twist.twist.angular.y * dt) + (1 - alpha) * accel_pitch;
         rotation_estimate.x = alpha * (rotation_estimate.x + current_twist.twist.angular.x * dt) + (1 - alpha) * accel_roll;
         rotation_estimate.z += current_twist.twist.angular.z * dt;
     }
 
     void integrate_pose(double dt) {
-        // Integrate velocity for pose estimation (preserving original method)
+        // Integrate velocity for pose estimation
         tf2::Quaternion q;
         q.setRPY(rotation_estimate.x, rotation_estimate.y, rotation_estimate.z);
         tf2::Matrix3x3 tf_R(q);
@@ -439,28 +433,39 @@ class DeadReckoningNode : public rclcpp::Node{
 
     void calculate_accelerations(double dt) {
         // Transform linear acceleration from IMU frame to base_link
+        /*
         auto linear_accel = transform_imu_data(current_imu_msg, false);
         double ax = linear_accel.x;
         double ay = linear_accel.y;
         double az = linear_accel.z;
+        */
 
         // Calculate linear acceleration with gravity compensation
         tf2::Quaternion q;
         q.setRPY(rotation_estimate.x, rotation_estimate.y, rotation_estimate.z);
         tf2::Matrix3x3 tf_R(q);
         tf2::Vector3 gravity_world(0, 0, -9.807);
-        tf2::Vector3 gravity_body = tf_R.transpose() * gravity_world;
+        tf2::Vector3 gravity_body_vector = tf_R.transpose() * gravity_world;
+        //rotation matrix is orthogonal, so transpose = inverse
+        //this is transforming the gravity vector from world to body frame
+
+        gravity_body.accel.linear.x = gravity_body_vector.x();
+        gravity_body.accel.linear.y = gravity_body_vector.y();
+        gravity_body.accel.linear.z = gravity_body_vector.z();
 
         // Calculate IMU true linear acceleration (subtract gravity)
-        double imu_accel_x = ax - gravity_body.x();
-        double imu_accel_y = ay - gravity_body.y();
-        double imu_accel_z = az - gravity_body.z();
+        /*
+        double imu_accel_x = ax - gravity_body_vector.x();
+        double imu_accel_y = ay - gravity_body_vector.y();
+        double imu_accel_z = az - gravity_body_vector.z();
 
         // Combine DVL acceleration with IMU acceleration using complementary filter
         current_accel.accel.linear.x = dvl_accel_alpha_ * dvl_accel.x + (1.0 - dvl_accel_alpha_) * imu_accel_x;
         current_accel.accel.linear.y = dvl_accel_alpha_ * dvl_accel.y + (1.0 - dvl_accel_alpha_) * imu_accel_y;
         current_accel.accel.linear.z = dvl_accel_alpha_ * dvl_accel.z + (1.0 - dvl_accel_alpha_) * imu_accel_z;
         //unused at the moment because weird readings from sim
+        //gravity calculation may not be accurate enough
+        */
 
         //infering the linear velocity from the current acceleration
         current_twist.twist.linear.x += current_accel.accel.linear.x * dt;
@@ -487,6 +492,8 @@ class DeadReckoningNode : public rclcpp::Node{
         current_twist.header.frame_id = "base_link";
         current_accel.header.stamp = current_time;
         current_accel.header.frame_id = "base_link";
+        gravity_body.header.stamp=current_time;
+        gravity_body.header.frame_id = "base_link";
 
         // Publish all state estimates
         pose_publisher->publish(current_pose); 
@@ -504,6 +511,8 @@ class DeadReckoningNode : public rclcpp::Node{
         accel_degrees.accel.angular.y = current_accel.accel.angular.y * 180.0 / M_PI;
         accel_degrees.accel.angular.z = current_accel.accel.angular.z * 180.0 / M_PI;
         accel_publisher->publish(accel_degrees);
+
+        gravity_publisher->publish(gravity_body);
     }
 
 	rclcpp::Subscription<sensor_msgs::msg::Imu>::SharedPtr imu_subscription;
@@ -511,6 +520,7 @@ class DeadReckoningNode : public rclcpp::Node{
 	rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr pose_publisher;
 	rclcpp::Publisher<geometry_msgs::msg::TwistStamped>::SharedPtr twist_publisher;
 	rclcpp::Publisher<geometry_msgs::msg::AccelStamped>::SharedPtr accel_publisher;
+	rclcpp::Publisher<geometry_msgs::msg::AccelStamped>::SharedPtr gravity_publisher;
     rclcpp::Service<okmr_msgs::srv::GetPoseTwistAccel>::SharedPtr get_pose_twist_accel_service;
     rclcpp::Service<okmr_msgs::srv::SetDeadReckoningEnabled>::SharedPtr set_dead_reckoning_service;
     rclcpp::Service<okmr_msgs::srv::ClearPose>::SharedPtr clear_pose_service;

@@ -12,13 +12,13 @@ AccelControlLayer::AccelControlLayer()
         "/accel_target", 10,
         std::bind(&AccelControlLayer::accel_target_callback, this, std::placeholders::_1));
     
-    velocity_target_sub_ = this->create_subscription<geometry_msgs::msg::TwistStamped>(
-        "/velocity_target", 10,
-        std::bind(&AccelControlLayer::velocity_target_callback, this, std::placeholders::_1));
-    
     accel_actual_sub_ = this->create_subscription<geometry_msgs::msg::AccelStamped>(
         "/acceleration", 10,
         std::bind(&AccelControlLayer::accel_actual_callback, this, std::placeholders::_1));
+
+    gravity_sub_ = this->create_subscription<geometry_msgs::msg::AccelStamped>(
+        "/gravity", 10,
+        std::bind(&AccelControlLayer::gravity_callback, this, std::placeholders::_1));
     
     velocity_actual_sub_ = this->create_subscription<geometry_msgs::msg::TwistStamped>(
         "/velocity", 10,
@@ -33,9 +33,6 @@ AccelControlLayer::AccelControlLayer()
     
     accel_actual_.accel.linear.x = accel_actual_.accel.linear.y = accel_actual_.accel.linear.z = 0.0;
     accel_actual_.accel.angular.x = accel_actual_.accel.angular.y = accel_actual_.accel.angular.z = 0.0;
-    
-    velocity_target_.twist.linear.x = velocity_target_.twist.linear.y = velocity_target_.twist.linear.z = 0.0;
-    velocity_target_.twist.angular.x = velocity_target_.twist.angular.y = velocity_target_.twist.angular.z = 0.0;
     
     velocity_actual_.twist.linear.x = velocity_actual_.twist.linear.y = velocity_actual_.twist.linear.z = 0.0;
     velocity_actual_.twist.angular.x = velocity_actual_.twist.angular.y = velocity_actual_.twist.angular.z = 0.0;
@@ -82,11 +79,6 @@ void AccelControlLayer::accel_target_callback(const geometry_msgs::msg::AccelSta
     accel_target_ = *msg;
 }
 
-void AccelControlLayer::velocity_target_callback(const geometry_msgs::msg::TwistStamped::SharedPtr msg)
-{
-    velocity_target_ = *msg;
-}
-
 void AccelControlLayer::accel_actual_callback(const geometry_msgs::msg::AccelStamped::SharedPtr msg)
 {
     accel_actual_ = *msg;
@@ -97,17 +89,21 @@ void AccelControlLayer::velocity_actual_callback(const geometry_msgs::msg::Twist
     velocity_actual_ = *msg;
 }
 
+void AccelControlLayer::gravity_callback(const geometry_msgs::msg::AccelStamped::SharedPtr msg)
+{
+    gravity_ = *msg;
+}
+
 geometry_msgs::msg::Vector3 AccelControlLayer::calculate_feedforward(
     const geometry_msgs::msg::Vector3& velocity,
     const geometry_msgs::msg::Vector3& acceleration)
 {
     geometry_msgs::msg::Vector3 feedforward;
     
-    // Feedforward = Kmass * acceleration + Kdrag * velocity
-    feedforward.x = kmass_x_ * acceleration.x + kdrag_x_ * velocity.x;
-    feedforward.y = kmass_y_ * acceleration.y + kdrag_y_ * velocity.y;
-    feedforward.z = kmass_z_ * acceleration.z + kdrag_z_ * velocity.z + kbuoyancy_;
-    //kbuoyancy is simplified to assume that the sub is always upright
+    // Feedforward = Kmass * acceleration + Kdrag * velocity + KBuoyancy * gravity
+    feedforward.x = kmass_x_ * acceleration.x + kdrag_x_ * velocity.x + kbuoyancy_ * gravity_.accel.linear.x;
+    feedforward.y = kmass_y_ * acceleration.y + kdrag_y_ * velocity.y + kbuoyancy_ * gravity_.accel.linear.y;
+    feedforward.z = kmass_z_ * acceleration.z + kdrag_z_ * velocity.z + kbuoyancy_ * gravity_.accel.linear.z;
     
     return feedforward;
 }
