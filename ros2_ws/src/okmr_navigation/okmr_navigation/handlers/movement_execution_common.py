@@ -55,7 +55,7 @@ def execute_movement_with_monitoring(goal_handle, publish_goal_func, service_nam
         # Check if we've reached the goal via distance service
         goal_distances = call_distance_service(service_name)
         
-        if goal_distances is not None and is_goal_reached(goal_distances, goal_handle):
+        if goal_distances is not None and is_goal_reached(goal_distances, goal_handle) and feedback_msg.time_elapsed > 0.1:
             # Movement completed
             execute_freeze()#used turning back into pose mode
             goal_handle.succeed()
