@@ -102,7 +102,7 @@
     </sensor>
 
     <actuator name="ThrusterFLI" type="simple_thruster">
-        <specs lower_thrust_limit="-5.0" upper_thrust_limit="5.0" inverted="false"/>
+        <specs lower_thrust_limit="-7.0" upper_thrust_limit="7.0" inverted="false"/>
         <propeller right="true">
             <mesh filename="objects/propeller.obj" scale="0.3"/>
             <material name="Aluminium"/>
@@ -114,7 +114,7 @@
     </actuator>
 
     <actuator name="ThrusterFRI" type="simple_thruster">
-        <specs lower_thrust_limit="-5.0" upper_thrust_limit="5.0" inverted="false"/>
+        <specs lower_thrust_limit="-7.0" upper_thrust_limit="7.0" inverted="false"/>
         <propeller right="true">
             <mesh filename="objects/propeller.obj" scale="0.3"/>
             <material name="Aluminium"/>
@@ -126,7 +126,7 @@
     </actuator>
 
     <actuator name="ThrusterBLI" type="simple_thruster">
-        <specs lower_thrust_limit="-5.0" upper_thrust_limit="5.0" inverted="false"/>
+        <specs lower_thrust_limit="-7.0" upper_thrust_limit="7.0" inverted="false"/>
         <propeller right="true">
             <mesh filename="objects/propeller.obj" scale="0.3"/>
             <material name="Aluminium"/>
@@ -138,7 +138,7 @@
     </actuator>
 
     <actuator name="ThrusterBRI" type="simple_thruster">
-        <specs lower_thrust_limit="-5.0" upper_thrust_limit="5.0" inverted="false"/>
+        <specs lower_thrust_limit="-7.0" upper_thrust_limit="7.0" inverted="false"/>
         <propeller right="true">
             <mesh filename="objects/propeller.obj" scale="0.3"/>
             <material name="Aluminium"/>
@@ -150,7 +150,7 @@
     </actuator>
 
     <actuator name="ThrusterFLO" type="simple_thruster">
-        <specs lower_thrust_limit="-5.0" upper_thrust_limit="5.0" inverted="false"/>
+        <specs lower_thrust_limit="-7.0" upper_thrust_limit="7.0" inverted="false"/>
         <propeller right="true">
             <mesh filename="objects/propeller.obj" scale="0.3"/>
             <material name="Aluminium"/>
@@ -162,7 +162,7 @@
     </actuator>
 
     <actuator name="ThrusterFRO" type="simple_thruster">
-        <specs lower_thrust_limit="-5.0" upper_thrust_limit="5.0" inverted="false"/>
+        <specs lower_thrust_limit="-7.0" upper_thrust_limit="7.0" inverted="false"/>
         <propeller right="true">
             <mesh filename="objects/propeller.obj" scale="0.3"/>
             <material name="Aluminium"/>
@@ -174,7 +174,7 @@
     </actuator>
 
     <actuator name="ThrusterBLO" type="simple_thruster">
-        <specs lower_thrust_limit="-5.0" upper_thrust_limit="5.0" inverted="false"/>
+        <specs lower_thrust_limit="-7.0" upper_thrust_limit="7.0" inverted="false"/>
         <propeller right="true">
             <mesh filename="objects/propeller.obj" scale="0.3"/>
             <material name="Aluminium"/>
@@ -186,7 +186,7 @@
     </actuator>
 
     <actuator name="ThrusterBRO" type="simple_thruster">
-        <specs lower_thrust_limit="-5.0" upper_thrust_limit="5.0" inverted="false"/>
+        <specs lower_thrust_limit="-7.0" upper_thrust_limit="7.0" inverted="false"/>
         <propeller right="true">
             <mesh filename="objects/propeller.obj" scale="0.3"/>
             <material name="Aluminium"/>
