@@ -9,23 +9,19 @@ class ESP32BridgeNode(Node):
     def __init__(self):
         super().__init__('esp32_bridge_node')
 
-        # Declare ROS2 parameters
         self.declare_parameter('serial_port', '/dev/ttyACM0')
         self.declare_parameter('baud_rate', 115200)
 
-        # Get parameters
         serial_port = self.get_parameter('serial_port').get_parameter_value().string_value
         baud_rate = self.get_parameter('baud_rate').get_parameter_value().integer_value
 
-        #Set up subscription
         self.subscription = self.create_subscription(
             MotorThrottle,
-            'motor_throttle',  # Match this with your publisher topic name
+            'motor_throttle',
             self.motor_callback,
             10
         )
 
-        #Set up serial communication 
         try:
             self.ser = serial.Serial(serial_port, baud_rate, timeout=1)
             self.seaport = sp.SeaPort(self.ser)
