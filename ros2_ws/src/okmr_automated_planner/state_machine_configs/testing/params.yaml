@@ -7,5 +7,5 @@ automated_planner:
       barrel_roll_speed: 180.0
 
     test_scan:
-      move_distance: 1.0
-      scan_angle: 100.0
+      move_distance: 0.76
+      scan_angle: -120.0
