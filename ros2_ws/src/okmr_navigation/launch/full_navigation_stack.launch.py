@@ -19,16 +19,10 @@ def generate_launch_description():
         Node(
             package='okmr_navigation',
             executable='relative_pose_target_server',
-            parameters=[
-                {'update_frequency': 100.0}
-            ]
         ),
         Node(
             package='okmr_navigation',
             executable='velocity_target_server',
-            parameters=[
-                {'update_frequency': 100.0}
-            ]
         ),
 ])
 
