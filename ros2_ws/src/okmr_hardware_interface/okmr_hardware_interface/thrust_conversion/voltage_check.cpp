@@ -1,39 +1,60 @@
 /*
 This is the main ROS2 node that handles checking the voltage value
 It subscribes to the voltage topic so the Thrust to PWM converter can switch tables
+It will round to the nearest voltage interval which may cause minor inaccuracies in thrust
 */
 
 #include "rclcpp/rclcpp.hpp"
-#include "std_msgs/msg/float64.hpp"
+#include "okmr_msgs/msg/motor_throttle.hpp"
 #include "thrust_to_pwm.h"
+#include <vector>
+#include <cmath>
+#include <limits>
 
-class voltage_check : public rclcpp::Node {
+class VoltageCheck : public rclcpp::Node {
 public:
-    voltage_check() : Node("voltage_check") {
-        voltage_sub_ = this->create_subscription<std_msgs::msg::Float64>(
+    VoltageCheck() : Node("voltage_check") {
+        voltage_sub_ = this->create_subscription<okmr_msgs::msg::MotorThrottle>(
             "/voltage", 10,
-            std::bind(&voltage_check::voltage_callback, this, std::placeholders::_1)
+            std::bind(&VoltageCheck::voltage_callback, this, std::placeholders::_1)
         );
 
         RCLCPP_INFO(this->get_logger(), "Voltage Check started.");
     }
 
 private:
-    void voltage_callback(const std_msgs::msg::Float64::SharedPtr msg) {
+    int roundToNearestAllowedVoltage(double voltage) {
+        const std::vector<int> allowed = {10, 12, 14, 16, 18, 20};
+        int nearest = allowed[0];
+        double min_diff = std::abs(voltage - nearest);
+
+        for (int v : allowed) {
+            double diff = std::abs(voltage - v);
+            if (diff < min_diff) {
+                nearest = v;
+                min_diff = diff;
+            }
+        }
+
+        return nearest;
+    }
+
+    void voltage_callback(const okmr_msgs::msg::MotorThrottle::SharedPtr msg) {
         double voltage = msg->data;
+        int rounded_voltage = roundToNearestAllowedVoltage(voltage);
         try {
-            updateThrustTableIfVoltageChanged(voltage);
+            updateThrustTableIfVoltageChanged(static_cast<double>(rounded_voltage));
         } catch (const std::exception &e) {
             RCLCPP_ERROR(this->get_logger(), "Error loading table: %s", e.what());
         }
     }
 
-    rclcpp::Subscription<std_msgs::msg::Float64>::SharedPtr voltage_sub_;
+    rclcpp::Subscription<okmr_msgs::msg::MotorThrottle>::SharedPtr voltage_sub_;
 };
 
 int main(int argc, char **argv) {
     rclcpp::init(argc, argv);
-    auto node = std::make_shared<voltage_check>();
+    auto node = std::make_shared<VoltageCheck>();
     rclcpp::spin(node);
     rclcpp::shutdown();
     return 0;
