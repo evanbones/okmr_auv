@@ -34,7 +34,7 @@ def _call_get_pose_twist_accel_service():
         
         # Make the blocking service call
         request = GetPoseTwistAccel.Request()
-        response = client.call(request, timeout_sec=2.0)
+        response = client.call(request)
         
         # Check response
         if response is not None and hasattr(response, 'success') and response.success:

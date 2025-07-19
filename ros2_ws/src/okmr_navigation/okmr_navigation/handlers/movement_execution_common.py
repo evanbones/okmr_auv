@@ -122,7 +122,7 @@ def call_distance_service(service_name):
         
         # Make the blocking service call
         request = DistanceFromGoal.Request()
-        response = client.call(request, timeout_sec=2.0)
+        response = client.call(request)
         
         # Return tuple of translation and orientation differences
         if response is not None:
