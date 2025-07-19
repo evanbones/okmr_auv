@@ -1,7 +1,5 @@
 Realsense2 reference: https://github.com/IntelRealSense/realsense-ros?tab=readme-ov-file#published-topics
 
-post-processing depth-> pointcloud already available
-Post-Processing Filters section of readme has useful information about available filters
-
-can make the mapping system super simple, just object mask + depth map + pose
+use pcl for projection and segmentation + plane estimation?
+https://pcl.readthedocs.io/projects/tutorials/en/master/walkthrough.html#walkthrough
 
