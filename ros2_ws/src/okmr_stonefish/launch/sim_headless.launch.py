@@ -11,7 +11,7 @@ def generate_launch_description():
     return LaunchDescription([
         DeclareLaunchArgument(
             'scenario_name',
-            default_value='simple.scn',
+            default_value='simple_headless.scn',
             description='scenario file to use'
         ),
         Node(
