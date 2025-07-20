@@ -22,13 +22,13 @@ def generate_launch_description():
     debug_arg = DeclareLaunchArgument(
         'debug',
         default_value='true',
-        description='Enable debug mode for automated planner'
+        description='Enable debug mode for all nodes that use it'
     )
     
     root_config_arg = DeclareLaunchArgument(
         'root_config',
         default_value='test.yaml',
-        description='Root configuration file for automated planner'
+        description='Root state machine configuration file for automated planner'
     )
     
     config_folder_arg = DeclareLaunchArgument(
@@ -74,8 +74,6 @@ def generate_launch_description():
             PathJoinSubstitution([mapping_dir, 'full_mapping_system.launch.py']),
             launch_arguments={
                 'use_semantic_subscriber': 'false',
-                'max_dist': '8.0',
-                'min_dist': '0.35'
             }.items()
         ),
         

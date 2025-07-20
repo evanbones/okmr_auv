@@ -13,40 +13,45 @@ def generate_launch_description():
         description='Whether to use semantic depth subscriber (true) or normal depth subscriber (false)'
     )
     
-    max_dist_arg = DeclareLaunchArgument(
-        'max_dist',
-        default_value='8.0',
-        description='Maximum distance for point filtering'
-    )
-    
-    min_dist_arg = DeclareLaunchArgument(
-        'min_dist',
-        default_value='0.35',
-        description='Minimum distance for point filtering'
-    )
-    
-    # Launch depth_to_pointcloud node
-    depth_to_pointcloud_node = Node(
+    # Launch front facing depth_to_pointcloud node
+    front_depth_to_pointcloud_node = Node(
         package='okmr_mapping',
         executable='depth_to_pointcloud',
-        name='depth_to_pointcloud_node',
+        name='front_depth_to_pointcloud_node',
         output='screen',
         parameters=[{
             'use_semantic_subscriber': LaunchConfiguration('use_semantic_subscriber'),
-            'max_dist': LaunchConfiguration('max_dist'),
-            'min_dist': LaunchConfiguration('min_dist'),
+            'max_dist': 6.0,
+            'min_dist': 0.35,
         }],
         remappings=[
-            ('/semantic_depth', '/semantic_depth'),
-            ('/depth', '/depth'),
-            ('/camera_info', '/camera_info'),
-            ('/pointcloud', '/pointcloud')
+            ('/semantic_depth', '/camera1/semantic_depth'),
+            ('/depth', '/camera1/camera1/image_depth'),
+            ('/camera_info', '/camera1/camera1/depth_camera_info'),
+            ('/pointcloud', '/camera1/pointcloud')
+        ]
+    )
+
+    bottom_depth_to_pointcloud_node = Node(
+        package='okmr_mapping',
+        executable='depth_to_pointcloud',
+        name='bottom_depth_to_pointcloud_node',
+        output='screen',
+        parameters=[{
+            'use_semantic_subscriber': LaunchConfiguration('use_semantic_subscriber'),
+            'max_dist': 1.0,
+            'min_dist': 0.07,
+        }],
+        remappings=[
+            ('/semantic_depth', '/camera2/semantic_depth'),
+            ('/depth', '/camera2/camera2/image_depth'),
+            ('/camera_info', '/camera2/camera2/depth_camera_info'),
+            ('/pointcloud', '/camera2/pointcloud')
         ]
     )
     
     return LaunchDescription([
         use_semantic_arg,
-        max_dist_arg,
-        min_dist_arg,
-        depth_to_pointcloud_node,
+        front_depth_to_pointcloud_node,
+        bottom_depth_to_pointcloud_node,
     ])

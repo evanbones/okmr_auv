@@ -72,29 +72,29 @@
     </sensor>
 
     <sensor name="FrontCamera_D455" type="camera" rate="15.0">
-        <specs resolution_x="640" resolution_y="480" horizontal_fov="90.0"/>
+        <specs resolution_x="640" resolution_y="480" horizontal_fov="80.0"/>
         <origin xyz="0.22 0.0 0.0" rpy="1.57 0.0 1.57"/>
         <link name="Base"/>
         <ros_publisher topic="/stonefish/front_camera/image_raw" />
     </sensor>
 
     <sensor name="DownCamera_D405" type="camera" rate="15.0">
-        <specs resolution_x="640" resolution_y="480" horizontal_fov="90.0"/>
+        <specs resolution_x="640" resolution_y="480" horizontal_fov="80.0"/>
         <origin xyz="-0.025 0.0 0.1" rpy="0.78 0.0 1.57"/>
         <link name="Base"/>
         <ros_publisher topic="/stonefish/down_camera/image_raw" />
     </sensor>
 
-    <sensor name="FrontDepthCamera_D455" type="depthcamera" rate="5.0">
-        <specs resolution_x="800" resolution_y="600" horizontal_fov="90.0" depth_min="0.1" depth_max="7.0"/>
+    <sensor name="FrontDepthCamera_D455" type="depthcamera" rate="15.0">
+        <specs resolution_x="800" resolution_y="600" horizontal_fov="80.0" depth_min="0.1" depth_max="7.0"/>
         <noise depth="0.02"/>
         <origin xyz="0.22 0.0 0.0" rpy="1.57 0.0 1.57"/>
         <link name="Base"/>
         <ros_publisher topic="/stonefish/front_depth_camera/depth" />
     </sensor>
 
-    <sensor name="DownDepthCamera_D405" type="depthcamera" rate="5.0">
-        <specs resolution_x="800" resolution_y="600" horizontal_fov="90.0" depth_min="0.01" depth_max="7.0"/>
+    <sensor name="DownDepthCamera_D405" type="depthcamera" rate="15.0">
+        <specs resolution_x="800" resolution_y="600" horizontal_fov="80.0" depth_min="0.01" depth_max="7.0"/>
         <noise depth="0.02"/>
         <origin xyz="-0.025 0.0 0.05" rpy="0.78 0.0 1.57"/>
         <link name="Base"/>
