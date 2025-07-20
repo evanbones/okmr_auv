@@ -7,6 +7,7 @@ class BaseStateMachine(Machine):
     mandatory_states = ['uninitialized','initializing', 'done', 'aborted']
     mandatory_transitions = [
                                 { 'trigger': 'initialize', 'source': 'uninitialized', 'dest': 'initializing'} ,             
+                                { 'trigger': 'initialize', 'source': 'done', 'dest': 'initializing'} , #allows resetting the state machine once done      
                                 { 'trigger': 'finish', 'source': '*', 'dest': 'done' },
                                 { 'trigger': 'abort', 'source': '*', 'dest': 'aborted' },
                               ]
@@ -197,6 +198,7 @@ class BaseStateMachine(Machine):
     
     def _start_sub_machine(self, sub_machine, success_callback=None, fail_callback=None):
         self.current_sub_machine = sub_machine
+
         sub_machine.success_callback = success_callback
         sub_machine.fail_callback = fail_callback
         threading.Thread(target=sub_machine.initialize, daemon=True).start()
