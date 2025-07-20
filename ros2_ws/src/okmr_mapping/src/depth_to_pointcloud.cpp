@@ -19,7 +19,7 @@ private:
     void semantic_depth_callback(const okmr_msgs::msg::SemanticDepth::SharedPtr msg);
     void depth_callback(const sensor_msgs::msg::Image::SharedPtr msg);
     void camera_info_callback(const sensor_msgs::msg::CameraInfo::SharedPtr msg);
-    pcl::PointCloud<pcl::PointXYZRGBL>::Ptr projectDepthImage(const okmr_msgs::msg::SemanticDepth& img);
+    pcl::PointCloud<pcl::PointXYZRGBL>::Ptr projectDepthImage(const okmr_msgs::msg::SemanticDepth& img, bool rainbow_mode);
     
     rclcpp::Subscription<okmr_msgs::msg::SemanticDepth>::SharedPtr semantic_depth_sub_;
     rclcpp::Subscription<sensor_msgs::msg::Image>::SharedPtr depth_sub_;
@@ -33,8 +33,8 @@ private:
 };
 
 DepthProjectionNode::DepthProjectionNode() : Node("depth_to_pointcloud_node"), camera_info_received_(false) {
-    this->declare_parameter("max_dist", 8.0);
-    this->declare_parameter("min_dist", 0.35);
+    this->declare_parameter("max_dist", 6.0);
+    this->declare_parameter("min_dist", 0.07);
     this->declare_parameter("use_semantic_subscriber", true);
     
     max_dist_ = this->get_parameter("max_dist").as_double();
@@ -65,7 +65,7 @@ void DepthProjectionNode::camera_info_callback(const sensor_msgs::msg::CameraInf
                      1.0/fx_inv_, 1.0/fy_inv_, cx_, cy_);
 }
 
-pcl::PointCloud<pcl::PointXYZRGBL>::Ptr DepthProjectionNode::projectDepthImage(const okmr_msgs::msg::SemanticDepth& img) {
+pcl::PointCloud<pcl::PointXYZRGBL>::Ptr DepthProjectionNode::projectDepthImage(const okmr_msgs::msg::SemanticDepth& img, bool rainbow_mode = false) {
     cv::Mat depth_img = cv_bridge::toCvCopy(img.depth)->image;
     cv::Mat rgb_img = cv_bridge::toCvCopy(img.rgb)->image;
     cv::Mat mask_img = cv_bridge::toCvCopy(img.mask)->image;
@@ -84,14 +84,34 @@ pcl::PointCloud<pcl::PointXYZRGBL>::Ptr DepthProjectionNode::projectDepthImage(c
         for (int u = 0; u < w; u++) {
             float depth = depth_img.at<unsigned short>(v, u);
             std::uint32_t mask_value = static_cast<std::uint32_t>(mask_img.at<int>(v, u));
-            std::uint8_t r = rgb_img.at<cv::Vec3b>(v, u)[2]; 
-            std::uint8_t g = rgb_img.at<cv::Vec3b>(v, u)[1];
-            std::uint8_t b = rgb_img.at<cv::Vec3b>(v, u)[0]; 
-            float z = depth * 0.001f;
+            std::uint8_t r, g, b;
+            if (!rainbow_mode) {
+                r = rgb_img.at<cv::Vec3b>(v, u)[2]; 
+                g = rgb_img.at<cv::Vec3b>(v, u)[1];
+                b = rgb_img.at<cv::Vec3b>(v, u)[0]; 
+            } else {
+                // Rainbow colorizing based on depth (close = red, far = blue)
+                float depth_meters = depth * 0.001f;
+                float depth_normalized = (depth_meters - min_dist_) / (max_dist_ - min_dist_);
+                depth_normalized = std::max(0.0f, std::min(1.0f, depth_normalized));
+                
+                // HSV: Hue from 0 (red) to 240 (blue), full saturation and value
+                float hue = (1.0f - depth_normalized) * 240.0f; // Invert so close is red
+                cv::Mat hsv_pixel(1, 1, CV_32FC3, cv::Scalar(hue, 125, 255));
+                cv::Mat rgb_pixel;
+                cv::cvtColor(hsv_pixel, rgb_pixel, cv::COLOR_HSV2BGR);
+                
+                b = static_cast<std::uint8_t>(rgb_pixel.at<cv::Vec3f>(0, 0)[0]);
+                g = static_cast<std::uint8_t>(rgb_pixel.at<cv::Vec3f>(0, 0)[1]); 
+                r = static_cast<std::uint8_t>(rgb_pixel.at<cv::Vec3f>(0, 0)[2]);
+            }
 
-            if (z > min_dist_ && z < max_dist_ && mask_value != 0) {
-                float x = (static_cast<float>(u) - cx_) * z * fx_inv_; 
-                float y = (static_cast<float>(v) - cy_) * z * fy_inv_; 
+            float x = depth * 0.001f;
+    
+            //hardcoded transform. X is forward, Y is left / right, Z is up down
+            if (x > min_dist_ && x < max_dist_ && mask_value != 0) {
+                float y = (static_cast<float>(u) - cx_) * x * fx_inv_; 
+                float z = (static_cast<float>(v) - cy_) * x * fy_inv_; 
                 
                 pcl::PointXYZRGBL point(x, y, z, r, g, b, mask_value);
                 cloud->points.push_back(point);
@@ -147,13 +167,14 @@ void DepthProjectionNode::depth_callback(const sensor_msgs::msg::Image::SharedPt
         semantic_msg.depth = *msg;
     }
     
-    cv::Mat white_rgb = cv::Mat::ones(msg->height, msg->width, CV_8UC3) * 255;
+    cv::Mat white_rgb = cv::Mat::ones(msg->height, msg->width, CV_8UC3);
+    white_rgb.setTo(cv::Scalar(255, 255, 255));
     semantic_msg.rgb = *cv_bridge::CvImage(msg->header, "bgr8", white_rgb).toImageMsg();
     
     cv::Mat mask_ones = cv::Mat::ones(msg->height, msg->width, CV_32SC1);
     semantic_msg.mask = *cv_bridge::CvImage(msg->header, "32SC1", mask_ones).toImageMsg();
     
-    auto cloud = projectDepthImage(semantic_msg);
+    auto cloud = projectDepthImage(semantic_msg, true);
     
     sensor_msgs::msg::PointCloud2 cloud_msg;
     pcl::toROSMsg(*cloud, cloud_msg);
