@@ -9,13 +9,41 @@ endif()
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(sensor_msgs REQUIRED)
+find_package(okmr_msgs REQUIRED)
+find_package(cv_bridge REQUIRED)
+find_package(OpenCV REQUIRED)
+find_package(PCL REQUIRED)
+find_package(pcl_conversions REQUIRED)
 
 add_executable(sim_test src/sim_test.cpp)
 ament_target_dependencies(sim_test rclcpp sensor_msgs)
 
+add_executable(depth_to_pointcloud src/depth_to_pointcloud.cpp)
+ament_target_dependencies(depth_to_pointcloud 
+  rclcpp 
+  sensor_msgs 
+  okmr_msgs 
+  cv_bridge 
+  OpenCV 
+  pcl_conversions
+)
+target_link_libraries(depth_to_pointcloud ${PCL_LIBRARIES})
+target_include_directories(depth_to_pointcloud PRIVATE ${PCL_INCLUDE_DIRS})
+
 install(TARGETS
   sim_test
+  depth_to_pointcloud
   DESTINATION lib/${PROJECT_NAME})
+
+install(DIRECTORY
+  launch
+  DESTINATION share/${PROJECT_NAME}/
+)
+
+install(DIRECTORY
+  params
+  DESTINATION share/${PROJECT_NAME}/
+)
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)

@@ -13,9 +13,9 @@ def generate_launch_description():
     return LaunchDescription([
         # Launch the Stonefish simulation
         IncludeLaunchDescription(
-            PathJoinSubstitution([stonefish_dir, 'sim_headless.launch.py']),
+            PathJoinSubstitution([stonefish_dir, 'sim.launch.py']),
             launch_arguments={
-                'scenario_name': 'simple_headless.scn',
+                'scenario_name': 'simple.scn',
             }.items()
         ),
 

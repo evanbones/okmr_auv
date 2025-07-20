@@ -30,6 +30,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
     msg/Dvl.msg
     msg/RelativePose.msg
     msg/MissionCommand.msg
+    msg/SemanticDepth.msg
     srv/FindObject.srv
     srv/Vg2pc.srv
     srv/Matching.srv

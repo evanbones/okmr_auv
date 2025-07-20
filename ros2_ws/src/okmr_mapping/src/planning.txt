@@ -3,3 +3,18 @@ Realsense2 reference: https://github.com/IntelRealSense/realsense-ros?tab=readme
 use pcl for projection and segmentation + plane estimation?
 https://pcl.readthedocs.io/projects/tutorials/en/master/walkthrough.html#walkthrough
 
+1. create depth -> pointcloud projection, pcl format
+    - done using XYZRGBL format
+
+2. test using simulation depth camera
+    - if output, success!
+    done, just need to add proper intrinsuics for sim
+
+2.5 update proejction node to subscribe to camerainfo message and use the ransofmration amtrix
+
+3. test visualization, use pcl tools to visualize the poitncloud
+    - create a tool that requests the most recent pointcloud using a service, and then visualizes just the one? 
+
+4. test applying masks
+5. test getting average point
+6. test clustering
