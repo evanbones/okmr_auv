@@ -30,9 +30,19 @@ ament_target_dependencies(depth_to_pointcloud
 target_link_libraries(depth_to_pointcloud ${PCL_LIBRARIES})
 target_include_directories(depth_to_pointcloud PRIVATE ${PCL_INCLUDE_DIRS})
 
+add_executable(cloud_visualizer src/cloud_visualizer.cpp)
+ament_target_dependencies(cloud_visualizer 
+  rclcpp 
+  sensor_msgs 
+  pcl_conversions
+)
+target_link_libraries(cloud_visualizer ${PCL_LIBRARIES})
+target_include_directories(cloud_visualizer PRIVATE ${PCL_INCLUDE_DIRS})
+
 install(TARGETS
   sim_test
   depth_to_pointcloud
+  cloud_visualizer
   DESTINATION lib/${PROJECT_NAME})
 
 install(DIRECTORY

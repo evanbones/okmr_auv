@@ -13,7 +13,7 @@ https://pcl.readthedocs.io/projects/tutorials/en/master/walkthrough.html#walkthr
 2.5 update proejction node to subscribe to camerainfo message and use the ransofmration amtrix
 
 3. test visualization, use pcl tools to visualize the poitncloud
-    - create a tool that requests the most recent pointcloud using a service, and then visualizes just the one? 
+    - create a tool that requests the most recent pointcloud using a service, and then visualizes just the one?
 
 4. test applying masks
 5. test getting average point
