@@ -13,10 +13,19 @@ https://pcl.readthedocs.io/projects/tutorials/en/master/walkthrough.html#walkthr
 2.5 update proejction node to subscribe to camerainfo message and use the ransofmration amtrix
 
 3. test visualization, use pcl tools to visualize the poitncloud
+    - done
 
 4. test applying masks
+    - test with rectangle
+
 5. test getting average point
+    - create subscriber node that gets average pose
+    - octotree filter it for reduced size?
+
 6. test clustering
+    - how to publisher cluster info?
+    - list of poses?
+    - list of custom message (object - pose, class, confidence, index etc?)
 
 future work: 
 implement the better visualizer if needed
