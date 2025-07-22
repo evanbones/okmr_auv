@@ -30,6 +30,8 @@ https://pcl.readthedocs.io/projects/tutorials/en/master/walkthrough.html#walkthr
 7. create proper robot state publisher?
     - publish TransformStamped alongside /pose from dead reckoning node?
 
+8. visualize pointcloud in rviz in base_link frame?
+
 future work: 
 implement the better visualizer if needed
 https://pcl.readthedocs.io/projects/tutorials/en/master/pcl_visualizer.html#pcl-visualizer
