@@ -10,5 +10,5 @@ accel_control_layer:
     kmass_roll: 0.05
     kmass_x: 10.0
     kmass_y: 10.0
-    kmass_yaw: 0.2
+    kmass_yaw: 0.1
     kmass_z: 10.0
