@@ -27,6 +27,8 @@ def generate_launch_description():
                 ),
                 "max_dist": 6.0,
                 "min_dist": 0.35,
+                "use_mask": false,
+                "use_rgb": true,
             }
         ],
         remappings=[
@@ -49,6 +51,8 @@ def generate_launch_description():
                 ),
                 "max_dist": 1.0,
                 "min_dist": 0.07,
+                "use_mask": false,
+                "use_rgb": true,
             }
         ],
         remappings=[

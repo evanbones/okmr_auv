@@ -1,30 +1,29 @@
 #ifndef OKMR_CONTROLS_POSE_CONTROL_LAYER_HPP
 #define OKMR_CONTROLS_POSE_CONTROL_LAYER_HPP
 
-#include "okmr_controls/control_layer_base.hpp"
-#include <okmr_msgs/msg/relative_pose.hpp>
 #include <geometry_msgs/msg/twist.hpp>
 #include <geometry_msgs/msg/twist_stamped.hpp>
+#include <okmr_msgs/msg/relative_pose.hpp>
 
-namespace okmr_controls
-{
+#include "okmr_controls/control_layer_base.hpp"
 
-class PoseControlLayer : public ControlLayerBase
-{
-public:
-    PoseControlLayer();
+namespace okmr_controls {
 
-protected:
-    void update() override;
+class PoseControlLayer : public ControlLayerBase {
+   public:
+    PoseControlLayer ();
 
-private:
+   protected:
+    void update () override;
+
+   private:
     rclcpp::Subscription<okmr_msgs::msg::RelativePose>::SharedPtr pose_target_sub_;
     rclcpp::Publisher<geometry_msgs::msg::TwistStamped>::SharedPtr velocity_target_pub_;
-    
+
     okmr_msgs::msg::RelativePose current_pose_;
     okmr_msgs::msg::RelativePose pose_target_;
-    
-    void pose_target_callback(const okmr_msgs::msg::RelativePose::SharedPtr msg);
+
+    void pose_target_callback (const okmr_msgs::msg::RelativePose::SharedPtr msg);
 };
 
 }  // namespace okmr_controls

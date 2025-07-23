@@ -14,6 +14,7 @@ find_package(cv_bridge REQUIRED)
 find_package(OpenCV REQUIRED)
 find_package(PCL REQUIRED)
 find_package(pcl_conversions REQUIRED)
+find_package(message_filters REQUIRED)
 
 add_executable(sim_test src/sim_test.cpp)
 ament_target_dependencies(sim_test rclcpp sensor_msgs)
@@ -26,6 +27,7 @@ ament_target_dependencies(depth_to_pointcloud
   cv_bridge 
   OpenCV 
   pcl_conversions
+  message_filters
 )
 target_link_libraries(depth_to_pointcloud ${PCL_LIBRARIES})
 target_include_directories(depth_to_pointcloud PRIVATE ${PCL_INCLUDE_DIRS})
