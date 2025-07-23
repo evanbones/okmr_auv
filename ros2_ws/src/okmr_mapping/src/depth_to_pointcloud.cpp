@@ -99,6 +99,7 @@ DepthProjectionNode::DepthProjectionNode ()
                 this, "/mask");
             sync3_ = std::make_shared<message_filters::Synchronizer<SyncPolicy3>> (
                 SyncPolicy3 (10), *depth_filter_, *mask_filter_, *rgb_filter_);
+            sync3_->setAgePenalty (0.50);
             sync3_->registerCallback (std::bind (&DepthProjectionNode::depth_mask_and_rgb_callback,
                                                  this, std::placeholders::_1, std::placeholders::_2,
                                                  std::placeholders::_3));
@@ -107,6 +108,7 @@ DepthProjectionNode::DepthProjectionNode ()
                 this, "/rgb");
             sync2_ = std::make_shared<message_filters::Synchronizer<SyncPolicy2>> (
                 SyncPolicy2 (10), *depth_filter_, *rgb_filter_);
+            sync2_->setAgePenalty (0.50);
             sync2_->registerCallback (std::bind (&DepthProjectionNode::depth_and_rgb_callback, this,
                                                  std::placeholders::_1, std::placeholders::_2));
         } else if (use_mask_) {
@@ -114,6 +116,7 @@ DepthProjectionNode::DepthProjectionNode ()
                 this, "/mask");
             sync2_ = std::make_shared<message_filters::Synchronizer<SyncPolicy2>> (
                 SyncPolicy2 (10), *depth_filter_, *mask_filter_);
+            sync2_->setAgePenalty (0.50);
             sync2_->registerCallback (std::bind (&DepthProjectionNode::depth_and_mask_callback,
                                                  this, std::placeholders::_1,
                                                  std::placeholders::_2));
@@ -171,7 +174,29 @@ pcl::PointCloud<pcl::PointXYZRGBL>::Ptr DepthProjectionNode::projectDepthImage (
 
     if (rgb_msg) {
         rgb_img = cv_bridge::toCvCopy (*rgb_msg)->image;
+    } else {
+        // Create rainbow coloring for entire image using vectorized operations
+        cv::Mat depth_float;
+        depth_img.convertTo (depth_float, CV_32F, 0.001f);
+
+        cv::Mat depth_normalized = (depth_float - min_dist_) / (max_dist_ - min_dist_);
+        cv::max (depth_normalized, 0.0f, depth_normalized);
+        cv::min (depth_normalized, 1.0f, depth_normalized);
+
+        cv::Mat hue_channel = depth_normalized * 240.0f;
+        cv::Mat sat_channel = cv::Mat::ones (depth_img.size (), CV_32F) * 125.0f;
+        cv::Mat val_channel = cv::Mat::ones (depth_img.size (), CV_32F) * 255.0f;
+
+        std::vector<cv::Mat> hsv_channels = {hue_channel, sat_channel, val_channel};
+        cv::Mat hsv_img;
+        cv::merge (hsv_channels, hsv_img);
+
+        cv::Mat rgb_float;
+        cv::cvtColor (hsv_img, rgb_float, cv::COLOR_HSV2BGR);
+
+        rgb_float.convertTo (rgb_img, CV_8UC3);
     }
+
     if (mask_msg) {
         mask_img = cv_bridge::toCvCopy (*mask_msg)->image;
     }
@@ -180,7 +205,7 @@ pcl::PointCloud<pcl::PointXYZRGBL>::Ptr DepthProjectionNode::projectDepthImage (
     const int h = depth_img.rows;
 
     pcl::PointCloud<pcl::PointXYZRGBL>::Ptr cloud (new pcl::PointCloud<pcl::PointXYZRGBL>);
-    cloud->header.frame_id = "base_link";
+    cloud->header.frame_id = "map";  // add "base_link" back in once publishing tf2 transform
     cloud->header.stamp = pcl_conversions::toPCL (this->now ());
     cloud->is_dense = true;
     cloud->points.reserve (w * h);
@@ -195,27 +220,9 @@ pcl::PointCloud<pcl::PointXYZRGBL>::Ptr DepthProjectionNode::projectDepthImage (
                 mask_value = static_cast<std::uint32_t> (mask_img.at<int> (v, u));
             }
 
-            if (rgb_msg) {
-                r = rgb_img.at<cv::Vec3b> (v, u)[2];
-                g = rgb_img.at<cv::Vec3b> (v, u)[1];
-                b = rgb_img.at<cv::Vec3b> (v, u)[0];
-            } else {
-                float depth_meters = depth * 0.001f;
-                float depth_normalized = (depth_meters - min_dist_) / (max_dist_ - min_dist_);
-                depth_normalized = std::max (0.0f, std::min (1.0f, depth_normalized));
-
-                float hue = depth_normalized * 240.0f;
-                int saturation = 125;
-                int value = 255;
-
-                cv::Mat hsv_pixel (1, 1, CV_32FC3, cv::Scalar (hue, saturation, value));
-                cv::Mat rgb_pixel;
-                cv::cvtColor (hsv_pixel, rgb_pixel, cv::COLOR_HSV2BGR);
-
-                b = static_cast<std::uint8_t> (rgb_pixel.at<cv::Vec3f> (0, 0)[0]);
-                g = static_cast<std::uint8_t> (rgb_pixel.at<cv::Vec3f> (0, 0)[1]);
-                r = static_cast<std::uint8_t> (rgb_pixel.at<cv::Vec3f> (0, 0)[2]);
-            }
+            r = rgb_img.at<cv::Vec3b> (v, u)[2];
+            g = rgb_img.at<cv::Vec3b> (v, u)[1];
+            b = rgb_img.at<cv::Vec3b> (v, u)[0];
 
             float x = depth * 0.001f;
 
@@ -228,6 +235,7 @@ pcl::PointCloud<pcl::PointXYZRGBL>::Ptr DepthProjectionNode::projectDepthImage (
             }
         }
     }
+
     cloud->width = cloud->points.size ();
     cloud->height = 1;
 
@@ -259,6 +267,8 @@ void DepthProjectionNode::depth_and_mask_callback (
 void DepthProjectionNode::depth_and_rgb_callback (
     const sensor_msgs::msg::Image::ConstSharedPtr& depth_msg,
     const sensor_msgs::msg::Image::ConstSharedPtr& rgb_msg) {
+    RCLCPP_INFO (this->get_logger (), "received depth + rgb callback");
+
     if (!camera_info_received_) {
         RCLCPP_WARN_THROTTLE (this->get_logger (), *this->get_clock (), 5000,
                               "Camera info not received yet, skipping image processing");

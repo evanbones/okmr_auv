@@ -27,12 +27,12 @@ def generate_launch_description():
                 ),
                 "max_dist": 6.0,
                 "min_dist": 0.35,
-                "use_mask": false,
-                "use_rgb": true,
+                "use_mask": False,
+                "use_rgb": True,
             }
         ],
         remappings=[
-            ("/semantic_depth", "/camera1/semantic_depth"),
+            ("/rgb", "/camera1/image_raw"),
             ("/depth", "/camera1/camera1/image_depth"),
             ("/camera_info", "/camera1/camera1/depth_camera_info"),
             ("/pointcloud", "/camera1/pointcloud"),
@@ -51,12 +51,12 @@ def generate_launch_description():
                 ),
                 "max_dist": 1.0,
                 "min_dist": 0.07,
-                "use_mask": false,
-                "use_rgb": true,
+                "use_mask": False,
+                "use_rgb": False,
             }
         ],
         remappings=[
-            ("/semantic_depth", "/camera2/semantic_depth"),
+            ("/rgb", "/camera2/image_raw"),
             ("/depth", "/camera2/camera2/image_depth"),
             ("/camera_info", "/camera2/camera2/depth_camera_info"),
             ("/pointcloud", "/camera2/pointcloud"),
