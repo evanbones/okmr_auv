@@ -151,16 +151,18 @@ bool DepthProjectionNode::validateImageDimensions (const sensor_msgs::msg::Image
                                                    const sensor_msgs::msg::Image* rgb_msg,
                                                    const sensor_msgs::msg::Image* mask_msg) {
     if (rgb_msg && (rgb_msg->width != depth_msg->width || rgb_msg->height != depth_msg->height)) {
-        RCLCPP_ERROR (this->get_logger (),
-                      "Image dimensions do not match: RGB(%dx%d), Depth(%dx%d)", rgb_msg->width,
-                      rgb_msg->height, depth_msg->width, depth_msg->height);
+        RCLCPP_ERROR_THROTTLE (this->get_logger (), *this->get_clock (),
+                               "Image dimensions do not match: RGB(%dx%d), Depth(%dx%d)",
+                               rgb_msg->width, rgb_msg->height, depth_msg->width,
+                               depth_msg->height);
         return false;
     }
     if (mask_msg &&
         (mask_msg->width != depth_msg->width || mask_msg->height != depth_msg->height)) {
-        RCLCPP_ERROR (this->get_logger (),
-                      "Image dimensions do not match: Mask(%dx%d), Depth(%dx%d)", mask_msg->width,
-                      mask_msg->height, depth_msg->width, depth_msg->height);
+        RCLCPP_ERROR_THROTTLE (this->get_logger (), *this->get_clock (),
+                               "Image dimensions do not match: Mask(%dx%d), Depth(%dx%d)",
+                               mask_msg->width, mask_msg->height, depth_msg->width,
+                               depth_msg->height);
         return false;
     }
     return true;
@@ -267,8 +269,6 @@ void DepthProjectionNode::depth_and_mask_callback (
 void DepthProjectionNode::depth_and_rgb_callback (
     const sensor_msgs::msg::Image::ConstSharedPtr& depth_msg,
     const sensor_msgs::msg::Image::ConstSharedPtr& rgb_msg) {
-    RCLCPP_INFO (this->get_logger (), "received depth + rgb callback");
-
     if (!camera_info_received_) {
         RCLCPP_WARN_THROTTLE (this->get_logger (), *this->get_clock (), 5000,
                               "Camera info not received yet, skipping image processing");

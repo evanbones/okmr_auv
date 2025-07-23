@@ -32,7 +32,7 @@ def generate_launch_description():
             }
         ],
         remappings=[
-            ("/rgb", "/camera1/image_raw"),
+            ("/rgb", "/camera1/camera1/image_raw"),
             ("/depth", "/camera1/camera1/image_depth"),
             ("/camera_info", "/camera1/camera1/depth_camera_info"),
             ("/pointcloud", "/camera1/pointcloud"),
@@ -56,7 +56,7 @@ def generate_launch_description():
             }
         ],
         remappings=[
-            ("/rgb", "/camera2/image_raw"),
+            ("/rgb", "/camera2/camera2/image_raw"),
             ("/depth", "/camera2/camera2/image_depth"),
             ("/camera_info", "/camera2/camera2/depth_camera_info"),
             ("/pointcloud", "/camera2/pointcloud"),
