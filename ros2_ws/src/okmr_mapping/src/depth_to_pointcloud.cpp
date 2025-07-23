@@ -108,7 +108,8 @@ DepthProjectionNode::DepthProjectionNode ()
                 this, "/rgb");
             sync2_ = std::make_shared<message_filters::Synchronizer<SyncPolicy2>> (
                 SyncPolicy2 (10), *depth_filter_, *rgb_filter_);
-            sync2_->setAgePenalty (0.50);
+            sync2_->setAgePenalty (0.50);  // tbh cannot find that much info about this parameter?
+                                           // Copied from documentation
             sync2_->registerCallback (std::bind (&DepthProjectionNode::depth_and_rgb_callback, this,
                                                  std::placeholders::_1, std::placeholders::_2));
         } else if (use_mask_) {
@@ -116,7 +117,8 @@ DepthProjectionNode::DepthProjectionNode ()
                 this, "/mask");
             sync2_ = std::make_shared<message_filters::Synchronizer<SyncPolicy2>> (
                 SyncPolicy2 (10), *depth_filter_, *mask_filter_);
-            sync2_->setAgePenalty (0.50);
+            sync2_->setAgePenalty (0.50);  // tbh cannot find that much info about this parameter?
+                                           // Copied from documentation
             sync2_->registerCallback (std::bind (&DepthProjectionNode::depth_and_mask_callback,
                                                  this, std::placeholders::_1,
                                                  std::placeholders::_2));
@@ -151,7 +153,7 @@ bool DepthProjectionNode::validateImageDimensions (const sensor_msgs::msg::Image
                                                    const sensor_msgs::msg::Image* rgb_msg,
                                                    const sensor_msgs::msg::Image* mask_msg) {
     if (rgb_msg && (rgb_msg->width != depth_msg->width || rgb_msg->height != depth_msg->height)) {
-        RCLCPP_ERROR_THROTTLE (this->get_logger (), *this->get_clock (),
+        RCLCPP_ERROR_THROTTLE (this->get_logger (), *this->get_clock (), 5000,
                                "Image dimensions do not match: RGB(%dx%d), Depth(%dx%d)",
                                rgb_msg->width, rgb_msg->height, depth_msg->width,
                                depth_msg->height);
@@ -159,7 +161,7 @@ bool DepthProjectionNode::validateImageDimensions (const sensor_msgs::msg::Image
     }
     if (mask_msg &&
         (mask_msg->width != depth_msg->width || mask_msg->height != depth_msg->height)) {
-        RCLCPP_ERROR_THROTTLE (this->get_logger (), *this->get_clock (),
+        RCLCPP_ERROR_THROTTLE (this->get_logger (), *this->get_clock (), 5000,
                                "Image dimensions do not match: Mask(%dx%d), Depth(%dx%d)",
                                mask_msg->width, mask_msg->height, depth_msg->width,
                                depth_msg->height);
@@ -222,15 +224,16 @@ pcl::PointCloud<pcl::PointXYZRGBL>::Ptr DepthProjectionNode::projectDepthImage (
                 mask_value = static_cast<std::uint32_t> (mask_img.at<int> (v, u));
             }
 
-            r = rgb_img.at<cv::Vec3b> (v, u)[2];
+            r = rgb_img.at<cv::Vec3b> (v, u)[0];
+            // inverted with blue for now? [0] is blue not red, but rviz2 is being weird
             g = rgb_img.at<cv::Vec3b> (v, u)[1];
-            b = rgb_img.at<cv::Vec3b> (v, u)[0];
+            b = rgb_img.at<cv::Vec3b> (v, u)[2];
 
             float x = depth * 0.001f;
 
             if (x > min_dist_ && x < max_dist_ && mask_value != 0) {
-                float y = (static_cast<float> (u) - cx_) * x * fx_inv_;
-                float z = (static_cast<float> (v) - cy_) * x * fy_inv_;
+                float y = -(static_cast<float> (u) - cx_) * fx_inv_ * x;
+                float z = -(static_cast<float> (v) - cy_) * fy_inv_ * x;
 
                 pcl::PointXYZRGBL point (x, y, z, r, g, b, mask_value);
                 cloud->points.push_back (point);
