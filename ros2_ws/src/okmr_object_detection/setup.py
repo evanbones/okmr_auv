@@ -27,6 +27,7 @@ setup(
             'example_detector = okmr_object_detection.example_detector:main',
             'color_detector = okmr_object_detection.color_detector:main',
             'lid_detector = okmr_object_detection.lid_detector:main',
+            'onnx_segmentation_detector = okmr_object_detection.onnx_segmentation_detector:main',
         ],
     },
 )
