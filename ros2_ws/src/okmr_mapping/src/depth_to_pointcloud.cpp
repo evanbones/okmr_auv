@@ -33,6 +33,7 @@ class DepthProjectionNode : public rclcpp::Node {
     float min_dist_;
     double cx_, cy_, fx_inv_, fy_inv_;
     bool camera_info_received_;
+    bool rainbow_coloring_;
 };
 
 DepthProjectionNode::DepthProjectionNode ()
@@ -40,9 +41,11 @@ DepthProjectionNode::DepthProjectionNode ()
     this->declare_parameter ("max_dist", 6.0);
     this->declare_parameter ("min_dist", 0.07);
     this->declare_parameter ("use_semantic_subscriber", true);
+    this->declare_parameter ("rainbow_coloring", true);
 
     max_dist_ = this->get_parameter ("max_dist").as_double ();
     min_dist_ = this->get_parameter ("min_dist").as_double ();
+    rainbow_coloring_ = this->get_parameter ("rainbow_coloring").as_bool ();
 
     cloud_publisher_ = this->create_publisher<sensor_msgs::msg::PointCloud2> ("/pointcloud", 10);
     camera_info_sub_ = this->create_subscription<sensor_msgs::msg::CameraInfo> (
@@ -152,7 +155,7 @@ void DepthProjectionNode::semantic_depth_callback (
         return;
     }
 
-    auto cloud = projectDepthImage (*msg);
+    auto cloud = projectDepthImage (*msg, rainbow_coloring_);
 
     sensor_msgs::msg::PointCloud2 cloud_msg;
     pcl::toROSMsg (*cloud, cloud_msg);
@@ -184,7 +187,7 @@ void DepthProjectionNode::depth_callback (const sensor_msgs::msg::Image::SharedP
     cv::Mat mask_ones = cv::Mat::ones (msg->height, msg->width, CV_32SC1);
     semantic_msg.mask = *cv_bridge::CvImage (msg->header, "32SC1", mask_ones).toImageMsg ();
 
-    auto cloud = projectDepthImage (semantic_msg, true);
+    auto cloud = projectDepthImage (semantic_msg, rainbow_coloring_);
 
     sensor_msgs::msg::PointCloud2 cloud_msg;
     pcl::toROSMsg (*cloud, cloud_msg);
