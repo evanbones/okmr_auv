@@ -9,8 +9,8 @@ its features didnt fully match up with our needs
 
 ## naming conventions (PLEASE PLEASE PLEASE USE)
 
- - state names: doingThing
- - linear transitions: doingThingDone
+ - state names: doing_thing
+ - linear transitions: doing_thing_done
 
 ## Code structure:
 ### state_machines
