@@ -25,16 +25,16 @@ def generate_launch_description():
                 "use_semantic_subscriber": LaunchConfiguration(
                     "use_semantic_subscriber"
                 ),
-                "max_dist": 6.0,
-                "min_dist": 0.35,
+                "max_dist": 16.0,
+                "min_dist": 0.0,
                 "use_mask": False,
-                "use_rgb": True,
+                "use_rgb": False,
             }
         ],
         remappings=[
-            ("/rgb", "/camera1/camera1/image_raw"),
-            ("/depth", "/camera1/camera1/image_depth"),
-            ("/camera_info", "/camera1/camera1/depth_camera_info"),
+            ("/rgb", "/camera/rgb"),
+            ("/depth", "/camera/depth"),
+            ("/camera_info", "/camera/camera/depth/camera_info"),
             ("/pointcloud", "/camera1/pointcloud"),
         ],
     )
