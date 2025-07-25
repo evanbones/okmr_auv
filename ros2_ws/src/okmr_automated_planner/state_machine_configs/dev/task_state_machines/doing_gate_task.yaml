@@ -1,16 +1,16 @@
 doing_gate_task:
   states:
-    - { name: locking_gate } #how to decide to enter this state?
+    - { name: locking_gate } 
     - { name: approaching_gate }
-    - { name: finding_shark }
+      # move left, move right, do some small rotations
     - { name: aligning_shark }
     - { name: passing_gate } #could be called passing_gate
     - { name: barrel_rolling }
 
   transitions:
-    - { trigger: UNKNOWN, source: initialized, dest: locking_gate }
+    - { trigger: initializing_done, source: initializing, dest: locking_gate }
     - { trigger: locking_gate_done, source: locking_gate, dest: approaching_gate }
-    - { trigger: approaching_gate_done, source: approaching_gate, dest: finding_shark }
+    - { trigger: approaching_gate_done, source: approaching_gate, dest: done} # TODO add actual movements here 
     - { trigger: finding_shark_done, source: finding_shark, dest: aligning_shark }  
     - { trigger: aligning_shark_done, source: aligning_shark, dest: completing_gate }  
     - { trigger: completing_gate_done, source: scanning_ccw, dest: scanning_cw }
