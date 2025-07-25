@@ -10,8 +10,7 @@ doing_gate_task:
   transitions:
     - { trigger: initializing_done, source: initializing, dest: locking_gate }
     - { trigger: locking_gate_done, source: locking_gate, dest: approaching_gate }
-    - { trigger: approaching_gate_done, source: approaching_gate, dest: done} # TODO add actual movements here 
-    - { trigger: finding_shark_done, source: finding_shark, dest: aligning_shark }  
-    - { trigger: aligning_shark_done, source: aligning_shark, dest: completing_gate }  
-    - { trigger: completing_gate_done, source: scanning_ccw, dest: scanning_cw }
-    - { trigger: barrel_rolling_done, source: '*', dest: done }
+    - { trigger: approaching_gate_done, source: approaching_gate, dest: aligning_shark} # TODO add actual movements here 
+    #- { trigger: aligning_shark_done, source: aligning_shark, dest: completing_gate }  
+    #- { trigger: completing_gate_done, source: scanning_ccw, dest: scanning_cw }
+    #- { trigger: barrel_rolling_done, source: '*', dest: done }

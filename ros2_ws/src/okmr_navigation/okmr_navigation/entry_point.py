@@ -10,6 +10,7 @@ from okmr_navigation.handlers.set_velocity_handler import *
 from okmr_navigation.handlers.look_at_handler import *
 from okmr_navigation.handlers.surface_passive_handler import *
 from okmr_navigation.handlers.barrel_roll_handler import *
+from okmr_navigation.handlers.set_altitude_handler import *
 from okmr_navigation.handlers.movement_execution_common import (
     execute_test_movement_common,
 )
@@ -25,7 +26,6 @@ COMMAND_HANDLERS = {
     MovementCommand.LOOK_AT: handle_look_at,
     MovementCommand.SURFACE_PASSIVE: handle_surface_passive,
     MovementCommand.SET_ALTITUDE: handle_set_altitude,
-    MovementCommand.SET_DEPTH: handle_set_depth,
     MovementCommand.BARREL_ROLL: handle_barrel_roll,
 }
 
@@ -34,6 +34,7 @@ TEST_COMMAND_HANDLERS = {
     MovementCommand.MOVE_RELATIVE: execute_test_movement_common,
     MovementCommand.MOVE_ABSOLUTE: execute_test_movement_common,
     MovementCommand.SET_VELOCITY: execute_test_movement_common,
+    MovementCommand.SET_ALTITUDE: execute_test_movement_common,
     MovementCommand.LOOK_AT: execute_test_movement_common,
     MovementCommand.SURFACE_PASSIVE: execute_test_movement_common,
     MovementCommand.BARREL_ROLL: execute_test_movement_common,

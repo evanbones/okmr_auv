@@ -70,5 +70,6 @@ int8 BARREL_ROLL = 7
     #uses goal_velocity field for barrel roll parameters
 
 
+int8 SET_ALTITUDE = 8
 
 

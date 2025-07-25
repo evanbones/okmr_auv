@@ -83,6 +83,12 @@ def generate_launch_description():
         ],
     )
 
+    navigator_server_node = Node(
+        package="okmr_navigation",
+        executable="navigator_action_server",
+        parameters=[{"test_mode": True}],
+    )
+
     # Set colorized output for better log readability
     colorized_output = SetEnvironmentVariable(
         name="RCUTILS_COLORIZED_OUTPUT", value="1"
@@ -98,5 +104,6 @@ def generate_launch_description():
             root_config_arg,
             debug_arg,
             automated_planner_node,
+            navigator_server_node,
         ]
     )

@@ -7,7 +7,7 @@ finding_gate:
   transitions:
     - { trigger: initialized, source: initializing, dest: scanning_cw }
     - { trigger: scanning_cw_done, source: scanning_cw, dest: scanning_ccw }
-    - { trigger: scanning_ccw_done, source: scanning_ccw, dest: scanning_cw }
+    - { trigger: scanning_ccw_done, source: scanning_ccw, dest: following_detection }
     - { trigger: object_detected, source: '*', dest: following_detection}
     # on following_detection completed, need a function to determine if false or true positive
     - { trigger: object_detection_false_positive, source:  following_detection, dest: scanning_cw }

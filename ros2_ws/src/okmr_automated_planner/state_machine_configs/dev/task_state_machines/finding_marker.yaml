@@ -5,7 +5,7 @@ finding_marker:
     - { name: setting_altitude }
 
   transitions:
-    - { trigger: initializing_done, source: initializing, dest: setting_depth}
+    - { trigger: initializing_done, source: initializing, dest: setting_altitude}
     - { trigger: setting_depth_done, source: setting_altitude, dest: scanning_cw }  
     - { trigger: scanning_cw_done, source: scanning_cw, dest: scanning_ccw } 
     - { trigger: scanning_ccw_done, source: scanning_ccw, dest: scanning_cw } # these 2 will loop until timeout

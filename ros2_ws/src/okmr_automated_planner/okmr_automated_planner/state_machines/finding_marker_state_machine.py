@@ -11,8 +11,6 @@ class FindingMarkerStateMachine(BaseStateMachine):
         self.queued_method = self.initializing_done
         pass
 
-                self.abort()
-
     def handle_movement_failure(self):
         """Handle movement action failure"""
         self.ros_node.get_logger().error("Movement action failed")
