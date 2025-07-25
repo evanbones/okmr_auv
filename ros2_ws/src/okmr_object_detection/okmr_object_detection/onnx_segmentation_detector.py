@@ -23,7 +23,7 @@ class OnnxSegmentationDetector(ObjectDetectorNode):
         self.declare_parameter('mask_threshold', 0.5)
         self.declare_parameter('input_size', 640)
         self.declare_parameter('top_k', -1)  # -1 means no limit
-        self.declare_parameter('providers', ['CPUExecutionProvider'])
+        self.declare_parameter('providers', ['TensorrtExecutionProvider', 'CUDAExecutionProvider', 'CPUExecutionProvider']) #Tries tensorRT then CUDA then CPU
         self.declare_parameter('debug', False)
         
         # Get parameters
@@ -45,7 +45,11 @@ class OnnxSegmentationDetector(ObjectDetectorNode):
         self.get_logger().info(f'Model: {self.model_path}')
         self.get_logger().info(f'Confidence threshold: {self.conf_threshold}')
         self.get_logger().info(f'Input size: {self.input_size}')
-        
+    
+    def __del__(self):
+        """Destructor to clean up OpenCV windows."""
+        if self.debug:
+            cv2.destroyAllWindows()
     def load_model(self):
         """Load the ONNX model"""
         if not os.path.isfile(self.model_path):
@@ -60,9 +64,9 @@ class OnnxSegmentationDetector(ObjectDetectorNode):
             names_shapes = [(o.name, o.shape) for o in outs]
             
             if self.debug:
-                self.get_logger().info("ONNX outputs:")
+                self.get_logger().debug("ONNX outputs:")
                 for n, s in names_shapes:
-                    self.get_logger().info(f"  {n} shape={s}")
+                    self.get_logger().debug(f"  {n} shape={s}")
             
             # Single-input name
             self.input_name = self.session.get_inputs()[0].name
@@ -124,10 +128,10 @@ class OnnxSegmentationDetector(ObjectDetectorNode):
         proto = proto[0]  # (M, Hp, Wp)
         
         if self.debug:
-            self.get_logger().info(f"DEBUG: det shape: {det.shape}")
-            self.get_logger().info(f"DEBUG: coefs shape: {coefs.shape}")
-            self.get_logger().info(f"DEBUG: proto shape: {proto.shape}")
-            self.get_logger().info(f"DEBUG: confidence scores range: {det[:, 4].min():.4f} - {det[:, 4].max():.4f}")
+            self.get_logger().debug(f"DEBUG: det shape: {det.shape}")
+            self.get_logger().debug(f"DEBUG: coefs shape: {coefs.shape}")
+            self.get_logger().debug(f"DEBUG: proto shape: {proto.shape}")
+            self.get_logger().debug(f"DEBUG: confidence scores range: {det[:, 4].min():.4f} - {det[:, 4].max():.4f}")
         
         # Filter by confidence
         scores = det[:, 4]
@@ -136,7 +140,7 @@ class OnnxSegmentationDetector(ObjectDetectorNode):
         coefs_filtered = coefs[keep]
         
         if self.debug:
-            self.get_logger().info(f"DEBUG: detections after confidence filtering ({self.conf_threshold}): {len(det_filtered)}")
+            self.get_logger().debug(f"DEBUG: detections after confidence filtering ({self.conf_threshold}): {len(det_filtered)}")
         
         # Apply top-k filtering if specified
         if self.top_k is not None and len(det_filtered) > self.top_k:
@@ -145,7 +149,7 @@ class OnnxSegmentationDetector(ObjectDetectorNode):
             coefs_filtered = coefs_filtered[conf_indices]
             
             if self.debug:
-                self.get_logger().info(f"DEBUG: Keeping only top {self.top_k} most confident detections")
+                self.get_logger().debug(f"DEBUG: Keeping only top {self.top_k} most confident detections")
         
         # Initialize combined mask
         H0, W0 = orig_shape[:2]
@@ -153,7 +157,7 @@ class OnnxSegmentationDetector(ObjectDetectorNode):
         
         if len(det_filtered) == 0:
             if self.debug:
-                self.get_logger().info("DEBUG: No detections found! Returning empty mask.")
+                self.get_logger().debug("DEBUG: No detections found! Returning empty mask.")
             return combined_mask
         
         # Decode masks
@@ -166,14 +170,15 @@ class OnnxSegmentationDetector(ObjectDetectorNode):
             x1, y1, x2, y2, conf, cls = d
             
             if self.debug:
-                self.get_logger().info(f"DEBUG: Detection {i+1}: bbox=({x1:.1f},{y1:.1f},{x2:.1f},{y2:.1f}), conf={conf:.4f}, class={int(cls)}")
+                self.get_logger().debug(f"DEBUG: Detection {i+1}: bbox=({x1:.1f},{y1:.1f},{x2:.1f},{y2:.1f}), conf={conf:.4f}, class={int(cls)}")
             
             # Process mask
             mask_logit = masks[i]
             mask = sigmoid(mask_logit)
             
-            # Handle aspect ratio correction (similar to original code)
-            corrected_height = int(H0 * 1.333)
+            # Handle aspect ratio correction
+            aspect_ratio = W0 / H0 
+            corrected_height = int(W0 / aspect_ratio)
             mask_resized = cv2.resize(mask, (W0, corrected_height))
             
             if corrected_height > H0:
@@ -204,9 +209,9 @@ class OnnxSegmentationDetector(ObjectDetectorNode):
         """
         try:
             if self.debug:
-                self.get_logger().info(f"DEBUG: Input RGB shape: {rgb.shape}")
+                self.get_logger().debug(f"DEBUG: Input RGB shape: {rgb.shape}")
                 if depth is not None:
-                    self.get_logger().info(f"DEBUG: Input depth shape: {depth.shape}")
+                    self.get_logger().debug(f"DEBUG: Input depth shape: {depth.shape}")
             
             # Convert RGB to BGR for OpenCV operations
             bgr_img = cv2.cvtColor(rgb, cv2.COLOR_RGB2BGR)
@@ -215,9 +220,9 @@ class OnnxSegmentationDetector(ObjectDetectorNode):
             inp, scale, pad_x, pad_y = self.preprocess(bgr_img)
             
             if self.debug:
-                self.get_logger().info(f"DEBUG: Preprocessed input shape: {inp.shape}")
-                self.get_logger().info(f"DEBUG: Scale factor: {scale}")
-                self.get_logger().info(f"DEBUG: Padding: x={pad_x}, y={pad_y}")
+                self.get_logger().debug(f"DEBUG: Preprocessed input shape: {inp.shape}")
+                self.get_logger().debug(f"DEBUG: Scale factor: {scale}")
+                self.get_logger().debug(f"DEBUG: Padding: x={pad_x}, y={pad_y}")
             
             # Run ONNX inference
             outs = self.session.run(None, {self.input_name: inp})
@@ -229,8 +234,8 @@ class OnnxSegmentationDetector(ObjectDetectorNode):
                 M = proto.shape[1]
                 
                 if self.debug:
-                    self.get_logger().info(f"DEBUG: Raw predictions shape: {raw_preds.shape}")
-                    self.get_logger().info(f"DEBUG: Proto shape: {proto.shape}")
+                    self.get_logger().debug(f"DEBUG: Raw predictions shape: {raw_preds.shape}")
+                    self.get_logger().debug(f"DEBUG: Proto shape: {proto.shape}")
                 
                 # Transpose raw → (1,N,C)
                 raw = raw_preds.transpose(0, 2, 1)
@@ -243,7 +248,7 @@ class OnnxSegmentationDetector(ObjectDetectorNode):
                 num_classes = C - 5 - M  # Total - bbox(4) - objectness(1) - mask_coeffs(M)
                 
                 if self.debug:
-                    self.get_logger().info(f"DEBUG: Calculated number of classes: {num_classes}")
+                    self.get_logger().debug(f"DEBUG: Calculated number of classes: {num_classes}")
                 
                 if num_classes <= 0:
                     # Single class model
@@ -277,8 +282,8 @@ class OnnxSegmentationDetector(ObjectDetectorNode):
             label_img = self.postprocess_onnx(det, coefs, proto, rgb.shape, scale, pad_x, pad_y)
             
             if self.debug:
-                self.get_logger().info(f"DEBUG: Output label_img shape: {label_img.shape}")
-                self.get_logger().info(f"DEBUG: Unique values in mask: {np.unique(label_img)}")
+                self.get_logger().debug(f"DEBUG: Output label_img shape: {label_img.shape}")
+                self.get_logger().debug(f"DEBUG: Unique values in mask: {np.unique(label_img)}")
             
             if self.debug:
                 display_mask = (label_img > 0).astype(np.uint8) * 255
