@@ -5,7 +5,7 @@ finding_gate:
     - { name: following_detection }
 
   transitions:
-    - { trigger: initialized, source: initializing, dest: scanning_cw }
+    - { trigger: initializing_done, source: initializing, dest: scanning_cw }
     - { trigger: scanning_cw_done, source: scanning_cw, dest: scanning_ccw }
     - { trigger: scanning_ccw_done, source: scanning_ccw, dest: following_detection }
     - { trigger: object_detected, source: '*', dest: following_detection}

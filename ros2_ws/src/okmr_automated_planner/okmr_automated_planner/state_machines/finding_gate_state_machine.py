@@ -27,7 +27,7 @@ class FindingGateStateMachine(BaseStateMachine):
         {
             "name": "true_positive_frame_threshold",
             "value": 20,
-            "descriptor": "how many frames to consider detection as true postive",
+            "descriptor": "how many frames to consider detection as true positive",
         },
         {
             "name": "max_scan_attempts",
@@ -57,7 +57,7 @@ class FindingGateStateMachine(BaseStateMachine):
             "initial_detection_frame_threshold"
         )
         self.true_positive_frame_threshold = self.get_local_parameter(
-            "true_postive_frame_threshold"
+            "true_positive_frame_threshold"
         )
         self.max_scan_attempts = self.get_local_parameter("gate_max_scan_attempts")
         self.scan_speed = self.get_local_parameter("scan_speed")
@@ -99,7 +99,7 @@ class FindingGateStateMachine(BaseStateMachine):
     def on_enter_initializing(self):
         # start up object detection model
         # on request success, initializingDone
-        self.queued_method = self.initialized
+        self.queued_method = self.initializing_done
         pass
 
     def on_enter_scanning_cw(self):
@@ -110,6 +110,8 @@ class FindingGateStateMachine(BaseStateMachine):
         movement_msg.goal_velocity.twist.angular.z = self.scan_speed
         movement_msg.goal_velocity.duration = self.scan_angle / self.scan_speed
         movement_msg.goal_velocity.integrate = True
+
+        movement_msg.timeout_sec = self.scan_angle / self.scan_speed * 2
 
         success = self.movement_client.send_movement_command(
             movement_msg,
@@ -131,6 +133,8 @@ class FindingGateStateMachine(BaseStateMachine):
         movement_msg.goal_velocity.twist.angular.z = -self.scan_speed
         movement_msg.goal_velocity.duration = self.scan_angle / self.scan_speed
         movement_msg.goal_velocity.integrate = True
+
+        movement_msg.timeout_sec = self.scan_angle / self.scan_speed * 2
 
         success = self.movement_client.send_movement_command(
             movement_msg,
@@ -158,7 +162,7 @@ class FindingGateStateMachine(BaseStateMachine):
         movement_msg.rotation = Vector3(
             x=0.0, y=0.0, z=calculated_yaw_rotation
         )  # Small rotation to center
-        movement_msg.duration = 15.0  # generous time estimate to rotate
+        movement_msg.timeout_sec = 5.0  # generous time estimate to rotate
 
         success = self.movement_client.send_movement_command(
             movement_msg,
@@ -175,11 +179,11 @@ class FindingGateStateMachine(BaseStateMachine):
     def validate_detection_is_true_positive(self):
         """Validate if we have enough high confidence frames to confirm the detected object is a true positive"""
 
-        if self.high_confidence_frame_count >= self.true_postive_frame_threshold:
+        if self.high_confidence_frame_count >= self.true_positive_frame_threshold:
             self.object_detection_true_positive()
         else:
             self.ros_node.get_logger().warn(
-                f"Gate validation failed. Only {self.high_confidence_frame_count} frames received, but {self.true_postive_frame_threshold} needed to continue"
+                f"Gate validation failed. Only {self.high_confidence_frame_count} frames received, but {self.true_positive_frame_threshold} needed to continue"
             )
             self.object_detection_false_positive()
 

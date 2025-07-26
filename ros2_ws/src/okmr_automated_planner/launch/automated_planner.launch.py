@@ -44,7 +44,7 @@ def generate_launch_description():
 
     debug_arg = DeclareLaunchArgument(
         "debug",
-        default_value="false",
+        default_value="true",
         description="Enable debug logging for automated_planner node",
     )
 
