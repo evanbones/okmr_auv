@@ -2,6 +2,7 @@ root:
   states:
     - { name: initializing, timeout: 30} #if initialization is taking too long we should abort
     - { name: waiting_for_mission_start} 
+    - { name: enabling_subsystems}
     - { name: sinking, timeout: 30}
     - { name: finding_gate, config_path: "task_state_machines/finding_gate.yaml" }
     - { name: doing_gate_task, config_path: "task_state_machines/doing_gate_task.yaml", timeout: 90 }
@@ -13,7 +14,8 @@ root:
 
   transitions:
     - { trigger: initializing_done, source: initializing, dest: waiting_for_mission_start}
-    - { trigger: mission_start_received, source: waiting_for_mission_start, dest: sinking }
+    - { trigger: mission_start_received, source: waiting_for_mission_start, dest: enabling_subsystems }
+    - { trigger: enabling_subsystems_done, source: enabling_subsystems, dest: sinking }
     - { trigger: sinking_done, source: sinking, dest: finding_gate }
     - { trigger: finding_gate_done, source: finding_gate, dest: doing_gate_task }
     - { trigger: doing_gate_task_done, source: doing_gate_task, dest: finding_slalom_marker }
