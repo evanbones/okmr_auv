@@ -5,6 +5,7 @@ from launch_ros.actions import Node
 from launch.actions import DeclareLaunchArgument
 from launch.substitutions import LaunchConfiguration
 from ament_index_python.packages import get_package_share_directory
+import os
 
 
 def generate_launch_description():
@@ -18,9 +19,10 @@ def generate_launch_description():
     # add debug launch arg
 
     pkg_share = get_package_share_directory("okmr_object_detection")
-    model_share_path = os.path.join(pkg_share, "models")
+    model_share_path = os.path.join(pkg_share, "models", "gate.onnx")
+    # TODO update obj detection node to allow model switching in real time
 
-    bottom_depth_to_pointcloud_node = Node(
+    object_detection_node = Node(
         package="okmr_object_detection",
         executable="onnx_segmentation_detector",
         output="screen",
@@ -34,8 +36,6 @@ def generate_launch_description():
 
     return LaunchDescription(
         [
-            use_semantic_arg,
-            front_depth_to_pointcloud_node,
-            bottom_depth_to_pointcloud_node,
+            object_detection_node,
         ]
     )
