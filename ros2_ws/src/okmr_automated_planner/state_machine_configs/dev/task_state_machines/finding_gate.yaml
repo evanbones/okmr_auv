@@ -1,14 +1,17 @@
 finding_gate:
   states:
-    - { name: scanning_cw }
-    - { name: scanning_ccw }
-    - { name: following_detection }
+    - { name: rotating_scan, config_path: "task_state_machines/rotating_scan.yaml", timeout: 30 }
+    - { name: initialize_looking_at_gate }
+    - { name: looking_at_gate }
+    - { name: validating_gate_found }
+    - { name: integrating_gate_data }
 
   transitions:
-    - { trigger: initializing_done, source: initializing, dest: scanning_cw }
-    - { trigger: scanning_cw_done, source: scanning_cw, dest: scanning_ccw }
-    - { trigger: scanning_ccw_done, source: scanning_ccw, dest: scanning_cw }
-    - { trigger: object_detected, source: '*', dest: following_detection }
-    # on following_detection completed, need a function to determine if false or true positive
-    - { trigger: object_detection_false_positive, source:  following_detection, dest: scanning_cw }
-    - { trigger: object_detection_true_positive, source: following_detection, dest: done }
+    - { trigger: initializing_done, source: initialized, dest: rotating_scan}
+    - { trigger: rotating_scan_done, source: rotating_scan, dest: rotating_scan }
+    - { trigger: look_at_gate, source: '*', dest: initialize_looking_at_gate }
+    - { trigger: initialize_looking_at_gate_done, source: initialize_looking_at_gate, dest: looking_at_gate }
+    - { trigger: looking_at_gate_done, source: looking_at_gate, dest: validating_gate_found }
+    - { trigger: resuming_rotating_scan, source: validating_gate_found, dest: rotating_scan}
+    - { trigger: gate_found, source: validating_gate_found, dest: integrating_gate_data }
+    - { trigger: integrating_gate_data_done, source: integrating_gate_data, dest: done }

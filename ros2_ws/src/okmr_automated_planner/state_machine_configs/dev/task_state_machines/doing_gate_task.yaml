@@ -1,16 +1,24 @@
 doing_gate_task:
   states:
-    - { name: locking_gate } 
+    - { name: locking_gate } #how to decide to enter this state?
     - { name: approaching_gate }
-      # move left, move right, do some small rotations
+    - { name: sideways_scan, config_path: "task_state_machines/sideways_scan.yaml", timeout: 30 }
+    - { name: finding_shark }
     - { name: aligning_shark }
     - { name: passing_gate } #could be called passing_gate
     - { name: barrel_rolling }
 
   transitions:
-    - { trigger: initializing_done, source: initializing, dest: locking_gate }
+    - { trigger: UNKNOWN, source: initialized, dest: locking_gate }
     - { trigger: locking_gate_done, source: locking_gate, dest: approaching_gate }
-    - { trigger: approaching_gate_done, source: approaching_gate, dest: aligning_shark} # TODO add actual movements here 
-    #- { trigger: aligning_shark_done, source: aligning_shark, dest: completing_gate }  
-    #- { trigger: completing_gate_done, source: scanning_ccw, dest: scanning_cw }
-    #- { trigger: barrel_rolling_done, source: '*', dest: done }
+    - { trigger: approaching_gate_done, source: approaching_gate, dest: sideways_scan }
+    - { trigger: sideways_scan_done, source: sideways_scan, dest: finding_shark}
+    - { trigger: no_shark_found, source: finding_shark, dest: return_initial }
+    - { trigger: return_initial_done, source: return_initial, dest: sideways_scan }
+    - { trigger: finding_shark_done, source: finding_shark, dest: aligning_shark }  
+    - { trigger: aligning_shark_done, source: aligning_shark, dest: passing_gate }
+    - { trigger: barrel_role_one, source: passing_gate, dest: barrel_rolling}
+    - {trigger: readjusting_depth, source: barrel_rolling, dest: passing_gate}
+    - {trigger: barrel_role_two, source: passing_gate, dest: barrel_rolling}
+    - { trigger: barrel_rolling_done, source: barrel_rolling, dest: done}
+    #plz commi9t this code

@@ -1,0 +1,24 @@
+doing_slalom:
+states:
+  {name: rotating_scan, config_path: "task_state_machines/rotating_scan.yaml", timeout: 30}
+  {name: returning_initial}
+  {name: looking_at_marker}
+  {name: moving_beside_marker}
+  {name: turning_at_angle} #maybe needs seperate sub-state machine
+  {name: moving_forward}
+  {name: locating_red_marker}
+  {name: moving_to_red_marker}
+
+  tranistions:
+    - { trigger: initialized, source: initializing_done, dest: rotating_scan} # this state is used to align the marker
+    - { trigger: marker_not_found, source: rotating_scan, dest: returning_initial}
+    - { trigger: returning_initial_done, source: returning_initial, dest: rotating_scan}
+    - { trigger: marker_found, source:  '*', dest: looking_at_marker }
+    - { trigger: looking_at_marker_done, source: looking_at_marker, dest: moving_beside_marker }
+    - { trigger: moving_beside_marker_done, source: moving_beside_marker, dest: turning_at_angle }
+    - { trigger: turning_at_angle_one, source: turning_at_angle, dest: moving_forward }
+    - { trigger: moving_forward_done, source: moving_forward, dest: turning_at_angle}
+    - { trigger: turning_at_angle_two, source: turning_at_angle, dest: locating_red_marker }
+    - { trigger: locating_red_marker_done, source: locating_red_marker, dest: moving_to_red_marker }
+    - { trigger: moving_to_red_marker_done, source: moving_to_red_marker, dest: done}
+

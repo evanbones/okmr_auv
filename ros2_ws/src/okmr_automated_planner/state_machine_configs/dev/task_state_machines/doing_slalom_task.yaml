@@ -1,5 +1,0 @@
-doing_slalom_task:
-  states:
-    - { }
-  transitions:
-    - { }

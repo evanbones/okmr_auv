@@ -1,13 +1,10 @@
 finding_marker:
   states:
-    - { name: scanning_cw }
-    - { name: scanning_ccw }
-    - { name: setting_altitude }
+    - { name: rotating_scan, config_path: "task_state_machines/rotating_scan.yaml", timeout: 30 }
+    - { name: setting_depth }
 
   transitions:
-    - { trigger: initializing_done, source: initializing, dest: setting_altitude}
-    - { trigger: setting_depth_done, source: setting_altitude, dest: scanning_cw }  
-    - { trigger: scanning_cw_done, source: scanning_cw, dest: scanning_ccw } 
-    - { trigger: scanning_ccw_done, source: scanning_ccw, dest: scanning_cw } # these 2 will loop until timeout
-      # TODO may need to add more robust search logic, will verify after testing at comp
+    - { trigger: marker_detection_on, source: initialized, dest: setting_depth}
+    - { trigger: setting_depth_done, source: setting_depth, dest: rotating_scan }  
+    - { trigger: rotating_scan_done, source: rotating_scan, dest: rotating_scan } # these 2 will loop until timeout
     - { trigger: found_marker, source: '*', dest: done }
