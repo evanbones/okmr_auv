@@ -20,9 +20,7 @@ class OnnxSegmentationDetector(ObjectDetectorNode):
         super().__init__(node_name="onnx_segmentation_detector")
 
         # Declare ONNX-specific parameters
-        self.declare_parameter(
-            "model_path", "gate.onnx"
-        )  # FIXME: idk why this doesnt work as just 'gate.onnx' as liddetector does that and everything works fine
+        self.declare_parameter("model_path", "model.onnx")
         self.declare_parameter("conf_threshold", 0.25)
         self.declare_parameter("mask_threshold", 0.5)
         self.declare_parameter("input_size", 640)
@@ -34,8 +32,8 @@ class OnnxSegmentationDetector(ObjectDetectorNode):
                 "CUDAExecutionProvider",
                 "CPUExecutionProvider",
             ],
-        )  # Tries tensorRT then CUDA then CPU
-        self.declare_parameter("debug", False)
+        )
+        self.declare_parameter("debug", True)
 
         # Get parameters
         self.model_path = (

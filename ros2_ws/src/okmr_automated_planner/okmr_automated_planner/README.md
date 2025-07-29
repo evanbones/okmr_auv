@@ -11,6 +11,7 @@ its features didnt fully match up with our needs
 Reference the existing state machines (ex. state_machines/root_state_machine.py and state_machine_configs/dev/root.yaml) when making new state machines.
 
 1. create a config inside state_machine_configs/dev/task_state_machines
+    - ensure you have a name for the state machine inside the actual config file
 2. create a matching python file inside okmr_automated_planner/state_machines
 3. add your new python state machine class to state_machines/__init__.py
 4. connect the state machine config to the matching python class inside state_machine_factory.py

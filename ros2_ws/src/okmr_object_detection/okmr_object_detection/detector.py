@@ -51,8 +51,7 @@ class ObjectDetectorNode(Node):
         )  # image must be returned in 32FC2 format, [class, confidence]
 
         try:
-            # Convert the empty image to ROS Image message
-            label_msg = self.bridge.cv2_to_imgmsg(label_image, encoding="8UC1")
+            label_msg = self.bridge.cv2_to_imgmsg(label_image, encoding="passthrough")
         except CvBridgeError as e:
             self.get_logger().error(f"Failed to convert empty image: {e}")
             return

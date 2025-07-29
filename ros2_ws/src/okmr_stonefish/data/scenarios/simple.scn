@@ -19,8 +19,8 @@
 
     <include file="objects/gate.scn">
         <arg name="x" value="3.0"/>
-        <arg name="y" value="0.0"/>
-        <arg name="z" value="1.0"/>
+        <arg name="y" value="-1.0"/>
+        <arg name="z" value="2.0"/>
     </include>
 
     <static name="SandyFloor" type="plane">
