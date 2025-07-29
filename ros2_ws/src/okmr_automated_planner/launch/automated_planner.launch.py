@@ -64,6 +64,14 @@ def generate_launch_description():
                 )
             },
             {"root_config": LaunchConfiguration("root_config")},
+            # this loads all params from the specified parameter file, which is why it doesnt have a key : value structure
+            PathJoinSubstitution(
+                [
+                    LaunchConfiguration("config_share_path"),
+                    LaunchConfiguration("config_folder"),
+                    LaunchConfiguration("param_file"),
+                ]
+            ),
         ],
         output="screen",
         ros_arguments=debug_ros_args,

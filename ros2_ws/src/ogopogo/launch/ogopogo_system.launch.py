@@ -97,7 +97,12 @@ def generate_launch_description():
             ),
             IncludeLaunchDescription(full_control_stack_launch),
             IncludeLaunchDescription(full_navigation_stack_launch),
-            IncludeLaunchDescription(full_object_detection_system_launch),
+            IncludeLaunchDescription(
+                full_object_detection_system_launch,
+                launch_arguments={
+                    "debug": "false",
+                }.items(),
+            ),
             IncludeLaunchDescription(
                 full_mapping_system_launch,
                 launch_arguments={

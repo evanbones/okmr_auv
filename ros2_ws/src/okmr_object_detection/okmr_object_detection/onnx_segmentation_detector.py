@@ -20,14 +20,14 @@ class OnnxSegmentationDetector(ObjectDetectorNode):
         super().__init__(node_name="onnx_segmentation_detector")
 
         self.declare_parameter("model_path", "model.onnx")
-        self.declare_parameter("conf_threshold", 0.25)
-        self.declare_parameter("mask_threshold", 0.5)
+        self.declare_parameter("conf_threshold", 0.7)
+        self.declare_parameter("mask_threshold", 0.7)
         self.declare_parameter("input_size", 640)
         self.declare_parameter("top_k", -1)  # -1 means no limit
         self.declare_parameter(
             "providers",
             [
-                # "TensorrtExecutionProvider",
+                "TensorrtExecutionProvider",
                 "CUDAExecutionProvider",
                 "CPUExecutionProvider",
             ],
