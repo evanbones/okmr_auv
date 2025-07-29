@@ -27,7 +27,7 @@ class OnnxSegmentationDetector(ObjectDetectorNode):
         self.declare_parameter(
             "providers",
             [
-                "TensorrtExecutionProvider",
+                # "TensorrtExecutionProvider",
                 "CUDAExecutionProvider",
                 "CPUExecutionProvider",
             ],
@@ -258,11 +258,8 @@ class OnnxSegmentationDetector(ObjectDetectorNode):
                 if depth is not None:
                     self.get_logger().debug(f"DEBUG: Input depth shape: {depth.shape}")
 
-            # Convert RGB to BGR for OpenCV operations
-            bgr_img = cv2.cvtColor(rgb, cv2.COLOR_RGB2BGR)
-
             # Preprocess image
-            inp, scale, pad_x, pad_y = self.preprocess(bgr_img)
+            inp, scale, pad_x, pad_y = self.preprocess(rgb)
 
             if self.debug:
                 self.get_logger().debug(f"DEBUG: Preprocessed input shape: {inp.shape}")
