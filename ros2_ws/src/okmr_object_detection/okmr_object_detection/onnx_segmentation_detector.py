@@ -19,7 +19,6 @@ class OnnxSegmentationDetector(ObjectDetectorNode):
     def __init__(self):
         super().__init__(node_name="onnx_segmentation_detector")
 
-        # Declare ONNX-specific parameters
         self.declare_parameter("model_path", "model.onnx")
         self.declare_parameter("conf_threshold", 0.25)
         self.declare_parameter("mask_threshold", 0.5)
@@ -57,7 +56,6 @@ class OnnxSegmentationDetector(ObjectDetectorNode):
         if self.top_k == -1:
             self.top_k = None
 
-        # Load ONNX model
         self.load_model()
 
         self.get_logger().info(f"ONNX Segmentation Detector initialized")
@@ -348,12 +346,12 @@ class OnnxSegmentationDetector(ObjectDetectorNode):
                 self.get_logger().debug(
                     f"DEBUG: Unique values in mask: {np.unique(label_img)}"
                 )
-
+            """
             if self.debug:
                 display_mask = (label_img > 0).astype(np.uint8) * 255
                 cv2.imshow("ONNX Segmentation Mask", display_mask)
                 cv2.waitKey(1)
-
+            """
             return label_img
 
         except Exception as e:
