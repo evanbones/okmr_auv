@@ -1,10 +1,10 @@
 finding_marker:
   states:
-    - { name: rotating_scan, config_path: "task_state_machines/rotating_scan.yaml", timeout: 30 }
-    - { name: setting_depth }
+    - { name: sideways_scan_marker, config_path: "task_state_machines/sideways_scan.yaml", timeout: 30 }
+    - { name: changing_altitude }
 
   transitions:
-    - { trigger: marker_detection_on, source: initialized, dest: setting_depth}
-    - { trigger: setting_depth_done, source: setting_depth, dest: rotating_scan }  
-    - { trigger: rotating_scan_done, source: rotating_scan, dest: rotating_scan } # these 2 will loop until timeout
+    - { trigger: initializing_done, source: initializing, dest: changing_altitude }
+    - { trigger: changing_altitude_done, source: changing_altitude, dest: sideways_scan_marker }  
+    - { trigger: sideways_scan_marker_done, source: sideways_scan_marker, dest: sideways_scan_marker } # these 2 will loop until timeout
     - { trigger: found_marker, source: '*', dest: done }

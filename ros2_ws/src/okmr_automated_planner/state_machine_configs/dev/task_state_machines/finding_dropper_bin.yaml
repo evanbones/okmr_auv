@@ -6,7 +6,7 @@ states:
 {name: return_to_initial}
 
 transitions:
-    - { trigger: initialized, source: initializing_done, dest: sideways_scan} # this state is used to align the marker
+    - { trigger: initializing_done, source: initializing, dest: sideways_scan} # this state is used to align the marker
     - { trigger: sideways_scan_done, source: sideways_scan, dest: changing_height}
     - { trigger: changing_height_done, source: changing_height, dest: return_to_initial}
     - { trigger: return_initial_done, source: return_to_initial, dest: sideways_scan }

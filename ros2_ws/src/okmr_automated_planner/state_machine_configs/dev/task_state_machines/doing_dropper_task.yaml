@@ -1,19 +1,18 @@
 doing_dropper_task:
 
 states:
-{name: finding_dropper_bin, config_path: "task_state_machines/finding_dropper_bin.yaml", timeout: 30 }
-{name: looking_at_bin}
-{name: mooving_toward_bin}
-{name: set_height_over_bin}
-{name: identifying_shark}
-{name: aligning_shark}
-{name: actuating_hand}
+  {name: finding_dropper_bin, config_path: "task_state_machines/finding_dropper_bin.yaml", timeout: 30 }
+  {name: moving_toward_bin}
+  {name: set_height_over_bin}
+  {name: identifying_shark}
+  {name: aligning_shark}
+  {name: actuating_hand}
 
 
 tranistions:
-- {trigger, bin_found, source finding_dropper_bin, dest: looking_at_bin}
-- {trigger: looking_at_bin_done, source: looking_at_bin, dest: mooving_toward_bin}
-- {trigger: mooving_toward_bin_done, source: mooving_toward_bin, dest: set_height_over_bin}
+- {trigger: initializing_done, source: initializing, dest: finding_dropper_bin}
+- {trigger: bin_found, source: finding_dropper_bin, dest: moving_toward_bin}
+- {trigger: moving_toward_bin_done, source: moving_toward_bin, dest: set_height_over_bin}
 - {trigger: set_height_over_bin_done, source: set_height_over_bin, dest: idle}
 - {trigger: switch_models_shark source: idle, dest: identifying_shark}
 - {trigger: identifying_shark_done, source: identifying_shark, dest: aligning_shark}

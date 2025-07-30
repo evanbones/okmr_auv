@@ -1,12 +1,11 @@
 sideways_scan:
 states:
 {name: rotating_scan, config_path: "task_state_machines/rotating_scan.yaml", timeout: 30}
-{name: return_initial}
+{name: return_to_initial}
 {name: moving_sideways}
 
 transitions:
-    - { trigger: initialized, source: initializing_done, dest: rotating_scan} # this state is used to align the marker
-    - { trigger: rotating_scan_done, source: rotating_scan, dest: return_initial}
-    - { trigger: return_initial_done, source: return_initial, dest: moving_sideways}
+    - { trigger: initializing_done, source: initializing, dest: rotating_scan}
+    - { trigger: rotating_scan_done, source: rotating_scan, dest: return_to_initial}
+    - { trigger: return_to_initial_done, source: return_to_initial, dest: moving_sideways}
     - { trigger: moving_sideways_done, source: moving_sideways, dest: rotating_scan }
-     # this state is used to align the marker

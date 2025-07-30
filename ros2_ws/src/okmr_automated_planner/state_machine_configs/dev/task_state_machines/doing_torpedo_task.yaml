@@ -12,6 +12,7 @@ states:
 {name: actuate_torpedo_two}
 
 transitions:
+- {trigger: initializing_done, source: initializing, dest: finding_torpedo_board}
 - {trigger: board_found, source: finding_torpedo_board, dest: looking_at_board}
 - {trigger: looking_at_board_done, source: looking_at_board, dest: moving_toward_board}
 - {trigger: at_distance_from_board source: moving_toward_board, dest: aligning_with_board}
