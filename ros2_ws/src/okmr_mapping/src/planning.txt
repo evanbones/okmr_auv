@@ -4,9 +4,6 @@ use pcl for projection and segmentation + plane estimation?
 https://pcl.readthedocs.io/projects/tutorials/en/master/walkthrough.html#walkthrough
 
 
-4. test applying masks
-    - test with rectangle
-
 5. test getting average point
     - create subscriber node that gets average pose
     - octotree filter it for reduced size?
