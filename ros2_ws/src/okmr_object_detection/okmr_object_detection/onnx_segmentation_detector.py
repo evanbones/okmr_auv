@@ -1,9 +1,9 @@
+import onnxruntime as ort
 import okmr_object_detection.detector
 from okmr_object_detection.detector import ObjectDetectorNode
 import rclpy
 import numpy as np
 import cv2
-import onnxruntime as ort
 import os
 from typing import Tuple, Optional
 
@@ -27,9 +27,9 @@ class OnnxSegmentationDetector(ObjectDetectorNode):
         self.declare_parameter(
             "providers",
             [
-                "TensorrtExecutionProvider",
+                # "TensorrtExecutionProvider",
                 "CUDAExecutionProvider",
-                "CPUExecutionProvider",
+                # "CPUExecutionProvider",
             ],
         )
         self.declare_parameter("debug", True)
@@ -58,6 +58,7 @@ class OnnxSegmentationDetector(ObjectDetectorNode):
 
         self.load_model()
 
+        self.get_logger().info(f"providers: {self.providers}")
         self.get_logger().info(f"ONNX Segmentation Detector initialized")
         self.get_logger().info(f"Model: {self.model_path}")
         self.get_logger().info(f"Confidence threshold: {self.conf_threshold}")
@@ -265,6 +266,9 @@ class OnnxSegmentationDetector(ObjectDetectorNode):
                 self.get_logger().debug(f"DEBUG: Preprocessed input shape: {inp.shape}")
                 self.get_logger().debug(f"DEBUG: Scale factor: {scale}")
                 self.get_logger().debug(f"DEBUG: Padding: x={pad_x}, y={pad_y}")
+                self.get_logger().debug(
+                    f"Providers being used: {self.session.get_providers()}"
+                )
 
             # Run ONNX inference
             outs = self.session.run(None, {self.input_name: inp})
@@ -355,6 +359,9 @@ class OnnxSegmentationDetector(ObjectDetectorNode):
             self.get_logger().error(f"Error during inference: {e}")
             # Return empty mask on error
             return np.zeros((rgb.shape[0], rgb.shape[1]), dtype=np.float32)
+
+
+# FIXME make the mask return in 32SC1 format, instead of 32FC1
 
 
 def main(args=None):
