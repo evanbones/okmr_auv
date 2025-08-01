@@ -39,6 +39,7 @@ struct DetectedObject {
     void update_position_estimate (Eigen::Vector3f new_position) {
         //  update position esitimate using exponential
         //  weighted average / complemntary filter
+        //  see okmr_navigation/src/dead_reckoning.cpp for examples
     }
 };
 
