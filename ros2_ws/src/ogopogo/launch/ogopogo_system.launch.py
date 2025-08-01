@@ -100,7 +100,7 @@ def generate_launch_description():
             IncludeLaunchDescription(
                 full_object_detection_system_launch,
                 launch_arguments={
-                    "debug": "false",
+                    "debug": "true",
                 }.items(),
             ),
             IncludeLaunchDescription(
