@@ -5,7 +5,7 @@ It will round to the nearest voltage interval which may cause minor inaccuracies
 */
 
 #include "rclcpp/rclcpp.hpp"
-#include "okmr_msgs/msg/motor_throttle.hpp"
+#include "okmr_msgs/msg/motor_thrust.hpp"
 #include "thrust_to_pwm.h"
 #include <vector>
 #include <cmath>
@@ -14,7 +14,7 @@ It will round to the nearest voltage interval which may cause minor inaccuracies
 class VoltageCheck : public rclcpp::Node {
 public:
     VoltageCheck() : Node("voltage_check") {
-        voltage_sub_ = this->create_subscription<okmr_msgs::msg::MotorThrottle>(
+        voltage_sub_ = this->create_subscription<okmr_msgs::msg::MotorThrust>(
             "/voltage", 10,
             std::bind(&VoltageCheck::voltage_callback, this, std::placeholders::_1)
         );
@@ -39,8 +39,8 @@ private:
         return nearest;
     }
 
-    void voltage_callback(const okmr_msgs::msg::MotorThrottle::SharedPtr msg) {
-        double voltage = msg->data;
+    void voltage_callback(const okmr_msgs::msg::MotorThrust::SharedPtr msg) {
+        double voltage = msg->thrust[0];
         int rounded_voltage = roundToNearestAllowedVoltage(voltage);
         try {
             updateThrustTableIfVoltageChanged(static_cast<double>(rounded_voltage));
@@ -49,7 +49,7 @@ private:
         }
     }
 
-    rclcpp::Subscription<okmr_msgs::msg::MotorThrottle>::SharedPtr voltage_sub_;
+    rclcpp::Subscription<okmr_msgs::msg::MotorThrust>::SharedPtr voltage_sub_;
 };
 
 int main(int argc, char **argv) {
