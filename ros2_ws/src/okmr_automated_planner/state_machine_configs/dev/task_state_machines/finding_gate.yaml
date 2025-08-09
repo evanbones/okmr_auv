@@ -2,19 +2,13 @@ finding_gate:
   states:
     - { name: scanning_cw }
     - { name: scanning_ccw }
-    - { name: initialize_looking_at_gate }
-    - { name: looking_at_gate }
-    - { name: validating_gate_found }
-    - { name: integrating_gate_data }
+    - { name: following_detection }
 
   transitions:
-    - { trigger: exit_initialized, source: initialized, dest: scanning_cw }
+    - { trigger: initializing_done, source: initializing, dest: scanning_cw }
     - { trigger: scanning_cw_done, source: scanning_cw, dest: scanning_ccw }
     - { trigger: scanning_ccw_done, source: scanning_ccw, dest: scanning_cw }
-    - { trigger: look_at_gate, source: '*', dest: initialize_looking_at_gate }
-    - { trigger: initialize_looking_at_gate_done, source: initialize_looking_at_gate, dest: looking_at_gate }
-    - { trigger: looking_at_gate_done, source: looking_at_gate, dest: validating_gate_found }
-    - { trigger: resuming_scanning_cw, source: validating_gate_found, dest: scanning_cw }
-    - { trigger: resuming_scanning_ccw, source: validating_gate_found, dest: scanning_ccw }
-    - { trigger: gate_found, source: validating_gate_found, dest: integrating_gate_data }
-    - { trigger: integrating_gate_data_done, source: integrating_gate_data, dest: done }
+    - { trigger: object_detected, source: '*', dest: following_detection }
+    # on following_detection completed, need a function to determine if false or true positive
+    - { trigger: object_detection_false_positive, source:  following_detection, dest: scanning_cw }
+    - { trigger: object_detection_true_positive, source: following_detection, dest: done }

@@ -12,31 +12,33 @@ find_package(rclcpp REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
+find_package(tf2 REQUIRED)
 find_package(tf2_msgs REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
+find_package(tf2_ros REQUIRED)
 find_package(okmr_msgs REQUIRED)
 
 add_executable(dead_reckoning
   src/dead_reckoning.cpp)
 
-add_executable(motion_planner
-  src/motion_planner.cpp)
-
 add_executable(relative_pose_target_server
   src/relative_pose_target_server.cpp)
 
-ament_target_dependencies(relative_pose_target_server rclcpp std_msgs okmr_msgs tf2 tf2_geometry_msgs)
-ament_target_dependencies(dead_reckoning rclcpp std_msgs okmr_msgs tf2 tf2_geometry_msgs)
-ament_target_dependencies(motion_planner rclcpp std_msgs sensor_msgs okmr_msgs geometry_msgs tf2_geometry_msgs tf2)
+add_executable(velocity_target_server
+  src/velocity_target_server.cpp)
 
-target_include_directories(motion_planner PUBLIC include)
+ament_target_dependencies(relative_pose_target_server rclcpp std_msgs okmr_msgs tf2 tf2_geometry_msgs geometry_msgs)
+
+ament_target_dependencies(velocity_target_server rclcpp std_msgs okmr_msgs geometry_msgs)
+
+ament_target_dependencies(dead_reckoning rclcpp std_msgs okmr_msgs tf2 tf2_geometry_msgs tf2_ros geometry_msgs sensor_msgs)
 
 ament_python_install_package(${PROJECT_NAME})
 
 install(TARGETS
     dead_reckoning
-    motion_planner
     relative_pose_target_server
+    velocity_target_server
     DESTINATION lib/${PROJECT_NAME})
 
 install(DIRECTORY

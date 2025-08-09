@@ -7,13 +7,14 @@ from okmr_navigation.handlers.movement_execution_common import (
     execute_movement_with_monitoring, execute_test_movement_common,
     call_distance_service, is_translation_close_enough, is_orientation_close_enough
 )
-import rclpy
-import time
-import math
+from okmr_navigation.handlers.set_control_mode import set_control_mode
+from okmr_msgs.msg import ControlMode
 
 
 def handle_move_absolute(goal_handle):
     """Execute absolute movement using provided goal pose"""
+    set_control_mode(ControlMode.POSE)
+
     return execute_movement_with_monitoring(
         goal_handle,
         _publish_pose_goal,

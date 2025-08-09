@@ -2,11 +2,12 @@ finding_marker:
   states:
     - { name: scanning_cw }
     - { name: scanning_ccw }
-    - { name: setting_depth }
+    - { name: setting_altitude }
 
   transitions:
-    - { trigger: marker_detection_on, source: initialized, dest: setting_depth}
-    - { trigger: setting_depth_done, source: setting_depth, dest: scanning_cw }  
+    - { trigger: initializing_done, source: initializing, dest: setting_altitude}
+    - { trigger: setting_depth_done, source: setting_altitude, dest: scanning_cw }  
     - { trigger: scanning_cw_done, source: scanning_cw, dest: scanning_ccw } 
     - { trigger: scanning_ccw_done, source: scanning_ccw, dest: scanning_cw } # these 2 will loop until timeout
+      # TODO may need to add more robust search logic, will verify after testing at comp
     - { trigger: found_marker, source: '*', dest: done }

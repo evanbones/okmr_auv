@@ -5,6 +5,7 @@ from okmr_msgs.action import Movement
 from okmr_msgs.srv import DistanceFromGoal
 from okmr_navigation.navigator_action_server import NavigatorActionServer
 from okmr_navigation.handlers.freeze_handler import execute_freeze
+
 import time
 
 
@@ -28,6 +29,9 @@ def execute_movement_with_monitoring(goal_handle, publish_goal_func, service_nam
     # Monitor execution with feedback
     start_time = node.get_clock().now()
     max_time = goal_handle.request.command_msg.timeout_sec
+    if max_time == 0.0:
+        max_time = 30.0
+        #in case you forget to send a time limit!
     
     while True:
         if not goal_handle.is_active:
@@ -51,7 +55,7 @@ def execute_movement_with_monitoring(goal_handle, publish_goal_func, service_nam
         # Check if we've reached the goal via distance service
         goal_distances = call_distance_service(service_name)
         
-        if goal_distances is not None and is_goal_reached(goal_distances, goal_handle):
+        if goal_distances is not None and is_goal_reached(goal_distances, goal_handle) and feedback_msg.time_elapsed > 0.1:
             # Movement completed
             execute_freeze()#used turning back into pose mode
             goal_handle.succeed()
@@ -118,7 +122,7 @@ def call_distance_service(service_name):
         
         # Make the blocking service call
         request = DistanceFromGoal.Request()
-        response = client.call(request, timeout_sec=2.0)
+        response = client.call(request)
         
         # Return tuple of translation and orientation differences
         if response is not None:
@@ -132,11 +136,6 @@ def call_distance_service(service_name):
         return None
 
 
-def normalize_angle_deg(angle):
-    """Normalize angle to [-180, 180] degrees"""
-    return (angle + 180) % 360 - 180
-
-
 def is_translation_close_enough(translation_vector, threshold=0.1):
     """Check if translation distance is within threshold"""
     distance = (translation_vector.x**2 + translation_vector.y**2 + translation_vector.z**2)**0.5
@@ -145,9 +144,9 @@ def is_translation_close_enough(translation_vector, threshold=0.1):
 
 def is_orientation_close_enough(rpy_diff, threshold=5.0):
     """Check if orientation difference is within threshold (degrees)"""
-    roll = normalize_angle_deg(rpy_diff.x)
-    pitch = normalize_angle_deg(rpy_diff.y)
-    yaw = normalize_angle_deg(rpy_diff.z)
+    roll = rpy_diff.x
+    pitch = rpy_diff.y
+    yaw = rpy_diff.z
     return abs(roll) < threshold and abs(pitch) < threshold and abs(yaw) < threshold
 
 
@@ -163,8 +162,9 @@ def is_goal_reached(goal_distances, goal_handle):
     command_msg = goal_handle.request.command_msg
     
     # Both pose and velocity movements use the same criteria
-    radius = command_msg.radius_of_acceptance
-    angle_threshold = command_msg.angle_threshold
+    radius = command_msg.radius_of_acceptance if command_msg.radius_of_acceptance != 0.0 else 0.2
+    angle_threshold = command_msg.angle_threshold if command_msg.angle_threshold != 0.0 else 5.0
+    #hardcoded default values for radius of acceptance, please dont use outside of testing
     
     return (is_translation_close_enough(translation_diff, radius) and 
             is_orientation_close_enough(orientation_diff, angle_threshold))

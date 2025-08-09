@@ -1,16 +1,14 @@
 from okmr_automated_planner.base_state_machine import BaseStateMachine
 
+
 class DoingGateTaskStateMachine(BaseStateMachine):
 
     def on_enter_initializing(self):
-        # ? what to do on init ?
+        # enable shark detection
         pass
 
-    def on_enter_initialized(self):
-        # 
-        pass
+    # TODO need to add all on_enter_* methods
 
     def on_completion(self):
         # disable object detection
         pass
-

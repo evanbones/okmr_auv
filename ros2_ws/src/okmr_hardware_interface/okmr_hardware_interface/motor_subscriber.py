@@ -9,19 +9,23 @@ class ESP32BridgeNode(Node):
     def __init__(self):
         super().__init__('esp32_bridge_node')
 
-        #Set up subscription
+        self.declare_parameter('serial_port', '/dev/ttyACM0')
+        self.declare_parameter('baud_rate', 115200)
+
+        serial_port = self.get_parameter('serial_port').get_parameter_value().string_value
+        baud_rate = self.get_parameter('baud_rate').get_parameter_value().integer_value
+
         self.subscription = self.create_subscription(
             MotorThrottle,
-            'motor_throttle',  # Match this with your publisher topic name
+            'motor_throttle',
             self.motor_callback,
             10
         )
 
-        #Set up serial communication 
         try:
-            self.ser = serial.Serial('/dev/ttyACM0', 115200, timeout=1)
+            self.ser = serial.Serial(serial_port, baud_rate, timeout=1)
             self.seaport = sp.SeaPort(self.ser)
-            self.get_logger().info("Serial connection to ESP32 established.")
+            self.get_logger().info(f"Serial connection to ESP32 established on {serial_port} at {baud_rate} baud.")
         except Exception as e:
             self.get_logger().error(f"Failed to connect to ESP32: {e}")
             self.ser = None
@@ -32,16 +36,15 @@ class ESP32BridgeNode(Node):
             self.get_logger().warn("No serial connection. Message not sent.")
             return
 
-        # data to send to ESP32
         data = {
-            "fli": msg.fli,
-            "fri": msg.fri,
-            "bli": msg.bli,
-            "bri": msg.bri,
-            "flo": msg.flo,
-            "fro": msg.fro,
-            "blo": msg.blo,
-            "bro": msg.bro
+            "0": msg.throttle[0],
+            "1": msg.throttle[1],
+            "2": msg.throttle[2],
+            "3": msg.throttle[3],
+            "4": msg.throttle[4],
+            "5": msg.throttle[5],
+            "6": msg.throttle[6],
+            "7": msg.throttle[7]
         }
 
         

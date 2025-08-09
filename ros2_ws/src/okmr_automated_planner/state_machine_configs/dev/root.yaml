@@ -1,23 +1,29 @@
 root:
   states:
     - { name: initializing, timeout: 30} #if initialization is taking too long we should abort
+    - { name: waiting_for_mission_start} 
+    - { name: enabling_subsystems}
     - { name: sinking, timeout: 30}
     - { name: finding_gate, config_path: "task_state_machines/finding_gate.yaml" }
-      #- { name: passing_gate, config_path: "task_configs/passing_gate.yaml", timeout: 60 }
-    - { name: passing_gate, timeout: 60 }
-      #- { name: finding_marker, config_path: "task_configs/finding_marker.yaml", timeout: 30}
-    - { name: finding_marker, timeout: 30}
-    - { name: arbitrating_task, timeout: 15}
+    - { name: doing_gate_task, config_path: "task_state_machines/doing_gate_task.yaml", timeout: 90 }
+    - { name: finding_slalom_marker, config_path: "task_state_machines/finding_marker.yaml", timeout: 60}
+    #- { name: doing_slalom_task, config_path: "task_state_machines/doing_slalom_task.yaml", timeout: 90}
+    #- { name: finding_dropper_marker, config_path: "task_state_machines/finding_marker.yaml", timeout: 60}
+    #- { name: doing_dropper_task, config_path: "task_state_machines/doing_dropper_task.yaml", timeout: 90}
     - { name: surfacing }
-    - { name: surfaced }
 
   transitions:
-    - { trigger: mission_start_received, source: initialized, dest: sinking }
+    - { trigger: initializing_done, source: initializing, dest: waiting_for_mission_start}
+    - { trigger: mission_start_received, source: waiting_for_mission_start, dest: enabling_subsystems }
+    - { trigger: enabling_subsystems_done, source: enabling_subsystems, dest: sinking }
     - { trigger: sinking_done, source: sinking, dest: finding_gate }
-    - { trigger: finding_gate_done, source: finding_gate, dest: passing_gate }
-    - { trigger: passing_gate_done, source: passing_gate, dest: finding_marker }
-    - { trigger: finding_marker_done, source: finding_marker, dest: arbitrating_task }
-    - { trigger: arbitrating_task_done, source: arbitrating_task, dest: surfacing } #TODO: update this line to go into next tasks
-    - { trigger: surfacing_done, source: surfacing, dest: uninitialized }
-    - { trigger: abort, source: '*', dest:  aborted}
+    - { trigger: finding_gate_done, source: finding_gate, dest: doing_gate_task }
+    - { trigger: doing_gate_task_done, source: doing_gate_task, dest: finding_slalom_marker }
+    #- { trigger: finding_slalom_marker_done, source: finding_slalom_marker, dest:  doing_slalom_task} 
+    #- { trigger: doing_slalom_task_done, source: doing_slalom_task, dest:  finding_dropper_marker} 
+    #- { trigger: finding_dropper_marker_done, source: finding_dropper_marker, dest:  doing_dropper_task}
+    #- { trigger: doing_dropper_task_done, source: doing_dropper_task, dest:  surfacing} 
+      # hopefully will add doing_torpedo, or at the very least surface inside the octogon
+      # feasibility TBD at comp
+    - { trigger: surfacing_done, source: surfacing, dest: waiting_for_mission_start }
 

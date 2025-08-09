@@ -1,0 +1,25 @@
+Realsense2 reference: https://github.com/IntelRealSense/realsense-ros?tab=readme-ov-file#published-topics
+
+use pcl for projection and segmentation + plane estimation?
+https://pcl.readthedocs.io/projects/tutorials/en/master/walkthrough.html#walkthrough
+
+
+4. test applying masks
+    - test with rectangle
+
+5. test getting average point
+    - create subscriber node that gets average pose
+    - octotree filter it for reduced size?
+    - keep a cached list of pointclouds
+        - linked list?
+        - size defined by ros2 parameter
+
+
+7. create proper robot state publisher?
+    - publish TransformStamped alongside /pose from dead reckoning node?
+
+8. visualize pointcloud in rviz in base_link frame?
+
+future work: 
+implement the better visualizer if needed
+https://pcl.readthedocs.io/projects/tutorials/en/master/pcl_visualizer.html#pcl-visualizer
