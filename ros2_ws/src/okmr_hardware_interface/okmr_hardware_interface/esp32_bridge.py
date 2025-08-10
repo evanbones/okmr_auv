@@ -25,7 +25,7 @@ class ESP32BridgeNode(Node):
             MotorThrottle, "motor_throttle", self.motor_callback, 10
         )
 
-        self.battery_voltage_pub = self.create_subscription(
+        self.battery_voltage_pub = self.create_publisher(
             BatteryVoltage, "battery_voltage", 10
         )
 
