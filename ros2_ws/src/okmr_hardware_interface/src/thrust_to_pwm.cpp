@@ -43,7 +43,7 @@ class ThrustToPwmNode : public rclcpp::Node {
    private:
     // Data structure: voltage -> (thrust -> throttle)
     std::map<float, std::map<float, float>> thrust_curve_map_;
-    float current_voltage_ = 12.0f;  // Default voltage
+    float current_voltage_ = 16.0f;  // Default voltage
 
     rclcpp::Subscription<okmr_msgs::msg::MotorThrust>::SharedPtr motor_thrust_sub_;
     rclcpp::Subscription<okmr_msgs::msg::BatteryVoltage>::SharedPtr voltage_sub_;
