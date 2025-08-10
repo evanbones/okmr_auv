@@ -11,7 +11,7 @@ class ESP32BridgeNode(Node):
     def __init__(self):
         super().__init__("esp32_bridge")
 
-        self.declare_parameter("serial_port", "/dev/ttyACM0")
+        self.declare_parameter("serial_port", "/dev/ttyUSB0")
         self.declare_parameter("baud_rate", 115200)
 
         serial_port = (
