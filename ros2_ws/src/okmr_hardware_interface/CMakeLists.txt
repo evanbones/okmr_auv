@@ -11,23 +11,21 @@ find_package(ament_cmake_python REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(okmr_msgs REQUIRED)
 
-# Include directories
-include_directories(okmr_hardware_interface/include)
+include_directories(include)
 
-# Create thrust_to_pwm library
 add_library(thrust_to_pwm
-  okmr_hardware_interface/src/thrust_to_pwm.cpp
+  src/thrust_to_pwm.cpp
 )
 ament_target_dependencies(thrust_to_pwm)
 
-# Create voltage_check executable
 add_executable(voltage_check_node
-  okmr_hardware_interface/src/voltage_check.cpp
+  src/voltage_check.cpp
 )
 ament_target_dependencies(voltage_check_node
   rclcpp
   okmr_msgs
 )
+
 target_link_libraries(voltage_check_node thrust_to_pwm)
 
 # Install Python package
@@ -48,22 +46,18 @@ install(TARGETS
   RUNTIME DESTINATION bin
 )
 
-# Install header files
-install(DIRECTORY okmr_hardware_interface/include/
+install(DIRECTORY include/
   DESTINATION include
 )
 
-# Install data files (CSV tables)
-install(DIRECTORY okmr_hardware_interface/tables/
+install(DIRECTORY tables/
   DESTINATION share/${PROJECT_NAME}/tables
 )
 
-# Install launch files
 install(DIRECTORY launch/
   DESTINATION share/${PROJECT_NAME}/launch
 )
 
-# Export libraries
 ament_export_targets(export_${PROJECT_NAME} HAS_LIBRARY_TARGET)
 ament_export_dependencies(rclcpp okmr_msgs)
 
