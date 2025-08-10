@@ -21,8 +21,6 @@ ament_target_dependencies(thrust_to_pwm_node
   okmr_msgs
 )
 
-
-
 # Install Python package
 ament_python_install_package(${PROJECT_NAME})
 
@@ -32,6 +30,23 @@ install(TARGETS
   DESTINATION lib/${PROJECT_NAME}
 )
 
+install(PROGRAMS
+    ${PROJECT_NAME}/dvl_driver.py
+    DESTINATION lib/${PROJECT_NAME}
+    RENAME dvl_driver
+)
+
+install(PROGRAMS
+    ${PROJECT_NAME}/esp32_bridge.py
+    DESTINATION lib/${PROJECT_NAME}
+    RENAME esp32_bridge
+)
+
+install(PROGRAMS
+    ${PROJECT_NAME}/temp_sensor.py
+    DESTINATION lib/${PROJECT_NAME}
+    RENAME temp_sensor
+)
 
 install(DIRECTORY include/
   DESTINATION include
