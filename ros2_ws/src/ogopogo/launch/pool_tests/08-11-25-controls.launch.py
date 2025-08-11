@@ -42,11 +42,9 @@ def generate_launch_description():
             IncludeLaunchDescription(dead_reckoning_launch),
             IncludeLaunchDescription(
                 rs_multi_camera_launch,
-                condition=UnlessCondition(LaunchConfiguration("sim_mode")),
             ),
             IncludeLaunchDescription(
                 ogopogo_hardware_interface_launch,
-                condition=UnlessCondition(LaunchConfiguration("sim_mode")),
             ),
         ]
     )
