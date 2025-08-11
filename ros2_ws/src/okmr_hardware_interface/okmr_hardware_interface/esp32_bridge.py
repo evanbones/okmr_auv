@@ -46,6 +46,7 @@ class ESP32BridgeNode(Node):
             self.seaport.subscribe(
                 7, lambda data: self.sensor_board_digital_reading_callback(data)
             )
+            self.seaport.start()
 
         except Exception as e:
             self.get_logger().error(f"Failed to connect to ESP32: {e}")
@@ -81,7 +82,7 @@ class ESP32BridgeNode(Node):
 
         try:
             self.seaport.publish(1, data)
-            self.get_logger().debug(f"Sent to ESP32: {data}")
+            self.get_logger().info(f"Sent to ESP32: {data}")
         except Exception as e:
             self.get_logger().error(f"Failed to send to ESP32: {e}")
 
