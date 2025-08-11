@@ -5,6 +5,7 @@ import rclpy
 import numpy as np
 import cv2
 import os
+import threading
 from typing import Tuple, Optional
 from okmr_msgs.srv import ChangeModel
 
@@ -85,6 +86,9 @@ class OnnxSegmentationDetector(ObjectDetectorNode):
             self.change_model_callback
         )
 
+        
+        self.model_lock = threading.Lock()
+
         self.load_model()
 
         self.get_logger().info(f"providers: {self.providers}")
@@ -100,46 +104,47 @@ class OnnxSegmentationDetector(ObjectDetectorNode):
 
     def change_model_callback(self, request, response):
         """Service callback to change the model file"""
-        try:
-            if request.model_id not in self.model_mapping:
-                response.success = False
-                response.message = f"Invalid model ID: {request.model_id}. Valid IDs are: {list(self.model_mapping.keys())}"
-                return response
-
-            # Get the model filename
-            model_filename = self.model_mapping[request.model_id]
-            
-            # Construct the full path to the installed models directory
-            from ament_index_python.packages import get_package_share_directory
-            package_share = get_package_share_directory('okmr_object_detection')
-            new_model_path = os.path.join(package_share, 'models', model_filename)
-            
-            # Check if the model file exists
-            if not os.path.isfile(new_model_path):
-                response.success = False
-                response.message = f"Model file not found: {new_model_path}"
-                return response
-
-            # Update the model path and reload
-            old_model = self.model_path
-            self.model_path = new_model_path
-            
+        with self.model_lock:
             try:
-                self.load_model()
-                response.success = True
-                response.message = f"Successfully changed model from {os.path.basename(old_model)} to {model_filename}"
-                self.get_logger().info(f"Model changed to: {self.model_path}")
+                if request.model_id not in self.model_mapping:
+                    response.success = False
+                    response.message = f"Invalid model ID: {request.model_id}. Valid IDs are: {list(self.model_mapping.keys())}"
+                    return response
+
+                # Get the model filename
+                model_filename = self.model_mapping[request.model_id]
                 
+                # Construct the full path to the installed models directory
+                from ament_index_python.packages import get_package_share_directory
+                package_share = get_package_share_directory('okmr_object_detection')
+                new_model_path = os.path.join(package_share, 'models', model_filename)
+                
+                # Check if the model file exists
+                if not os.path.isfile(new_model_path):
+                    response.success = False
+                    response.message = f"Model file not found: {new_model_path}"
+                    return response
+
+                # Update the model path and reload
+                old_model = self.model_path
+                self.model_path = new_model_path
+                
+                try:
+                    self.load_model()
+                    response.success = True
+                    response.message = f"Successfully changed model from {os.path.basename(old_model)} to {model_filename}"
+                    self.get_logger().info(f"Model changed to: {self.model_path}")
+                    
+                except Exception as e:
+                    # Revert to old model if loading fails
+                    self.model_path = old_model
+                    self.load_model()
+                    response.success = False
+                    response.message = f"Failed to load new model, reverted to previous: {str(e)}"
+                    
             except Exception as e:
-                # Revert to old model if loading fails
-                self.model_path = old_model
-                self.load_model()
                 response.success = False
-                response.message = f"Failed to load new model, reverted to previous: {str(e)}"
-                
-        except Exception as e:
-            response.success = False
-            response.message = f"Service error: {str(e)}"
+                response.message = f"Service error: {str(e)}"
             
         return response
 
@@ -344,8 +349,9 @@ class OnnxSegmentationDetector(ObjectDetectorNode):
                     f"Providers being used: {self.session.get_providers()}"
                 )
 
-            # Run ONNX inference
-            outs = self.session.run(None, {self.input_name: inp})
+            # Run ONNX inference 
+            with self.model_lock:
+                outs = self.session.run(None, {self.input_name: inp})
 
             if self.mode_2out:
                 # Handle 2-output model (raw predictions + proto)
