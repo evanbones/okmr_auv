@@ -56,13 +56,13 @@ class ESP32BridgeNode(Node):
             self.seaport = None
 
     def environment_sensor_callback(self, data: dict):
-        self.get_logger().info(f"Got environmental data: {dict}")
+        self.get_logger().info(f"Got environmental data: {data}")
 
     def sensor_board_analog_reading_callback(self, data: dict):
-        self.get_logger().info(f"Got analog data: {dict}")
+        self.get_logger().info(f"Got analog data: {data}")
 
     def sensor_board_digital_reading_callback(self, data: dict):
-        self.get_logger().info(f"Got digital data: {dict}")
+        self.get_logger().info(f"Got digital data: {data}")
 
     def motor_callback(self, msg: MotorThrottle):
         if not self.seaport:
