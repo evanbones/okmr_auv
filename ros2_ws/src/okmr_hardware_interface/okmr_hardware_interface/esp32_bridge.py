@@ -84,7 +84,7 @@ class ESP32BridgeNode(Node):
         }
         """
 
-        data = {"7": 1900}
+        data = {"7": 1800}
 
         try:
             self.seaport.publish(1, data)
