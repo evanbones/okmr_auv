@@ -6,6 +6,7 @@ import numpy as np
 import cv2
 import os
 from typing import Tuple, Optional
+from okmr_msgs.srv import ChangeModel
 
 
 def sigmoid(x):
@@ -56,6 +57,25 @@ class OnnxSegmentationDetector(ObjectDetectorNode):
         if self.top_k == -1:
             self.top_k = None
 
+        # Model mapping
+        self.model_mapping = {
+            ChangeModel.Request.GATE: "gate.onnx",
+            ChangeModel.Request.SHARK: "shark.onnx",
+            ChangeModel.Request.SWORDFISH: "swordfish.onnx",
+            ChangeModel.Request.PATH_MARKER: "path_marker.onnx",
+            ChangeModel.Request.SLALOM_CENTER: "slalom_center.onnx",
+            ChangeModel.Request.SLALOM_OUTER: "slalom_outer.onnx",
+            ChangeModel.Request.DROPPER_BIN: "dropper_bin.onnx",
+            ChangeModel.Request.TORPEDO_BOARD: "torpedo_board.onnx"
+        }
+
+        # Create service
+        self.change_model_srv = self.create_service(
+            ChangeModel, 
+            'change_model', 
+            self.change_model_callback
+        )
+
         self.load_model()
 
         self.get_logger().info(f"providers: {self.providers}")
@@ -68,6 +88,49 @@ class OnnxSegmentationDetector(ObjectDetectorNode):
         """Destructor to clean up OpenCV windows."""
         if self.debug:
             cv2.destroyAllWindows()
+
+    def change_model_callback(self, request, response):
+        """Service callback to change the model file"""
+        try:
+            if request.model_id not in self.model_mapping:
+                response.success = False
+                response.message = f"Invalid model ID: {request.model_id}. Valid IDs are: {list(self.model_mapping.keys())}"
+                return response
+
+            # Get the model filename
+            model_filename = self.model_mapping[request.model_id]
+            
+            # Construct the full path to the installed models directory
+            new_model_path = os.path.join("share", "okmr_object_detection", "models", model_filename)
+            
+            # Check if the model file exists
+            if not os.path.isfile(new_model_path):
+                response.success = False
+                response.message = f"Model file not found: {new_model_path}"
+                return response
+
+            # Update the model path and reload
+            old_model = self.model_path
+            self.model_path = new_model_path
+            
+            try:
+                self.load_model()
+                response.success = True
+                response.message = f"Successfully changed model from {os.path.basename(old_model)} to {model_filename}"
+                self.get_logger().info(f"Model changed to: {self.model_path}")
+                
+            except Exception as e:
+                # Revert to old model if loading fails
+                self.model_path = old_model
+                self.load_model()
+                response.success = False
+                response.message = f"Failed to load new model, reverted to previous: {str(e)}"
+                
+        except Exception as e:
+            response.success = False
+            response.message = f"Service error: {str(e)}"
+            
+        return response
 
     def load_model(self):
         """Load the ONNX model"""
