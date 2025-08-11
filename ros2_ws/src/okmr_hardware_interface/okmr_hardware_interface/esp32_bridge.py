@@ -48,6 +48,7 @@ class ESP32BridgeNode(Node):
             self.seaport.subscribe(
                 7, lambda data: self.sensor_board_digital_reading_callback(data)
             )
+            self.seaport.subscribe(254, lambda data: self.pong_callback(data))
             self.seaport.start()
 
         except Exception as e:
@@ -56,6 +57,9 @@ class ESP32BridgeNode(Node):
             self.seaport = None
 
     def environment_sensor_callback(self, data: dict):
+        self.get_logger().info(f"pong data: {data}")
+
+    def pong_callback(self, data: dict):
         self.get_logger().info(f"Got environmental data: {data}")
 
     def sensor_board_analog_reading_callback(self, data: dict):
@@ -71,8 +75,9 @@ class ESP32BridgeNode(Node):
 
         try:
             for i, throttle in enumerate(msg.throttle):
-                data = {f"{i}": throttle}
+                data = {str(i): float(throttle)}
                 self.seaport.publish(1, data)
+                self.seaport.publish(254, {"cmd": "ping"})
                 self.get_logger().info(f"Sent to ESP32: {data}")
         except Exception as e:
             self.get_logger().error(f"Failed to send to ESP32: {e}")
