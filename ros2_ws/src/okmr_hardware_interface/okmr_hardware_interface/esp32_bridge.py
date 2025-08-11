@@ -4,6 +4,7 @@ import rclpy
 from rclpy.node import Node
 from okmr_msgs.msg import MotorThrottle
 from okmr_msgs.msg import BatteryVoltage
+from std_msgs.msg import String
 
 import serial
 import seaport as sp
@@ -25,6 +26,8 @@ class ESP32BridgeNode(Node):
             MotorThrottle, "motor_throttle", self.motor_callback, 10
         )
 
+        self.ping_sub = self.create_subscription(String, "ping", self.ping_callback, 10)
+
         self.battery_voltage_pub = self.create_publisher(
             BatteryVoltage, "battery_voltage", 10
         )
@@ -39,13 +42,13 @@ class ESP32BridgeNode(Node):
             # self.seaport.subscribe(3, lambda data: imu_accel_callback(data))
             # self.seaport.subscribe(4, lambda data: imu_gyro_callback(data))
             # self.seaport.subscribe(5, lambda data: imu_meta_callback(data))
-            # self.seaport.subscribe(
-            #    6, lambda data: self.sensor_board_analog_reading_callback(data)
-            # )
-            # self.seaport.subscribe(
-            #    7, lambda data: self.sensor_board_digital_reading_callback(data)
-            # )
-            # self.seaport.subscribe(254, lambda data: self.pong_callback(data))
+            self.seaport.subscribe(
+                6, lambda data: self.sensor_board_analog_reading_callback(data)
+            )
+            self.seaport.subscribe(
+                7, lambda data: self.sensor_board_digital_reading_callback(data)
+            )
+            self.seaport.subscribe(254, lambda data: self.pong_callback(data))
             self.seaport.subscribe(
                 2, lambda data: self.environment_sensor_callback(data)
             )
@@ -68,6 +71,9 @@ class ESP32BridgeNode(Node):
     def sensor_board_digital_reading_callback(self, data: dict):
         self.get_logger().info(f"Got digital data: {data}")
 
+    def ping_callback(self, msg):
+        self.seaport.publish(254, {"cmd": "ping"})
+
     def motor_callback(self, msg: MotorThrottle):
         if not self.seaport:
             self.get_logger().warn("No serial connection. Message not sent.")
@@ -77,8 +83,7 @@ class ESP32BridgeNode(Node):
             for i, throttle in enumerate(msg.throttle):
                 data = {str(i): float(throttle)}
                 self.seaport.publish(1, data)
-                self.seaport.publish(254, {"cmd": "ping"})
-                self.get_logger().info(f"Sent to ESP32: {data}")
+                # self.get_logger().info(f"Sent to ESP32: {data}")
         except Exception as e:
             self.get_logger().error(f"Failed to send to ESP32: {e}")
 
