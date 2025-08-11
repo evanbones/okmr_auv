@@ -36,9 +36,6 @@ class ESP32BridgeNode(Node):
                 f"Serial connection to ESP32 established on {serial_port} at {baud_rate} baud."
             )
 
-            self.seaport.subscribe(
-                2, lambda data: self.environment_sensor_callback(data)
-            )
             # self.seaport.subscribe(3, lambda data: imu_accel_callback(data))
             # self.seaport.subscribe(4, lambda data: imu_gyro_callback(data))
             # self.seaport.subscribe(5, lambda data: imu_meta_callback(data))
@@ -49,6 +46,9 @@ class ESP32BridgeNode(Node):
                 7, lambda data: self.sensor_board_digital_reading_callback(data)
             )
             self.seaport.subscribe(254, lambda data: self.pong_callback(data))
+            self.seaport.subscribe(
+                2, lambda data: self.environment_sensor_callback(data)
+            )
             self.seaport.start()
 
         except Exception as e:
@@ -57,7 +57,7 @@ class ESP32BridgeNode(Node):
             self.seaport = None
 
     def environment_sensor_callback(self, data: dict):
-        self.get_logger().info(f"pong data: {data}")
+        self.get_logger().info(f"Got environment data: {data}")
 
     def pong_callback(self, data: dict):
         self.get_logger().info(f"Got pong data: {data}")
