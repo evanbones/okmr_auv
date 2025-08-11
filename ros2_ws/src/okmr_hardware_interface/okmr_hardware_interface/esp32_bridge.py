@@ -43,22 +43,27 @@ class ESP32BridgeNode(Node):
             # self.seaport.subscribe(4, lambda data: imu_gyro_callback(data))
             # self.seaport.subscribe(5, lambda data: imu_meta_callback(data))
             self.seaport.subscribe(
-                6, lambda data: self.sensor_board_analog_reading_callback(data)
+                6,
+                lambda data: self.sensor_board_analog_reading_callback(data),
+                debug=True,
             )
             self.seaport.subscribe(
-                7, lambda data: self.sensor_board_digital_reading_callback(data)
+                7,
+                lambda data: self.sensor_board_digital_reading_callback(data),
+                debug=True,
             )
             self.seaport.subscribe(
                 254, lambda data: self.pong_callback(data), debug=True
             )
             self.seaport.start()
-
+            """
             while True:
                 for i in range(8):
                     data = {str(i): 1800.0}
                     self.seaport.publish(1, data)
                     self.seaport.publish(254, {"cmd": "ping"})
                     self.get_logger().info(f"Sent to ESP32: {data}")
+            """
 
         except Exception as e:
             self.get_logger().error(f"Failed to connect to ESP32: {e}")
