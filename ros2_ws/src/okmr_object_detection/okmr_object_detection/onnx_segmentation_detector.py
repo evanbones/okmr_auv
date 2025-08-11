@@ -20,7 +20,7 @@ class OnnxSegmentationDetector(ObjectDetectorNode):
     def __init__(self):
         super().__init__(node_name="onnx_segmentation_detector")
 
-        self.declare_parameter("model_path", "model.onnx")
+        self.declare_parameter("model_path", "gate.onnx")
         self.declare_parameter("conf_threshold", 0.7)
         self.declare_parameter("mask_threshold", 0.7)
         self.declare_parameter("input_size", 640)
@@ -36,9 +36,18 @@ class OnnxSegmentationDetector(ObjectDetectorNode):
         self.declare_parameter("debug", True)
 
         # Get parameters
-        self.model_path = (
+        model_filename = (
             self.get_parameter("model_path").get_parameter_value().string_value
         )
+        
+        # Check if it's a full path or just filename
+        if os.path.isabs(model_filename):
+            self.model_path = model_filename
+        else:
+            # Use the installed models directory
+            from ament_index_python.packages import get_package_share_directory
+            package_share = get_package_share_directory('okmr_object_detection')
+            self.model_path = os.path.join(package_share, 'models', model_filename)
         self.conf_threshold = (
             self.get_parameter("conf_threshold").get_parameter_value().double_value
         )
@@ -101,7 +110,9 @@ class OnnxSegmentationDetector(ObjectDetectorNode):
             model_filename = self.model_mapping[request.model_id]
             
             # Construct the full path to the installed models directory
-            new_model_path = os.path.join("share", "okmr_object_detection", "models", model_filename)
+            from ament_index_python.packages import get_package_share_directory
+            package_share = get_package_share_directory('okmr_object_detection')
+            new_model_path = os.path.join(package_share, 'models', model_filename)
             
             # Check if the model file exists
             if not os.path.isfile(new_model_path):

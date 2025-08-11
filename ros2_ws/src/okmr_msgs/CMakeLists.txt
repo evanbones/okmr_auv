@@ -41,6 +41,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
     srv/EnableThrustAllocation.srv
     srv/ClearPose.srv
     srv/DistanceFromGoal.srv
+    srv/ChangeModel.srv
     msg/VoxelGrid.msg
     msg/Classes.msg
     action/Movement.action
