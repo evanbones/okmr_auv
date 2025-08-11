@@ -31,5 +31,9 @@ def generate_launch_description():
                 ogopogo_hardware_interface_launch,
                 condition=UnlessCondition(LaunchConfiguration("sim_mode")),
             ),
+            Node(
+                package='foxglove_bridge',
+                executable='foxglove_bridge'
+            ),
         ]
     )
