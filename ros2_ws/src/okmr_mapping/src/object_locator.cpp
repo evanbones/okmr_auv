@@ -14,22 +14,23 @@
 
 #include "geometry_msgs/msg/vector3.hpp"
 #include "okmr_msgs/msg/detected_object.hpp"
+#include "okmr_msgs/srv/get_objects_by_class.hpp"
 #include "rclcpp/rclcpp.hpp"
 #include "sensor_msgs/msg/point_cloud2.hpp"
 
 struct DetectedObject {
   Eigen::Vector3f position;
-  int32 object_class;
+  int32_t object_class;
 
-  DetectedObject(Eigen::Vector3f position, int32 object_class) {
+  DetectedObject(Eigen::Vector3f position, int32_t object_class) {
     this->position = position;
     this->object_class = object_class;
   }
 
-  DetectedObject(okmr_msgs::msg::DetectedObject ros_msg) {
-    position.x = ros_msg.x();
-    position.y = ros_msg.y();
-    position.z = ros_msg.z();
+  DetectedObject(const okmr_msgs::msg::DetectedObject& ros_msg) {
+    position.x() = ros_msg.pose.position.x;
+    position.y() = ros_msg.pose.position.y;
+    position.z() = ros_msg.pose.position.z;
     object_class = ros_msg.object_class;
   }
 
@@ -42,18 +43,28 @@ struct DetectedObject {
     return msg;
   }
 
-  void update_position_estimate(Eigen::Vector3f new_position) {
-    //  update position esitimate using exponential
-    //  weighted average / complemntary filter
-    //  see okmr_navigation/src/dead_reckoning.cpp for examples
+  void update_position_estimate(const Eigen::Vector3f& new_position) {
+    // Update position estimate using exponential weighted average
+    // See okmr_navigation/src/dead_reckoning.cpp for examples
+    // Simple implementation: 0.8 * current + 0.2 * new
+    position = position * 0.8f + new_position * 0.2f;
   }
 };
+
+// Forward declaration for helper function
+std::vector<DetectedObject>
+find_objects_in_pointcloud(const pcl::PointCloud<pcl::PointXYZRGBL>& pointcloud);
 
 class ObjectLocator : public rclcpp::Node {
 public:
   ObjectLocator() : Node("object_locator") {
     declare_parameter("max_pointclouds", 5);
+    declare_parameter("leaf_size", 0.05);
+    declare_parameter("max_update_distance", 0.5);
+    
     max_pointclouds_ = get_parameter("max_pointclouds").as_int();
+    leaf_size_ = get_parameter("leaf_size").as_double();
+    max_update_distance_ = get_parameter("max_update_distance").as_double();
 
     param_callback_handle_ = this->add_on_set_parameters_callback(std::bind(
         &ObjectLocator::on_parameter_change, this, std::placeholders::_1));
@@ -92,10 +103,13 @@ private:
   std::vector<DetectedObject> long_term_objects_;
   std::queue<pcl::PointCloud<pcl::PointXYZRGBL>::Ptr> pointcloud_queue_;
   int max_pointclouds_;
+  double leaf_size_;
+  double max_update_distance_; // 50cm
 };
 
+// Helper function implementation
 std::vector<DetectedObject>
-find_objects_in_pointcloud(pcl::PointCloud<pcl::PointXYZRGBL> pointcloud) {
+find_objects_in_pointcloud(const pcl::PointCloud<pcl::PointXYZRGBL>& pointcloud) {
   std::vector<DetectedObject> detected_objects;
 
   // Read in the cloud data
@@ -106,15 +120,13 @@ find_objects_in_pointcloud(pcl::PointCloud<pcl::PointXYZRGBL> pointcloud) {
   pcl::PointCloud<pcl::PointXYZRGBL>::Ptr cloud_f(
       new pcl::PointCloud<pcl::PointXYZRGBL>);
 
-  // Create the filtering object: downsample the dataset using a leaf size of
-  // 1cm
+  // Create the filtering object: downsample the dataset using a leaf size of 1cm
   pcl::VoxelGrid<pcl::PointXYZRGBL> vg;
   vg.setInputCloud(cloud);
   vg.setLeafSize(0.01f, 0.01f, 0.01f);
   vg.filter(*cloud_filtered);
 
-  // Create the segmentation object for the planar model and set all the
-  // parameters
+  // Create the segmentation object for the planar model and set all parameters
   pcl::SACSegmentation<pcl::PointXYZRGBL> seg;
   pcl::PointIndices::Ptr inliers(new pcl::PointIndices);
   pcl::ModelCoefficients::Ptr coefficients(new pcl::ModelCoefficients);
@@ -127,27 +139,32 @@ find_objects_in_pointcloud(pcl::PointCloud<pcl::PointXYZRGBL> pointcloud) {
   seg.setMaxIterations(100);
   seg.setDistanceThreshold(0.02);
 
-  int nr_points = (int)cloud_filtered->size();
+  int nr_points = static_cast<int>(cloud_filtered->size());
+  
+  // Main processing loop - extract planes and find clusters
   while (cloud_filtered->size() > 0.3 * nr_points) {
     // Segment the largest planar component from the remaining cloud
     seg.setInputCloud(cloud_filtered);
     seg.segment(*inliers, *coefficients);
-    if (inliers->indices.size() == 0) {
+    if (inliers->indices.empty()) {
       break;
     }
 
-    // Extract the planar inliers from the input cloud
-    // pcl::ExtractIndices<pcl::PointXYZRGBL> extract;
-    // extract.setInputCloud(cloud_filtered);
-    // extract.setIndices(inliers);
-    // extract.setNegative(false);
-    // extract.filter(*cloud_plane);
-
-    // Remove the planar inliers, extract the rest
-    // extract.setNegative(true);
-    // extract.filter(*cloud_f);
-    //*cloud_filtered = *cloud_f;int
+    // Optional: Extract planar inliers and remove them
+    // Uncomment this section if you want to remove planes (e.g., floor/walls)
+    /*
+    pcl::ExtractIndices<pcl::PointXYZRGBL> extract;
+    extract.setInputCloud(cloud_filtered);
+    extract.setIndices(inliers);
+    extract.setNegative(false);
+    extract.filter(*cloud_plane);
     
+    // Remove the planar inliers, extract the rest
+    extract.setNegative(true);
+    extract.filter(*cloud_f);
+    *cloud_filtered = *cloud_f;
+    */
+
     // Creating the KdTree object for the search method of the extraction
     pcl::search::KdTree<pcl::PointXYZRGBL>::Ptr tree(
         new pcl::search::KdTree<pcl::PointXYZRGBL>);
@@ -175,10 +192,11 @@ find_objects_in_pointcloud(pcl::PointCloud<pcl::PointXYZRGBL> pointcloud) {
         // Count label occurrences and sum positions
         label_counts[point.label]++;
         position_sum += Eigen::Vector3f(point.x, point.y, point.z);
-      } //*
+      }
 
-      if (cloud_cluster->empty())
+      if (cloud_cluster->empty()) {
         continue;
+      }
 
       // Find the dominant label in the cluster
       auto dominant_label =
@@ -189,93 +207,174 @@ find_objects_in_pointcloud(pcl::PointCloud<pcl::PointXYZRGBL> pointcloud) {
                            });
 
       // Calculate purity and discard impure clusters
-      float purity = (float)dominant_label->second / cloud_cluster->size();
+      float purity = static_cast<float>(dominant_label->second) / 
+                     static_cast<float>(cloud_cluster->size());
       if (purity < 0.7f) {
         continue;
       }
 
       // Calculate average position and add to detected objects
-      Eigen::Vector3f avg_position = position_sum / cloud_cluster->size();
+      Eigen::Vector3f avg_position = position_sum / 
+                                     static_cast<float>(cloud_cluster->size());
       detected_objects.emplace_back(avg_position, dominant_label->first);
     }
 
-    return detected_objects;
+    // We only process one plane's worth of clusters, then exit
+    break;
   }
 
-  void ObjectLocator::pointcloud_callback(
-      const sensor_msgs::msg::PointCloud2::SharedPtr msg) {
-    // pointcloud is downsampled using voxelgrid in pcl
-    // NOTE: make the leaf size a cube, and make it a live ros2 parameter
-    // Use for initial downsampling
-    // https://pointclouds.org/documentation/classpcl_1_1_approximate_voxel_grid.html#details
-    //
-    // append the downsampled pointcloud to the queue
-    // if the the size of the queue excedes the max pointcloud parameter, pop
-    // the queue
-    //
-    // concatinate all x pointclouds into one combined pointcloud (using +=
-    // operator) set the header stamp of the combined pointcloud equal to the
-    // ros2 message stamp
-    //
-    // downsample the combined pointcloud
-    //
-    // Use for downsampling concatenated pointcloud:
-    // https://pointclouds.org/documentation/classpcl_1_1_voxel_grid.html#details
-    //
-    //   using the downsampled, combined pointcloud, run the
-    //   find_objects_in_pointcloud algorithm
-    //
-    //   using the detected_objects returned by the clustering algo, update the
-    //   estimates of the long term detected obejct array
-    //      - update pose estimate if same class and inside predefined radius
+  return detected_objects;
+}
 
-    //  FUTURE WORK: pop pointclouds from the list based on header stamp instead
-    //  of queue size, making x robust to slower pointcloud publishing
-  }
+// Method implementations for ObjectLocator class
+void ObjectLocator::pointcloud_callback(
+    const sensor_msgs::msg::PointCloud2::SharedPtr msg) {
+  try {
+    // Convert ROS message to PCL point cloud
+    pcl::PointCloud<pcl::PointXYZRGBL>::Ptr cloud(
+        new pcl::PointCloud<pcl::PointXYZRGBL>);
+    pcl::fromROSMsg(*msg, *cloud);
+    
+    // Set the cloud timestamp from the ROS message
+    cloud->header.stamp = pcl_conversions::toPCL(msg->header).stamp;
 
-  void ObjectLocator::get_objects_by_class(
-      const std::shared_ptr<okmr_msgs::srv::GetObjectsByClass::Request> request,
-      std::shared_ptr<okmr_msgs::srv::GetObjectsByClass::Response> response) {
-    for (const auto &obj : long_term_objects_) {
-      if (obj.object_class == request->object_class) {
-        response->objects.push_back(obj.to_ros_msg());
+    // Downsample using VoxelGrid filter
+    pcl::PointCloud<pcl::PointXYZRGBL>::Ptr cloud_downsampled(
+        new pcl::PointCloud<pcl::PointXYZRGBL>);
+    pcl::VoxelGrid<pcl::PointXYZRGBL> vg;
+    vg.setInputCloud(cloud);
+    vg.setLeafSize(leaf_size_, leaf_size_, leaf_size_);
+    vg.filter(*cloud_downsampled);
+    
+    // Append the downsampled pointcloud to the queue
+    pointcloud_queue_.push(cloud_downsampled);
+    
+    // If the size of the queue exceeds the max pointcloud parameter, pop the queue
+    while (static_cast<int>(pointcloud_queue_.size()) > max_pointclouds_) {
+      pointcloud_queue_.pop();
+    }
+    
+    // Concatenate all pointclouds into one combined pointcloud
+    pcl::PointCloud<pcl::PointXYZRGBL>::Ptr combined_cloud(
+        new pcl::PointCloud<pcl::PointXYZRGBL>);
+    combined_cloud->header = cloud_downsampled->header;
+    
+    std::queue<pcl::PointCloud<pcl::PointXYZRGBL>::Ptr> temp_queue = pointcloud_queue_;
+    while (!temp_queue.empty()) {
+      *combined_cloud += *(temp_queue.front());
+      temp_queue.pop();
+    }
+    
+    // Downsample the combined pointcloud
+    pcl::PointCloud<pcl::PointXYZRGBL>::Ptr final_cloud(
+        new pcl::PointCloud<pcl::PointXYZRGBL>);
+    pcl::VoxelGrid<pcl::PointXYZRGBL> vg_combined;
+    vg_combined.setInputCloud(combined_cloud);
+    vg_combined.setLeafSize(leaf_size_, leaf_size_, leaf_size_);
+    vg_combined.filter(*final_cloud);
+    
+    // Using the downsampled, combined pointcloud, run the find_objects_in_pointcloud algorithm
+    std::vector<DetectedObject> detected_objects = 
+        find_objects_in_pointcloud(*final_cloud);
+    
+    // Update long-term object tracking using the class member for max_update_distance
+    
+    // For each newly detected object
+    for (const auto& detected_obj : detected_objects) {
+      bool updated_existing = false;
+      
+      // Try to update existing objects
+      for (auto& existing_obj : long_term_objects_) {
+        // If same class and close enough, update position
+        if (detected_obj.object_class == existing_obj.object_class) {
+          float distance = (detected_obj.position - existing_obj.position).norm();
+          if (distance < max_update_distance_) {  // Using class member instead of hardcoded value
+            existing_obj.update_position_estimate(detected_obj.position);
+            updated_existing = true;
+            break;
+          }
+        }
+      }
+      
+      // If no existing object was updated, add this as a new object
+      if (!updated_existing) {
+        long_term_objects_.push_back(detected_obj);
       }
     }
-
-    RCLCPP_INFO(this->get_logger(), "Returning %zu objects of class %d",
-                response->objects.size(), request->object_class);
+    
+    // Log the current count of tracked objects
+    RCLCPP_DEBUG(this->get_logger(), "Currently tracking %zu objects", 
+                long_term_objects_.size());
+  } catch (const std::exception& e) {
+    RCLCPP_ERROR(this->get_logger(), "Error processing point cloud: %s", e.what());
   }
+}
 
-  rcl_interfaces::msg::SetParametersResult ObjectLocator::on_parameter_change(
-      const std::vector<rclcpp::Parameter> &parameters) {
-    rcl_interfaces::msg::SetParametersResult result;
-    result.successful = true;
-
-    for (const auto &param : parameters) {
-      if (param.get_name() == "max_pointclouds") {
-        int new_value = param.as_int();
-        if (new_value <= 0) {
-          result.successful = false;
-          result.reason = "max_pointclouds must be positive";
-          return result;
-        }
-
-        max_pointclouds_ = new_value;
-        RCLCPP_INFO(this->get_logger(), "Updated max_pointclouds to %d",
-                    max_pointclouds_);
-
-        while (static_cast<int>(pointcloud_queue_.size()) > max_pointclouds_) {
-          pointcloud_queue_.pop();
-        }
-      }
+void ObjectLocator::get_objects_by_class(
+    const std::shared_ptr<okmr_msgs::srv::GetObjectsByClass::Request> request,
+    std::shared_ptr<okmr_msgs::srv::GetObjectsByClass::Response> response) {
+  for (const auto &obj : long_term_objects_) {
+    if (obj.object_class == request->object_class) {
+      response->objects.push_back(obj.to_ros_msg());
     }
-
-    return result;
   }
 
-  int main(int argc, char **argv) {
-    rclcpp::init(argc, argv);
-    rclcpp::spin(std::make_shared<ObjectLocator>());
-    rclcpp::shutdown();
-    return 0;
+  RCLCPP_INFO(this->get_logger(), "Returning %zu objects of class %d",
+              response->objects.size(), request->object_class);
+}
+
+rcl_interfaces::msg::SetParametersResult ObjectLocator::on_parameter_change(
+    const std::vector<rclcpp::Parameter> &parameters) {
+  rcl_interfaces::msg::SetParametersResult result;
+  result.successful = true;
+
+  for (const auto &param : parameters) {
+    if (param.get_name() == "max_pointclouds") {
+      int new_value = param.as_int();
+      if (new_value <= 0) {
+        result.successful = false;
+        result.reason = "max_pointclouds must be positive";
+        return result;
+      }
+
+      max_pointclouds_ = new_value;
+      RCLCPP_INFO(this->get_logger(), "Updated max_pointclouds to %d",
+                  max_pointclouds_);
+
+      while (static_cast<int>(pointcloud_queue_.size()) > max_pointclouds_) {
+        pointcloud_queue_.pop();
+      }
+    } else if (param.get_name() == "leaf_size") {
+      double new_value = param.as_double();
+      if (new_value <= 0.0) {
+        result.successful = false;
+        result.reason = "leaf_size must be positive";
+        return result;
+      }
+
+      leaf_size_ = new_value;
+      RCLCPP_INFO(this->get_logger(), "Updated leaf_size to %f", leaf_size_);
+    } else if (param.get_name() == "max_update_distance") {
+      double new_value = param.as_double();
+      if (new_value <= 0.0) {
+        result.successful = false;
+        result.reason = "max_update_distance must be positive";
+        return result;
+      }
+
+      max_update_distance_ = new_value;
+      RCLCPP_INFO(this->get_logger(), "Updated max_update_distance to %f",
+                  max_update_distance_);
+    }
   }
+
+  return result;
+}
+
+// Main function (moved outside the class)
+int main(int argc, char **argv) {
+  rclcpp::init(argc, argv);
+  rclcpp::spin(std::make_shared<ObjectLocator>());
+  rclcpp::shutdown();
+  return 0;
+}
