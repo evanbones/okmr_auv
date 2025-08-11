@@ -15,6 +15,10 @@ def generate_launch_description():
             ),
             Node(
                 package="okmr_hardware_interface",
+                executable="thrust_to_pwm_node",
+            ),
+            Node(
+                package="okmr_hardware_interface",
                 executable="esp32_bridge",
                 # params for dev file and baud rate
             ),
