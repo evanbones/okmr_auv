@@ -69,26 +69,11 @@ class ESP32BridgeNode(Node):
             self.get_logger().warn("No serial connection. Message not sent.")
             return
 
-        self.get_logger().info("got motor throttel")
-
-        """
-        data = {
-            "0": int(msg.throttle[0]),
-            "1": int(msg.throttle[1]),
-            "2": int(msg.throttle[2]),
-            "3": int(msg.throttle[3]),
-            "4": int(msg.throttle[4]),
-            "5": int(msg.throttle[5]),
-            "6": int(msg.throttle[6]),
-            "7": int(msg.throttle[7]),
-        }
-        """
-
-        data = {"7": 1800}
-
         try:
-            self.seaport.publish(1, data)
-            self.get_logger().info(f"Sent to ESP32: {data}")
+            for(i, throttle in enumerate(msg.throttle)):
+                data = {f"{i}": throttle}
+                self.seaport.publish(1, data)
+                self.get_logger().info(f"Sent to ESP32: {data}")
         except Exception as e:
             self.get_logger().error(f"Failed to send to ESP32: {e}")
 
