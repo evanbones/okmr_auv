@@ -7,6 +7,8 @@
   <maintainer email="todo@todo.todo">TODO</maintainer>
   <license>TODO: License declaration</license>
 
+  <depend>okmr_msgs</depend>
+
   <buildtool_depend>ament_cmake</buildtool_depend>
   <buildtool_depend>ament_cmake_python</buildtool_depend>
 

@@ -1,11 +1,13 @@
+import onnxruntime as ort
 import okmr_object_detection.detector
 from okmr_object_detection.detector import ObjectDetectorNode
 import rclpy
 import numpy as np
 import cv2
-import onnxruntime as ort
 import os
+import threading
 from typing import Tuple, Optional
+from okmr_msgs.srv import ChangeModel
 
 
 def sigmoid(x):
@@ -19,7 +21,7 @@ class OnnxSegmentationDetector(ObjectDetectorNode):
     def __init__(self):
         super().__init__(node_name="onnx_segmentation_detector")
 
-        self.declare_parameter("model_path", "model.onnx")
+        self.declare_parameter("model_path", "gate.onnx")
         self.declare_parameter("conf_threshold", 0.7)
         self.declare_parameter("mask_threshold", 0.7)
         self.declare_parameter("input_size", 640)
@@ -27,17 +29,26 @@ class OnnxSegmentationDetector(ObjectDetectorNode):
         self.declare_parameter(
             "providers",
             [
-                "TensorrtExecutionProvider",
+                # "TensorrtExecutionProvider",
                 "CUDAExecutionProvider",
-                "CPUExecutionProvider",
+                # "CPUExecutionProvider",
             ],
         )
         self.declare_parameter("debug", True)
 
         # Get parameters
-        self.model_path = (
+        model_filename = (
             self.get_parameter("model_path").get_parameter_value().string_value
         )
+        
+        # Check if it's a full path or just filename
+        if os.path.isabs(model_filename):
+            self.model_path = model_filename
+        else:
+            # Use the installed models directory
+            from ament_index_python.packages import get_package_share_directory
+            package_share = get_package_share_directory('okmr_object_detection')
+            self.model_path = os.path.join(package_share, 'models', model_filename)
         self.conf_threshold = (
             self.get_parameter("conf_threshold").get_parameter_value().double_value
         )
@@ -56,8 +67,31 @@ class OnnxSegmentationDetector(ObjectDetectorNode):
         if self.top_k == -1:
             self.top_k = None
 
+        # Model mapping
+        self.model_mapping = {
+            ChangeModel.Request.GATE: "gate.onnx",
+            ChangeModel.Request.SHARK: "shark.onnx",
+            ChangeModel.Request.SWORDFISH: "swordfish.onnx",
+            ChangeModel.Request.PATH_MARKER: "path_marker.onnx",
+            ChangeModel.Request.SLALOM_CENTER: "slalom_center.onnx",
+            ChangeModel.Request.SLALOM_OUTER: "slalom_outer.onnx",
+            ChangeModel.Request.DROPPER_BIN: "dropper_bin.onnx",
+            ChangeModel.Request.TORPEDO_BOARD: "torpedo_board.onnx"
+        }
+
+        # Create service
+        self.change_model_srv = self.create_service(
+            ChangeModel, 
+            'change_model', 
+            self.change_model_callback
+        )
+
+        
+        self.model_lock = threading.Lock()
+
         self.load_model()
 
+        self.get_logger().info(f"providers: {self.providers}")
         self.get_logger().info(f"ONNX Segmentation Detector initialized")
         self.get_logger().info(f"Model: {self.model_path}")
         self.get_logger().info(f"Confidence threshold: {self.conf_threshold}")
@@ -67,6 +101,52 @@ class OnnxSegmentationDetector(ObjectDetectorNode):
         """Destructor to clean up OpenCV windows."""
         if self.debug:
             cv2.destroyAllWindows()
+
+    def change_model_callback(self, request, response):
+        """Service callback to change the model file"""
+        with self.model_lock:
+            try:
+                if request.model_id not in self.model_mapping:
+                    response.success = False
+                    response.message = f"Invalid model ID: {request.model_id}. Valid IDs are: {list(self.model_mapping.keys())}"
+                    return response
+
+                # Get the model filename
+                model_filename = self.model_mapping[request.model_id]
+                
+                # Construct the full path to the installed models directory
+                from ament_index_python.packages import get_package_share_directory
+                package_share = get_package_share_directory('okmr_object_detection')
+                new_model_path = os.path.join(package_share, 'models', model_filename)
+                
+                # Check if the model file exists
+                if not os.path.isfile(new_model_path):
+                    response.success = False
+                    response.message = f"Model file not found: {new_model_path}"
+                    return response
+
+                # Update the model path and reload
+                old_model = self.model_path
+                self.model_path = new_model_path
+                
+                try:
+                    self.load_model()
+                    response.success = True
+                    response.message = f"Successfully changed model from {os.path.basename(old_model)} to {model_filename}"
+                    self.get_logger().info(f"Model changed to: {self.model_path}")
+                    
+                except Exception as e:
+                    # Revert to old model if loading fails
+                    self.model_path = old_model
+                    self.load_model()
+                    response.success = False
+                    response.message = f"Failed to load new model, reverted to previous: {str(e)}"
+                    
+            except Exception as e:
+                response.success = False
+                response.message = f"Service error: {str(e)}"
+            
+        return response
 
     def load_model(self):
         """Load the ONNX model"""
@@ -265,9 +345,13 @@ class OnnxSegmentationDetector(ObjectDetectorNode):
                 self.get_logger().debug(f"DEBUG: Preprocessed input shape: {inp.shape}")
                 self.get_logger().debug(f"DEBUG: Scale factor: {scale}")
                 self.get_logger().debug(f"DEBUG: Padding: x={pad_x}, y={pad_y}")
+                self.get_logger().debug(
+                    f"Providers being used: {self.session.get_providers()}"
+                )
 
-            # Run ONNX inference
-            outs = self.session.run(None, {self.input_name: inp})
+            # Run ONNX inference 
+            with self.model_lock:
+                outs = self.session.run(None, {self.input_name: inp})
 
             if self.mode_2out:
                 # Handle 2-output model (raw predictions + proto)
@@ -355,6 +439,9 @@ class OnnxSegmentationDetector(ObjectDetectorNode):
             self.get_logger().error(f"Error during inference: {e}")
             # Return empty mask on error
             return np.zeros((rgb.shape[0], rgb.shape[1]), dtype=np.float32)
+
+
+# FIXME make the mask return in 32SC1 format, instead of 32FC1
 
 
 def main(args=None):

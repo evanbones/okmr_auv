@@ -26,8 +26,6 @@ def generate_launch_description():
         [FindPackageShare("okmr_object_detection"), "params", "gate.yaml"]
     )
 
-    debug_bool = PythonExpression(["'", LaunchConfiguration("debug"), "' == 'true'"])
-
     pkg_share = get_package_share_directory("okmr_object_detection")
     model_share_path = os.path.join(pkg_share, "models", "gate.onnx")
     # TODO update obj detection node to allow model switching in real time
@@ -37,7 +35,7 @@ def generate_launch_description():
         executable="onnx_segmentation_detector",
         output="screen",
         parameters=[
-            {"debug": debug_bool},
+            {"debug": False},
             {"model_path": model_share_path},
             object_detection_param_path,
         ],

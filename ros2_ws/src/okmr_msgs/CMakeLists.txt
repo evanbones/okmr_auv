@@ -31,6 +31,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
     msg/RelativePose.msg
     msg/MissionCommand.msg
     msg/SemanticDepth.msg
+    msg/DetectedObject.msg
     srv/FindObject.srv
     srv/Vg2pc.srv
     srv/Matching.srv
@@ -40,6 +41,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
     srv/EnableThrustAllocation.srv
     srv/ClearPose.srv
     srv/DistanceFromGoal.srv
+    srv/ChangeModel.srv
     msg/VoxelGrid.msg
     msg/Classes.msg
     action/Movement.action

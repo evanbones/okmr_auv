@@ -8,7 +8,7 @@ class DepthImageAnalyzer : public rclcpp::Node {
    public:
     DepthImageAnalyzer () : Node ("depth_image_analyzer") {
         subscription_ = this->create_subscription<sensor_msgs::msg::Image> (
-            "/camera2/camera2/image_depth", 10,
+            "/labeled_image", 10,
             std::bind (&DepthImageAnalyzer::image_callback, this, std::placeholders::_1));
 
         RCLCPP_INFO (this->get_logger (), "Subscribed to /camera2/camera2/image_depth");

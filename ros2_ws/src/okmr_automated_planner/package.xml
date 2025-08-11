@@ -10,6 +10,7 @@
   <buildtool_depend>ament_cmake</buildtool_depend>
   
   <depend>okmr_utils</depend>
+  <depend>okmr_msgs</depend>
 
   <test_depend>ament_cmake_ros</test_depend>
     <test_depend>launch</test_depend>

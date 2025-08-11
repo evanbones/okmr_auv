@@ -31,6 +31,7 @@ class DepthProjectionNode : public rclcpp::Node {
     void camera_info_callback (const sensor_msgs::msg::CameraInfo::SharedPtr msg);
 
     sensor_msgs::msg::Image::SharedPtr convertDepthFormat (sensor_msgs::msg::Image::SharedPtr msg);
+    sensor_msgs::msg::Image::SharedPtr convertMaskFormat (sensor_msgs::msg::Image::SharedPtr msg);
 
     bool validateImageDimensions (const sensor_msgs::msg::Image* depth_msg,
                                   const sensor_msgs::msg::Image* rgb_msg = nullptr,
@@ -149,6 +150,17 @@ sensor_msgs::msg::Image::SharedPtr DepthProjectionNode::convertDepthFormat (
     return msg;
 }
 
+sensor_msgs::msg::Image::SharedPtr DepthProjectionNode::convertMaskFormat (
+    sensor_msgs::msg::Image::SharedPtr msg) {
+    if (msg->encoding != "32SC1") {
+        cv::Mat mask_img = cv_bridge::toCvCopy (msg)->image;
+        cv::Mat mask_32sc1;
+        mask_img.convertTo (mask_32sc1, CV_32SC1, 1.0);
+        return cv_bridge::CvImage (msg->header, "32SC1", mask_32sc1).toImageMsg ();
+    }
+    return msg;
+}
+
 bool DepthProjectionNode::validateImageDimensions (const sensor_msgs::msg::Image* depth_msg,
                                                    const sensor_msgs::msg::Image* rgb_msg,
                                                    const sensor_msgs::msg::Image* mask_msg) {
@@ -258,11 +270,14 @@ void DepthProjectionNode::depth_and_mask_callback (
 
     auto converted_depth =
         convertDepthFormat (std::const_pointer_cast<sensor_msgs::msg::Image> (depth_msg));
-    if (!validateImageDimensions (converted_depth.get (), nullptr, mask_msg.get ())) {
+    auto converted_mask =
+        convertMaskFormat (std::const_pointer_cast<sensor_msgs::msg::Image> (mask_msg));
+
+    if (!validateImageDimensions (converted_depth.get (), nullptr, converted_mask.get ())) {
         return;
     }
 
-    auto cloud = projectDepthImage (converted_depth.get (), nullptr, mask_msg.get ());
+    auto cloud = projectDepthImage (converted_depth.get (), nullptr, converted_mask.get ());
 
     sensor_msgs::msg::PointCloud2 cloud_msg;
     pcl::toROSMsg (*cloud, cloud_msg);
@@ -304,11 +319,13 @@ void DepthProjectionNode::depth_mask_and_rgb_callback (
 
     auto converted_depth =
         convertDepthFormat (std::const_pointer_cast<sensor_msgs::msg::Image> (depth_msg));
-    if (!validateImageDimensions (converted_depth.get (), rgb_msg.get (), mask_msg.get ())) {
+    auto converted_mask =
+        convertMaskFormat (std::const_pointer_cast<sensor_msgs::msg::Image> (mask_msg));
+    if (!validateImageDimensions (converted_depth.get (), rgb_msg.get (), converted_mask.get ())) {
         return;
     }
 
-    auto cloud = projectDepthImage (converted_depth.get (), rgb_msg.get (), mask_msg.get ());
+    auto cloud = projectDepthImage (converted_depth.get (), rgb_msg.get (), converted_mask.get ());
 
     sensor_msgs::msg::PointCloud2 cloud_msg;
     pcl::toROSMsg (*cloud, cloud_msg);
