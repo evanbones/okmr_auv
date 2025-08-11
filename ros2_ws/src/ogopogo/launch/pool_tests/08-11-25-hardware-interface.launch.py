@@ -1,0 +1,35 @@
+from launch import LaunchDescription
+from launch.actions import IncludeLaunchDescription, DeclareLaunchArgument
+from launch.substitutions import PathJoinSubstitution, LaunchConfiguration
+from launch_ros.substitutions import FindPackageShare
+from launch_ros.actions import Node
+from launch.conditions import IfCondition, UnlessCondition
+
+
+def generate_launch_description():
+    realsense_launch_dir = PathJoinSubstitution(
+        [FindPackageShare("realsense2_camera"), "launch"]
+    )
+    hardware_interface_launch_dir = PathJoinSubstitution(
+        [FindPackageShare("okmr_hardware_interface"), "launch"]
+    )
+
+    rs_multi_camera_launch = PathJoinSubstitution(
+        [realsense_launch_dir, "rs_multi_camera_launch.py"]
+    )
+    ogopogo_hardware_interface_launch = PathJoinSubstitution(
+        [hardware_interface_launch_dir, "ogopogo_hardware_interface.launch.py"]
+    )
+
+    return LaunchDescription(
+        [
+            IncludeLaunchDescription(
+                rs_multi_camera_launch,
+                condition=UnlessCondition(LaunchConfiguration("sim_mode")),
+            ),
+            IncludeLaunchDescription(
+                ogopogo_hardware_interface_launch,
+                condition=UnlessCondition(LaunchConfiguration("sim_mode")),
+            ),
+        ]
+    )
