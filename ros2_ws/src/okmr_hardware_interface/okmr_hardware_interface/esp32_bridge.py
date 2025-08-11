@@ -71,6 +71,7 @@ class ESP32BridgeNode(Node):
 
         self.get_logger().info("got motor throttel")
 
+        """
         data = {
             "0": int(msg.throttle[0]),
             "1": int(msg.throttle[1]),
@@ -81,6 +82,9 @@ class ESP32BridgeNode(Node):
             "6": int(msg.throttle[6]),
             "7": int(msg.throttle[7]),
         }
+        """
+
+        data = {"7": 1900}
 
         try:
             self.seaport.publish(1, data)
