@@ -36,7 +36,9 @@ class ESP32BridgeNode(Node):
                 f"Serial connection to ESP32 established on {serial_port} at {baud_rate} baud."
             )
 
-            self.seaport.subscribe(2, lambda data: environment_sensor_callback(data))
+            self.seaport.subscribe(
+                2, lambda data: self.environment_sensor_callback(data)
+            )
             # self.seaport.subscribe(3, lambda data: imu_accel_callback(data))
             # self.seaport.subscribe(4, lambda data: imu_gyro_callback(data))
             # self.seaport.subscribe(5, lambda data: imu_meta_callback(data))
