@@ -70,7 +70,7 @@ class ESP32BridgeNode(Node):
             return
 
         try:
-            for(i, throttle in enumerate(msg.throttle)):
+            for i, throttle in enumerate(msg.throttle):
                 data = {f"{i}": throttle}
                 self.seaport.publish(1, data)
                 self.get_logger().info(f"Sent to ESP32: {data}")
