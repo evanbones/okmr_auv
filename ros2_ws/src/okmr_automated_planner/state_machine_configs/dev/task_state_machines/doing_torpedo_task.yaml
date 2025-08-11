@@ -1,0 +1,25 @@
+doing_torpedo_task:
+
+states:
+{name: finding_torpedo_board, config_path: "task_state_machines/finding_torpedo_board.yaml", timeout: 30}
+{name: looking_at_board}
+{name: moving_toward_board}
+{name: aligning_with_board}
+{name: arrived_at_board}
+{name: identifying_shark}
+{name: aligning_height_shark}
+{name: actuate_torpedo_one}
+{name: actuate_torpedo_two}
+
+transitions:
+- {trigger: initializing_done, source: initializing, dest: finding_torpedo_board}
+- {trigger: board_found, source: finding_torpedo_board, dest: looking_at_board}
+- {trigger: looking_at_board_done, source: looking_at_board, dest: moving_toward_board}
+- {trigger: at_distance_from_board source: moving_toward_board, dest: aligning_with_board}
+- {trigger: aligning_with_board_done, source: aligning_with_board, dest: arrived_at_board}
+- {trigger: arrived_at_board_done, source: arrived_at_board, dest: idle}
+- {trigger: switch_models_shark, source: idle, dest: identifying_shark}
+- {trigger: identifying_shark_done, source: identifying_shark, dest: aligning_height_shark}
+- {trigger: aligning_height_shark_done, source: aligning_height_shark, dest: actuate_torpedo_one}
+- {trigger: actuate_torpedo_one_done, source: actuate_torpedo_one, dest: actuate_torpedo_two}
+- {trigger: actuate_torpedo_two_done, source: actuate_torpedo_two, dest: done}

@@ -1,14 +1,13 @@
 finding_gate:
   states:
-    - { name: scanning_cw }
+    - { name: scanning_cw}
     - { name: scanning_ccw }
-    - { name: following_detection }
+    - { name: looking_at_gate }
+   
 
   transitions:
-    - { trigger: initializing_done, source: initializing, dest: scanning_cw }
+    - { trigger: initializing_done, source: initializing, dest: scanning_cw}
     - { trigger: scanning_cw_done, source: scanning_cw, dest: scanning_ccw }
-    - { trigger: scanning_ccw_done, source: scanning_ccw, dest: scanning_cw }
-    - { trigger: object_detected, source: '*', dest: following_detection }
-    # on following_detection completed, need a function to determine if false or true positive
-    - { trigger: object_detection_false_positive, source:  following_detection, dest: scanning_cw }
-    - { trigger: object_detection_true_positive, source: following_detection, dest: done }
+    - { trigger: scanning_ccw_done, source: scanning_ccw, dest: looking_at_gate }
+    - { trigger: looking_at_gate_done, source: looking_at_gate, dest: done }
+    
