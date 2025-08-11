@@ -39,13 +39,13 @@ class ESP32BridgeNode(Node):
             # self.seaport.subscribe(3, lambda data: imu_accel_callback(data))
             # self.seaport.subscribe(4, lambda data: imu_gyro_callback(data))
             # self.seaport.subscribe(5, lambda data: imu_meta_callback(data))
-            self.seaport.subscribe(
-                6, lambda data: self.sensor_board_analog_reading_callback(data)
-            )
-            self.seaport.subscribe(
-                7, lambda data: self.sensor_board_digital_reading_callback(data)
-            )
-            self.seaport.subscribe(254, lambda data: self.pong_callback(data))
+            # self.seaport.subscribe(
+            #    6, lambda data: self.sensor_board_analog_reading_callback(data)
+            # )
+            # self.seaport.subscribe(
+            #    7, lambda data: self.sensor_board_digital_reading_callback(data)
+            # )
+            # self.seaport.subscribe(254, lambda data: self.pong_callback(data))
             self.seaport.subscribe(
                 2, lambda data: self.environment_sensor_callback(data)
             )
