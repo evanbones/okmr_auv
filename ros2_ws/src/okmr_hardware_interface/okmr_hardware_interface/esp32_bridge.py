@@ -72,14 +72,14 @@ class ESP32BridgeNode(Node):
         self.get_logger().info("got motor throttel")
 
         data = {
-            "0": msg.throttle[0],
-            "1": msg.throttle[1],
-            "2": msg.throttle[2],
-            "3": msg.throttle[3],
-            "4": msg.throttle[4],
-            "5": msg.throttle[5],
-            "6": msg.throttle[6],
-            "7": msg.throttle[7],
+            "0": int(msg.throttle[0]),
+            "1": int(msg.throttle[1]),
+            "2": int(msg.throttle[2]),
+            "3": int(msg.throttle[3]),
+            "4": int(msg.throttle[4]),
+            "5": int(msg.throttle[5]),
+            "6": int(msg.throttle[6]),
+            "7": int(msg.throttle[7]),
         }
 
         try:
