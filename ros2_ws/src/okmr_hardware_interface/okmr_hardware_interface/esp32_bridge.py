@@ -66,6 +66,8 @@ class ESP32BridgeNode(Node):
             self.get_logger().warn("No serial connection. Message not sent.")
             return
 
+        self.get_logger().info("got motor throttel")
+
         data = {
             "0": msg.throttle[0],
             "1": msg.throttle[1],
