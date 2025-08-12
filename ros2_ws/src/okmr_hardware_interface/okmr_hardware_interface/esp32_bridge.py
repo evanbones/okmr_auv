@@ -17,11 +17,11 @@ class ESP32BridgeNode(Node):
 
         self.declare_parameter("serial_port", "/dev/ttyUSB0")
         self.declare_parameter("baud_rate", 115200)
-        self.declare_parameter("killswitch_address", 42)
-        self.declare_parameter("killswitch_index", 1)
-        self.declare_parameter("mission_button_address", 43)
+        self.declare_parameter("killswitch_address", 66)
+        self.declare_parameter("killswitch_index", 0)
+        self.declare_parameter("mission_button_address", 66)
         self.declare_parameter("mission_button_index", 1)
-        self.declare_parameter("mission_button_arm_time_ms", 5000)
+        self.declare_parameter("mission_button_arm_time_ms", 3000)
 
         serial_port = (
             self.get_parameter("serial_port").get_parameter_value().string_value
