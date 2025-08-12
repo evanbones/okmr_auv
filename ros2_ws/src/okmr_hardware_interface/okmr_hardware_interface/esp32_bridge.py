@@ -5,6 +5,8 @@ from rclpy.node import Node
 from okmr_msgs.msg import MotorThrottle
 from okmr_msgs.msg import BatteryVoltage
 from okmr_msgs.msg import MissionCommand
+from okmr_msgs.msg import SensorReading
+from okmr_msgs.msg import EnvironmentData
 from std_msgs.msg import String
 
 import serial
@@ -22,6 +24,9 @@ class ESP32BridgeNode(Node):
         self.declare_parameter("mission_button_address", 43)
         self.declare_parameter("mission_button_index", 1)
         self.declare_parameter("mission_button_arm_time_ms", 5000)
+        self.declare_parameter("leak_sensor_addresses",[66,69] ) #addresses correspond with their indicies at offset of -66
+        self.declare_parameter("leak_sensor_indicies", [0,4])
+        self.declare_parameter("leak_sensor_threshold", 500.0)  # Analog threshold for leak detection
 
         serial_port = (
             self.get_parameter("serial_port").get_parameter_value().string_value
@@ -32,6 +37,9 @@ class ESP32BridgeNode(Node):
         self.mission_button_address = self.get_parameter("mission_button_address").get_parameter_value().integer_value
         self.mission_button_index = self.get_parameter("mission_button_index").get_parameter_value().integer_value
         self.mission_button_arm_time_ms = self.get_parameter("mission_button_arm_time_ms").get_parameter_value().integer_value
+        self.leak_sensor_addresses = self.get_parameter("leak_sensor_addresses").get_parameter_value().integer_array_value
+        self.leak_sensor_indices = self.get_parameter("leak_sensor_indicies").get_parameter_value().integer_array_value
+        self.leak_sensor_threshold = self.get_parameter("leak_sensor_threshold").get_parameter_value().double_value
 
 
         self.motor_throttle_sub = self.create_subscription(
@@ -52,6 +60,14 @@ class ESP32BridgeNode(Node):
             MissionCommand, "mission_command", 10
         )
 
+        self.leak_sensor_pub = self.create_publisher(
+            SensorReading, "leak_sensor", 10
+        )
+
+        self.environment_data_pub = self.create_publisher(
+            EnvironmentData, "environment_data", 10
+        )
+
         try:
             self.ser = serial.Serial(serial_port, baud_rate, timeout=1)
             self.seaport = sp.SeaPort(self.ser)
@@ -66,6 +82,9 @@ class ESP32BridgeNode(Node):
             )
             self.get_logger().info(
                 f"Mission button arm time: {self.mission_button_arm_time_ms}ms"
+            )
+            self.get_logger().info(
+                f"Leak sensors configured: addresses={self.leak_sensor_addresses}, indices={self.leak_sensor_indices}, threshold={self.leak_sensor_threshold}"
             )
 
             # self.seaport.subscribe(3, lambda data: imu_accel_callback(data))
@@ -98,17 +117,49 @@ class ESP32BridgeNode(Node):
         self.mission_armed = False
 
     def environment_sensor_callback(self, data: dict):
-        #self.get_logger().info(f"Got environment data: {data}")
-        #FIXME new message needed for envorinment data
-        pass
+        """Handle environment sensor data from ESP32"""
+        try:
+            # Create EnvironmentData message
+            env_msg = EnvironmentData()
+            env_msg.header.stamp = self.get_clock().now().to_msg()
+            env_msg.header.frame_id = "environment_sensor"
+            
+            # Extract data from ESP32 message
+            # Expected format: {"a": address, "temp": temperature, "hum": humidity, "press": pressure}
+            env_msg.board_address = data.get("a", 0)
+            env_msg.temperature = data.get("t", 0.0)
+            env_msg.humidity = data.get("h", 0.0)
+            env_msg.pressure = data.get("p", 0.0)
+            
+            # Publish environment data
+            self.environment_data_pub.publish(env_msg)
+            
+            # Log environment data (can be disabled in production)
+            self.get_logger().debug(
+                f"Environment data from board {env_msg.board_address}: "
+                f"T={env_msg.temperature:.1f}°C, H={env_msg.humidity:.1f}%, "
+                f"P={env_msg.pressure:.1f}hPa"
+            )
+            
+        except Exception as e:
+            self.get_logger().error(f"Error processing environment sensor data: {e}")
 
     def pong_callback(self, data: dict):
         #self.get_logger().info(f"Got pong data: {data}")
         pass
 
     def sensor_board_analog_reading_callback(self, data: dict):
-        #self.get_logger().info(f"Got analog data: {data}")
-        pass
+        """Handle analog inputs including leak sensors"""
+        # Check if this is leak sensor data
+        address = data.get("a")
+        index = data.get("i") 
+        value = data.get("v", 0.0)
+        
+        # Check if this matches any of our configured leak sensors
+        for i, (leak_addr, leak_idx) in enumerate(zip(self.leak_sensor_addresses, self.leak_sensor_indices)):
+            if address == leak_addr and index == leak_idx:
+                self.leak_sensor_callback(data, i)
+                break
 
     def sensor_board_digital_reading_callback(self, data: dict):
         """Handle digital inputs including killswitch from sensor boards"""
@@ -214,6 +265,39 @@ class ESP32BridgeNode(Node):
                     
         except Exception as e:
             self.get_logger().error(f"Error processing mission button data: {e}")
+
+    def leak_sensor_callback(self, data: dict, sensor_index: int):
+        """Handle leak sensor readings and publish warnings"""
+        try:
+            # Expect data format: {"a": address, "i": index, "v": analog_value}
+            address = data.get("a")
+            index = data.get("i")
+            value = data.get("v", 0.0)
+            
+            # Create and publish sensor reading message
+            sensor_msg = SensorReading()
+            sensor_msg.header.stamp = self.get_clock().now().to_msg()
+            sensor_msg.header.frame_id = f"leak_sensor_{address}_{index}"
+            sensor_msg.data = float(value)
+            
+            self.leak_sensor_pub.publish(sensor_msg)
+            
+            # Check threshold and issue warning
+            if value > self.leak_sensor_threshold:
+                self.get_logger().error(
+                    f"LEAK DETECTED! Sensor {address}:{index} reading {value:.1f} "
+                    f"exceeds threshold {self.leak_sensor_threshold:.1f}"
+                )
+                 msg = MissionCommand()
+                 msg.command = MissionCommand.KILL_MISSION
+                 self.mission_command_pub.publish(msg)
+            else:
+                self.get_logger().debug(
+                    f"Leak sensor {address}:{index} reading: {value:.1f}"
+                )
+                    
+        except Exception as e:
+            self.get_logger().error(f"Error processing leak sensor data: {e}")
 
     def mission_command_callback(self, msg: MissionCommand):
         """Handle mission command messages"""
