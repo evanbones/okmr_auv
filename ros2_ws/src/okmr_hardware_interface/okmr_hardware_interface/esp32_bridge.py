@@ -32,7 +32,7 @@ class ESP32BridgeNode(Node):
         )  # addresses correspond with their indicies at offset of -66
         self.declare_parameter("leak_sensor_indicies", [0, 4])
         self.declare_parameter(
-            "leak_sensor_threshold", 1000.0
+            "leak_sensor_threshold", 2000.0
         )  # Analog threshold for leak detection
 
         serial_port = (
