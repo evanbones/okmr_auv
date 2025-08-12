@@ -105,4 +105,6 @@ ros2 topic echo /battery_voltage
    - Topic: `/battery_voltage`
    - Publishes battery status.
 
+### Killswitch Info
+1. **`ros2 topic pub /mission_command okmr_msgs/msg/MissionCommand "{command: 4}" --once`**
 ---
