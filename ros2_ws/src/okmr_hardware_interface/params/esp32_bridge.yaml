@@ -10,3 +10,4 @@ esp32_bridge:
     leak_sensor_addresses: [66, 69]  # ESP32 board addresses
     leak_sensor_indicies: [0, 4]     # Analog pin indices
     leak_sensor_threshold: 2000.0     # Analog threshold for leak detection
+    motor_index_remapping: [1, 4, 7, 3, 5, 0, 2, 6]
