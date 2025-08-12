@@ -6,6 +6,10 @@ import os
 
 
 def generate_launch_description():
+    
+    # Get path to parameter file
+    package_dir = get_package_share_directory('okmr_hardware_interface')
+    esp32_params_file = os.path.join(package_dir, 'params', 'esp32_bridge.yaml')
 
     return LaunchDescription(
         [
@@ -16,15 +20,7 @@ def generate_launch_description():
             Node(
                 package="okmr_hardware_interface",
                 executable="esp32_bridge",
-                parameters=[{
-                    'serial_port': '/dev/ttyUSB0',
-                    'baud_rate': 115200,
-                    'killswitch_address': 42,
-                    'killswitch_index': 1,
-                    'mission_button_address': 43,
-                    'mission_button_index': 1,
-                    'mission_button_arm_time_ms': 5000
-                }]
+                parameters=[esp32_params_file]
             ),
             Node(
                 package="okmr_hardware_interface",
