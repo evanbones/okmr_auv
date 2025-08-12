@@ -7,4 +7,5 @@
     - all hardware interface nodes
     - camera nodes
 
-3. 
+3. Ensure that the thrust allocator has the correct paramters loaded
+4. send wrench commands 
