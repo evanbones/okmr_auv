@@ -413,6 +413,7 @@ class ESP32BridgeNode(Node):
             self.get_logger().warn("Motor command blocked - disarmed")
             # Send zero throttle to all motors as safety measure
             self.stop_all_motors()
+            return
         try:
             for i, throttle in enumerate(msg.throttle):
                 if throttle != 0.0:
