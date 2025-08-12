@@ -27,19 +27,34 @@ class ESP32BridgeNode(Node):
             self.get_parameter("serial_port").get_parameter_value().string_value
         )
         baud_rate = self.get_parameter("baud_rate").get_parameter_value().integer_value
-        self.killswitch_address = self.get_parameter("killswitch_address").get_parameter_value().integer_value
-        self.killswitch_index = self.get_parameter("killswitch_index").get_parameter_value().integer_value
-        self.mission_button_address = self.get_parameter("mission_button_address").get_parameter_value().integer_value
-        self.mission_button_index = self.get_parameter("mission_button_index").get_parameter_value().integer_value
-        self.mission_button_arm_time_ms = self.get_parameter("mission_button_arm_time_ms").get_parameter_value().integer_value
-
+        self.killswitch_address = (
+            self.get_parameter("killswitch_address").get_parameter_value().integer_value
+        )
+        self.killswitch_index = (
+            self.get_parameter("killswitch_index").get_parameter_value().integer_value
+        )
+        self.mission_button_address = (
+            self.get_parameter("mission_button_address")
+            .get_parameter_value()
+            .integer_value
+        )
+        self.mission_button_index = (
+            self.get_parameter("mission_button_index")
+            .get_parameter_value()
+            .integer_value
+        )
+        self.mission_button_arm_time_ms = (
+            self.get_parameter("mission_button_arm_time_ms")
+            .get_parameter_value()
+            .integer_value
+        )
 
         self.motor_throttle_sub = self.create_subscription(
             MotorThrottle, "motor_throttle", self.motor_callback, 10
         )
 
         self.ping_sub = self.create_subscription(String, "ping", self.ping_callback, 10)
-        
+
         self.mission_command_sub = self.create_subscription(
             MissionCommand, "mission_command", self.mission_command_callback, 10
         )
@@ -71,10 +86,10 @@ class ESP32BridgeNode(Node):
             # self.seaport.subscribe(3, lambda data: imu_accel_callback(data))
             # self.seaport.subscribe(4, lambda data: imu_gyro_callback(data))
             # self.seaport.subscribe(5, lambda data: imu_meta_callback(data))
-            self.seaport.subscribe(#make new msg type for leak sensor
+            self.seaport.subscribe(  # make new msg type for leak sensor
                 6, lambda data: self.sensor_board_analog_reading_callback(data)
             )
-            self.seaport.subscribe(#handle killswitch and button callback logic in THIS callback 
+            self.seaport.subscribe(  # handle killswitch and button callback logic in THIS callback
                 7, lambda data: self.sensor_board_digital_reading_callback(data)
             )
             self.seaport.subscribe(254, lambda data: self.pong_callback(data))
@@ -91,68 +106,76 @@ class ESP32BridgeNode(Node):
         # Killswitch state tracking
         self.killswitch_active = False
         self.last_killswitch_state = False
-        
+
         # Mission button state tracking
         self.last_mission_button_state = False
         self.mission_button_press_time = None
         self.mission_armed = False
 
     def environment_sensor_callback(self, data: dict):
-        #self.get_logger().info(f"Got environment data: {data}")
-        #FIXME new message needed for envorinment data
+        self.get_logger().info(f"Got environment data: {data}")
+        # FIXME new message needed for envorinment data
         pass
 
     def pong_callback(self, data: dict):
-        #self.get_logger().info(f"Got pong data: {data}")
+        self.get_logger().info(f"Got pong data: {data}")
         pass
 
     def sensor_board_analog_reading_callback(self, data: dict):
-        #self.get_logger().info(f"Got analog data: {data}")
+        self.get_logger().info(f"Got analog data: {data}", throttle_duration_sec=2.0)
         pass
 
     def sensor_board_digital_reading_callback(self, data: dict):
         """Handle digital inputs including killswitch from sensor boards"""
         # self.get_logger().info(f"Got digital data: {data}")
-        
+
         # Check if this is killswitch data (configurable address)
-        if data.get("a") == self.killswitch_address and data.get("i") == self.killswitch_index:
+        if (
+            data.get("a") == self.killswitch_address
+            and data.get("i") == self.killswitch_index
+        ):
             self.killswitch_callback(data)
-        
+
         # Check if this is mission button data (configurable address)
-        elif data.get("a") == self.mission_button_address and data.get("i") == self.mission_button_index:
+        elif (
+            data.get("a") == self.mission_button_address
+            and data.get("i") == self.mission_button_index
+        ):
             self.mission_button_callback(data)
 
-    def killswitch_callback(self, data: dict): 
+    def killswitch_callback(self, data: dict):
         """Handle killswitch state changes from ESP32"""
-        
+
         try:
             # Expect data format: {"a": address, "i": index, "v": 0/1}
             # Killswitch is a dial - when pulled it stays active until physically reset
-            killswitch_pulled = data['v']
-            
+            killswitch_pulled = data["v"]
+
             # Update current physical state
             self.last_killswitch_state = killswitch_pulled
-            
+
             # If killswitch is pulled and wasn't already active, trigger kill
             if killswitch_pulled and not self.killswitch_active:
                 self.killswitch_active = True
                 self.get_logger().error("HARDWARE KILLSWITCH ACTIVATED!")
-                
+
                 # Disarm mission button if armed
                 if self.mission_armed:
                     self.mission_armed = False
-                    self.get_logger().warn("Mission button disarmed due to killswitch activation")
-                
+                    self.get_logger().warn(
+                        "Mission button disarmed due to killswitch activation"
+                    )
+
                 # Publish hardware kill command
                 msg = MissionCommand()
                 msg.command = MissionCommand.HARDWARE_KILL
                 self.mission_command_pub.publish(msg)
-                
+
             elif not killswitch_pulled and self.killswitch_active:
                 # Killswitch dial was reset - automatically clear kill state
                 self.killswitch_active = False
                 self.get_logger().info("Hardware killswitch reset - system operational")
-                
+
         except Exception as e:
             self.get_logger().error(f"Error processing killswitch data: {e}")
 
@@ -160,58 +183,79 @@ class ESP32BridgeNode(Node):
         """Handle mission button state changes from ESP32"""
         try:
             # Expect data format: {"a": address, "i": index, "v": 0/1}
-            button_pressed = not data['v']
+            button_pressed = not data["v"]
             current_time = self.get_clock().now()
-            
+
             # Detect button press (rising edge)
             if button_pressed and not self.last_mission_button_state:
                 self.get_logger().info("Mission button pressed - starting hold timer")
                 self.mission_button_press_time = current_time
-                
+
             # Button is being held - check for arming
             elif button_pressed and self.last_mission_button_state:
                 if self.mission_button_press_time is not None:
-                    hold_duration_ms = (current_time - self.mission_button_press_time).nanoseconds / 1e6
-                    
+                    hold_duration_ms = (
+                        current_time - self.mission_button_press_time
+                    ).nanoseconds / 1e6
+
                     # Check if we should arm the system and start mission
-                    if not self.mission_armed and hold_duration_ms >= self.mission_button_arm_time_ms:
+                    if (
+                        not self.mission_armed
+                        and hold_duration_ms >= self.mission_button_arm_time_ms
+                    ):
                         # Check killswitch before allowing arming
                         if self.killswitch_active:
-                            self.get_logger().warn("Cannot arm system - hardware killswitch active")
+                            self.get_logger().warn(
+                                "Cannot arm system - hardware killswitch active"
+                            )
                         else:
                             self.mission_armed = True
-                            self.get_logger().info(f"Mission button held for {hold_duration_ms:.0f}ms - SYSTEM ARMED")
-                            
+                            self.get_logger().info(
+                                f"Mission button held for {hold_duration_ms:.0f}ms - SYSTEM ARMED"
+                            )
+
                             # Immediately start mission when armed
                             msg = MissionCommand()
                             msg.command = MissionCommand.START_MISSION
                             self.mission_command_pub.publish(msg)
-                            self.get_logger().info("Mission start command published - MISSION STARTED")
-                
+                            self.get_logger().info(
+                                "Mission start command published - MISSION STARTED"
+                            )
+
             # Detect button release (falling edge)
             elif not button_pressed and self.last_mission_button_state:
                 if self.mission_button_press_time is not None:
-                    hold_duration_ms = (current_time - self.mission_button_press_time).nanoseconds / 1e6
-                    self.get_logger().info(f"Mission button released after {hold_duration_ms:.0f}ms")
-                    
+                    hold_duration_ms = (
+                        current_time - self.mission_button_press_time
+                    ).nanoseconds / 1e6
+                    self.get_logger().info(
+                        f"Mission button released after {hold_duration_ms:.0f}ms"
+                    )
+
                     # Small pulse (< arm time) = disarm if currently armed
                     if hold_duration_ms < self.mission_button_arm_time_ms:
                         if self.mission_armed:
                             self.mission_armed = False
-                            self.get_logger().info("Mission button pulse detected - SYSTEM DISARMED")
+                            self.get_logger().info(
+                                "Mission button pulse detected - SYSTEM DISARMED"
+                            )
                         else:
-                            self.get_logger().info(f"Button released before arming time ({self.mission_button_arm_time_ms}ms)")
-                    
+                            self.get_logger().info(
+                                f"Button released before arming time ({self.mission_button_arm_time_ms}ms)"
+                            )
+
                     # Long press release - no action needed (mission already started when armed)
                     else:
-                        self.get_logger().info("Mission button released after long press - no action needed")
-                
+                        self.get_logger().info(
+                            "Mission button released after long press - no action needed"
+                        )
+
                 # Reset press time
                 self.mission_button_press_time = None
-            
+
             # Update button state
             self.last_mission_button_state = button_pressed
-                    
+
         except Exception as e:
             self.get_logger().error(f"Error processing mission button data: {e}")
 
@@ -221,9 +265,13 @@ class ESP32BridgeNode(Node):
             # Killswitch reset is now automatic when dial is physically reset
             if not self.last_killswitch_state and self.killswitch_active:
                 self.killswitch_active = False
-                self.get_logger().info("Hardware killswitch manually reset - system operational")
+                self.get_logger().info(
+                    "Hardware killswitch manually reset - system operational"
+                )
             elif self.last_killswitch_state:
-                self.get_logger().warn("Cannot reset killswitch while dial is still pulled")
+                self.get_logger().warn(
+                    "Cannot reset killswitch while dial is still pulled"
+                )
             else:
                 self.get_logger().info("Killswitch already reset")
 
