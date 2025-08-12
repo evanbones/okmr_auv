@@ -171,9 +171,9 @@ class ESP32BridgeNode(Node):
             # Extract data from ESP32 message
             # Expected format: {"a": address, "temp": temperature, "hum": humidity, "press": pressure}
             env_msg.board_address = data.get("a", 0)
-            env_msg.temperature = data.get("t", 0.0)
-            env_msg.humidity = data.get("h", 0.0)
-            env_msg.pressure = data.get("p", 0.0)
+            env_msg.temperature = float(data.get("t", 0.0))
+            env_msg.humidity = float(data.get("h", 0.0))
+            env_msg.pressure = float(data.get("p", 0.0))
 
             # Publish environment data
             self.environment_data_pub.publish(env_msg)
