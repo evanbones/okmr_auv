@@ -9,4 +9,4 @@ esp32_bridge:
     mission_button_arm_time_ms: 3000
     leak_sensor_addresses: [66, 69]  # ESP32 board addresses
     leak_sensor_indicies: [0, 4]     # Analog pin indices
-    leak_sensor_threshold: 500.0     # Analog threshold for leak detection
+    leak_sensor_threshold: 2000.0     # Analog threshold for leak detection
