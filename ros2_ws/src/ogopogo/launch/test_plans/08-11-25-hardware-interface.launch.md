@@ -51,6 +51,8 @@ ros2 topic pub /motor_throttle okmr_msgs/msg/MotorThrottle "throttle: [0.0, 0.0,
 ros2 topic pub /motor_throttle okmr_msgs/msg/MotorThrottle "throttle: [0.0, 0.0, 0.0, 0.0, 0.0, 1600, 0.0, 0.0]"
 ros2 topic pub /motor_throttle okmr_msgs/msg/MotorThrottle "throttle: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1600, 0.0]"
 ros2 topic pub /motor_throttle okmr_msgs/msg/MotorThrottle "throttle: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1600]"
+
+ros2 topic pub /motor_throttle okmr_msgs/MotorThrottle "{throttle: [1600.0, 1600.0, 1600.0, 1600.0, 1600.0, 1600.0, 1600.0, 1600.0]}"
 ```
 
 
