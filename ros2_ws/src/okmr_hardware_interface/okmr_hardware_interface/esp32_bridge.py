@@ -2,6 +2,7 @@
 
 import rclpy
 from rclpy.node import Node
+from rclpy.parameter import parameter_value_to_python
 from okmr_msgs.msg import MotorThrottle
 from okmr_msgs.msg import BatteryVoltage
 from okmr_msgs.msg import MissionCommand
@@ -22,6 +23,7 @@ class ESP32BridgeNode(Node):
         self.declare_parameter("mission_button_address", 66)
         self.declare_parameter("mission_button_index", 1)
         self.declare_parameter("mission_button_arm_time_ms", 3000)
+        self.declare_parameter("motor_index_remapping", [0, 1, 2, 3, 4, 5, 6, 7])
 
         serial_port = (
             self.get_parameter("serial_port").get_parameter_value().string_value
@@ -48,6 +50,12 @@ class ESP32BridgeNode(Node):
             .get_parameter_value()
             .integer_value
         )
+
+        self.motor_index_remapping = parameter_value_to_python(
+            self.get_parameter("motor_index_remapping")
+        )
+
+        self.get_logger().info(f"Motor remapping: {self.motor_index_remapping}")
 
         self.motor_throttle_sub = self.create_subscription(
             MotorThrottle, "motor_throttle", self.motor_callback, 10
@@ -298,7 +306,7 @@ class ESP32BridgeNode(Node):
 
         try:
             for i, throttle in enumerate(msg.throttle):
-                data = {str(i): float(throttle)}
+                data = {str(self.motor_index_remapping[i]): float(throttle)}
                 self.seaport.publish(1, data)
                 # self.get_logger().info(f"Sent to ESP32: {data}")
         except Exception as e:
