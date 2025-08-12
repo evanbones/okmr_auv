@@ -2,7 +2,6 @@
 
 import rclpy
 from rclpy.node import Node
-from rclpy.parameter import parameter_value_to_python
 from okmr_msgs.msg import MotorThrottle
 from okmr_msgs.msg import BatteryVoltage
 from okmr_msgs.msg import MissionCommand
@@ -81,9 +80,9 @@ class ESP32BridgeNode(Node):
             .integer_value
         )
 
-        self.motor_index_remapping = parameter_value_to_python(
-            self.get_parameter("motor_index_remapping")
-        )
+        self.motor_index_remapping = self.get_parameter(
+            "motor_index_remapping"
+        ).integer_array_value
 
         self.get_logger().info(f"Motor remapping: {self.motor_index_remapping}")
 
