@@ -80,9 +80,11 @@ class ESP32BridgeNode(Node):
             .integer_value
         )
 
-        self.motor_index_remapping = self.get_parameter(
-            "motor_index_remapping"
-        ).integer_array_value
+        self.motor_index_remapping = (
+            self.get_parameter("motor_index_remapping")
+            .get_parameter_value()
+            .integer_array_value
+        )
 
         self.get_logger().info(f"Motor remapping: {self.motor_index_remapping}")
 
