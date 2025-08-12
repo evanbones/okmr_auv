@@ -71,10 +71,10 @@ class ESP32BridgeNode(Node):
             # self.seaport.subscribe(3, lambda data: imu_accel_callback(data))
             # self.seaport.subscribe(4, lambda data: imu_gyro_callback(data))
             # self.seaport.subscribe(5, lambda data: imu_meta_callback(data))
-            self.seaport.subscribe(
+            self.seaport.subscribe(#make new msg type for leak sensor
                 6, lambda data: self.sensor_board_analog_reading_callback(data)
             )
-            self.seaport.subscribe(
+            self.seaport.subscribe(#handle killswitch and button callback logic in THIS callback 
                 7, lambda data: self.sensor_board_digital_reading_callback(data)
             )
             self.seaport.subscribe(254, lambda data: self.pong_callback(data))
@@ -118,12 +118,13 @@ class ESP32BridgeNode(Node):
         elif data.get("a") == self.mission_button_address and data.get("i") == self.mission_button_index:
             self.mission_button_callback(data)
 
-    def killswitch_callback(self, data: dict):
+    def killswitch_callback(self, data: dict): 
         """Handle killswitch state changes from ESP32"""
+        
         try:
             # Expect data format: {"a": address, "i": index, "v": 0/1}
             # Killswitch is a dial - when pulled it stays active until physically reset
-            killswitch_pulled = bool(data.get("v", 1))
+            killswitch_pulled = data['v']
             
             # Update current physical state
             self.last_killswitch_state = killswitch_pulled
@@ -155,7 +156,7 @@ class ESP32BridgeNode(Node):
         """Handle mission button state changes from ESP32"""
         try:
             # Expect data format: {"a": address, "i": index, "v": 0/1}
-            button_pressed = bool(data.get("v", 0))
+            button_pressed = data['v']
             current_time = self.get_clock().now()
             
             # Detect button press (rising edge)

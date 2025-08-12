@@ -60,6 +60,10 @@ install(DIRECTORY launch/
   DESTINATION share/${PROJECT_NAME}/launch
 )
 
+install(DIRECTORY params/
+  DESTINATION share/${PROJECT_NAME}/params
+)
+
 ament_export_dependencies(rclcpp okmr_msgs)
 
 if(BUILD_TESTING)
