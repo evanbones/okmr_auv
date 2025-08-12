@@ -19,11 +19,11 @@ def generate_launch_description():
                 parameters=[{
                     'serial_port': '/dev/ttyUSB0',
                     'baud_rate': 115200,
-                    'killswitch_address': 42,
-                    'killswitch_index': 1,
-                    'mission_button_address': 43,
+                    'killswitch_address': 66,
+                    'killswitch_index': 0,
+                    'mission_button_address': 66,
                     'mission_button_index': 1,
-                    'mission_button_arm_time_ms': 5000
+                    'mission_button_arm_time_ms': 3000
                 }]
             ),
             Node(

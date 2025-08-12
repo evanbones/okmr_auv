@@ -23,13 +23,11 @@ def generate_launch_description():
 
     return LaunchDescription(
         [
-            IncludeLaunchDescription(
-                rs_multi_camera_launch,
-                condition=UnlessCondition(LaunchConfiguration("sim_mode")),
-            ),
+            #IncludeLaunchDescription(
+            #    rs_multi_camera_launch,
+            #),
             IncludeLaunchDescription(
                 ogopogo_hardware_interface_launch,
-                condition=UnlessCondition(LaunchConfiguration("sim_mode")),
             ),
             Node(
                 package='foxglove_bridge',
