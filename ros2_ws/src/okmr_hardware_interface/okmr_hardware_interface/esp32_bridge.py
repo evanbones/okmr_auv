@@ -232,8 +232,8 @@ class ESP32BridgeNode(Node):
             return
 
         # Check killswitch state before sending motor commands
-        if self.killswitch_active:
-            self.get_logger().warn("Motor command blocked - hardware killswitch active")
+        if not self.mission_armed:
+            self.get_logger().warn("Motor command blocked - disarmed")
             # Send zero throttle to all motors as safety measure
             try:
                 for i in range(len(msg.throttle)):
