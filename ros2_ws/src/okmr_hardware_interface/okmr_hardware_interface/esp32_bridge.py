@@ -113,7 +113,9 @@ class ESP32BridgeNode(Node):
         self.mission_armed = False
 
     def environment_sensor_callback(self, data: dict):
-        self.get_logger().info(f"Got environment data: {data}")
+        self.get_logger().info(
+            f"Got environment data: {data}", throttle_duration_sec=2.0
+        )
         # FIXME new message needed for envorinment data
         pass
 
@@ -123,7 +125,6 @@ class ESP32BridgeNode(Node):
 
     def sensor_board_analog_reading_callback(self, data: dict):
         self.get_logger().info(f"Got analog data: {data}", throttle_duration_sec=2.0)
-        pass
 
     def sensor_board_digital_reading_callback(self, data: dict):
         """Handle digital inputs including killswitch from sensor boards"""
