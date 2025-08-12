@@ -2,6 +2,7 @@
 
 import rclpy
 from rclpy.node import Node
+from rclpy.parameter import parameter_value_to_python
 from okmr_msgs.msg import MotorThrottle
 from okmr_msgs.msg import BatteryVoltage
 from okmr_msgs.msg import MissionCommand
@@ -21,13 +22,15 @@ class ESP32BridgeNode(Node):
         self.declare_parameter("baud_rate", 115200)
         self.declare_parameter("killswitch_address", 66)
         self.declare_parameter("killswitch_index", 0)
+        self.declare_parameter("motor_count", 8)
         self.declare_parameter("mission_button_address", 66)
         self.declare_parameter("mission_button_index", 1)
+        self.declare_parameter("motor_index_remapping", [0, 1, 2, 3, 4, 5, 6, 7])
 
         self.declare_parameter("mission_button_arm_time_ms", 5000)
         self.declare_parameter("leak_sensor_addresses",[66,69] ) #addresses correspond with their indicies at offset of -66
         self.declare_parameter("leak_sensor_indicies", [0,4])
-        self.declare_parameter("leak_sensor_threshold", 500.0)  # Analog threshold for leak detection
+        self.declare_parameter("leak_sensor_threshold", 1000.0)  # Analog threshold for leak detection
 
         serial_port = (
             self.get_parameter("serial_port").get_parameter_value().string_value
@@ -42,6 +45,9 @@ class ESP32BridgeNode(Node):
         )
         self.killswitch_index = (
             self.get_parameter("killswitch_index").get_parameter_value().integer_value
+        )
+        self.motor_count = (
+            self.get_parameter("motor_count").get_parameter_value().integer_value
         )
         self.mission_button_address = (
             self.get_parameter("mission_button_address")
@@ -58,6 +64,12 @@ class ESP32BridgeNode(Node):
             .get_parameter_value()
             .integer_value
         )
+
+        self.motor_index_remapping = parameter_value_to_python(
+            self.get_parameter("motor_index_remapping")
+        )
+
+        self.get_logger().info(f"Motor remapping: {self.motor_index_remapping}")
 
         self.motor_throttle_sub = self.create_subscription(
             MotorThrottle, "motor_throttle", self.motor_callback, 10
@@ -134,7 +146,6 @@ class ESP32BridgeNode(Node):
         self.mission_armed = False
 
     def environment_sensor_callback(self, data: dict):
-
         """Handle environment sensor data from ESP32"""
         try:
             # Create EnvironmentData message
@@ -162,13 +173,11 @@ class ESP32BridgeNode(Node):
         except Exception as e:
             self.get_logger().error(f"Error processing environment sensor data: {e}")
 
-
     def pong_callback(self, data: dict):
         self.get_logger().info(f"Got pong data: {data}")
         pass
 
     def sensor_board_analog_reading_callback(self, data: dict):
-
         """Handle analog inputs including leak sensors"""
         # Check if this is leak sensor data
         address = data.get("a")
@@ -180,7 +189,6 @@ class ESP32BridgeNode(Node):
             if address == leak_addr and index == leak_idx:
                 self.leak_sensor_callback(data, i)
                 break
-
 
     def sensor_board_digital_reading_callback(self, data: dict):
         """Handle digital inputs including killswitch from sensor boards"""
@@ -215,6 +223,7 @@ class ESP32BridgeNode(Node):
             if killswitch_pulled and not self.killswitch_active:
                 self.killswitch_active = True
                 self.get_logger().error("HARDWARE KILLSWITCH ACTIVATED!")
+                self.stop_all_motors()
 
                 # Disarm mission button if armed
                 if self.mission_armed:
@@ -296,6 +305,7 @@ class ESP32BridgeNode(Node):
                             self.get_logger().info(
                                 "Mission button pulse detected - SYSTEM DISARMED"
                             )
+                            self.stop_all_motors()
                         else:
                             self.get_logger().info(
                                 f"Button released before arming time ({self.mission_button_arm_time_ms}ms)"
@@ -315,6 +325,15 @@ class ESP32BridgeNode(Node):
 
         except Exception as e:
             self.get_logger().error(f"Error processing mission button data: {e}")
+
+
+    def stop_all_motors(self):
+        try:
+            for i in range(self.motor_count):
+                data = {str(i): 1500.0}
+                self.seaport.publish(1, data)
+        except Exception as e:
+            self.get_logger().error(f"Failed to send safety stop to ESP32: {e}")
 
     def leak_sensor_callback(self, data: dict, sensor_index: int):
         """Handle leak sensor readings and publish warnings"""
@@ -377,18 +396,12 @@ class ESP32BridgeNode(Node):
         if not self.mission_armed:
             self.get_logger().warn("Motor command blocked - disarmed")
             # Send zero throttle to all motors as safety measure
-            try:
-                for i in range(len(msg.throttle)):
-                    data = {str(i): 1500.0}
-                    self.seaport.publish(1, data)
-            except Exception as e:
-                self.get_logger().error(f"Failed to send safety stop to ESP32: {e}")
-            return
-
+            self.stop_all_motors()
         try:
             for i, throttle in enumerate(msg.throttle):
-                data = {str(i): float(throttle)}
-                self.seaport.publish(1, data)
+                if throttle != 0.0:
+                    data = {str(self.motor_index_remapping[i]): float(throttle)}
+                    self.seaport.publish(1, data)
                 # self.get_logger().info(f"Sent to ESP32: {data}")
         except Exception as e:
             self.get_logger().error(f"Failed to send to ESP32: {e}")
