@@ -169,6 +169,7 @@ class ESP32BridgeNode(Node):
             if killswitch_pulled and not self.killswitch_active:
                 self.killswitch_active = True
                 self.get_logger().error("HARDWARE KILLSWITCH ACTIVATED!")
+                self.stop_all_motors()
 
                 # Disarm mission button if armed
                 if self.mission_armed:
@@ -250,6 +251,7 @@ class ESP32BridgeNode(Node):
                             self.get_logger().info(
                                 "Mission button pulse detected - SYSTEM DISARMED"
                             )
+                            self.stop_all_motors()
                         else:
                             self.get_logger().info(
                                 f"Button released before arming time ({self.mission_button_arm_time_ms}ms)"
@@ -306,14 +308,7 @@ class ESP32BridgeNode(Node):
         if not self.mission_armed:
             self.get_logger().warn("Motor command blocked - disarmed")
             # Send zero throttle to all motors as safety measure
-            try:
-                for i in range(self.motor_count):
-                    data = {str(i): 1500.0}
-                    self.seaport.publish(1, data)
-            except Exception as e:
-                self.get_logger().error(f"Failed to send safety stop to ESP32: {e}")
-            return
-
+            self.stop_all_motors()
         try:
             for i, throttle in enumerate(msg.throttle):
                 if throttle != 0.0:
