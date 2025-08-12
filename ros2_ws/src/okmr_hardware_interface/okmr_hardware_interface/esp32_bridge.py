@@ -20,6 +20,7 @@ class ESP32BridgeNode(Node):
         self.declare_parameter("baud_rate", 115200)
         self.declare_parameter("killswitch_address", 66)
         self.declare_parameter("killswitch_index", 0)
+        self.declare_parameter("motor_count", 8)
         self.declare_parameter("mission_button_address", 66)
         self.declare_parameter("mission_button_index", 1)
         self.declare_parameter("mission_button_arm_time_ms", 3000)
@@ -34,6 +35,9 @@ class ESP32BridgeNode(Node):
         )
         self.killswitch_index = (
             self.get_parameter("killswitch_index").get_parameter_value().integer_value
+        )
+        self.motor_count = (
+            self.get_parameter("motor_count").get_parameter_value().integer_value
         )
         self.mission_button_address = (
             self.get_parameter("mission_button_address")
@@ -121,9 +125,7 @@ class ESP32BridgeNode(Node):
         self.mission_armed = False
 
     def environment_sensor_callback(self, data: dict):
-        self.get_logger().info(
-            f"Got environment data: {data}", throttle_duration_sec=2.0
-        )
+        self.get_logger().info(f"Got environment data: {data}")
         # FIXME new message needed for envorinment data
         pass
 
@@ -132,7 +134,7 @@ class ESP32BridgeNode(Node):
         pass
 
     def sensor_board_analog_reading_callback(self, data: dict):
-        self.get_logger().info(f"Got analog data: {data}", throttle_duration_sec=2.0)
+        self.get_logger().info(f"Got analog data: {data}")
 
     def sensor_board_digital_reading_callback(self, data: dict):
         """Handle digital inputs including killswitch from sensor boards"""
@@ -268,6 +270,14 @@ class ESP32BridgeNode(Node):
         except Exception as e:
             self.get_logger().error(f"Error processing mission button data: {e}")
 
+    def stop_all_motors(self):
+        try:
+            for i in range(self.motor_count):
+                data = {str(i): 1500.0}
+                self.seaport.publish(1, data)
+        except Exception as e:
+            self.get_logger().error(f"Failed to send safety stop to ESP32: {e}")
+
     def mission_command_callback(self, msg: MissionCommand):
         """Handle mission command messages"""
         if msg.command == MissionCommand.HARDWARE_KILL_RESET:
@@ -297,7 +307,7 @@ class ESP32BridgeNode(Node):
             self.get_logger().warn("Motor command blocked - disarmed")
             # Send zero throttle to all motors as safety measure
             try:
-                for i in range(len(msg.throttle)):
+                for i in range(self.motor_count):
                     data = {str(i): 1500.0}
                     self.seaport.publish(1, data)
             except Exception as e:
@@ -306,8 +316,9 @@ class ESP32BridgeNode(Node):
 
         try:
             for i, throttle in enumerate(msg.throttle):
-                data = {str(self.motor_index_remapping[i]): float(throttle)}
-                self.seaport.publish(1, data)
+                if throttle != 0.0:
+                    data = {str(self.motor_index_remapping[i]): float(throttle)}
+                    self.seaport.publish(1, data)
                 # self.get_logger().info(f"Sent to ESP32: {data}")
         except Exception as e:
             self.get_logger().error(f"Failed to send to ESP32: {e}")
