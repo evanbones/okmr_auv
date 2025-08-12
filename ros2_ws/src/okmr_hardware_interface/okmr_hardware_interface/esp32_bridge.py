@@ -28,17 +28,33 @@ class ESP32BridgeNode(Node):
         self.declare_parameter("motor_index_remapping", [0, 1, 2, 3, 4, 5, 6, 7])
 
         self.declare_parameter("mission_button_arm_time_ms", 5000)
-        self.declare_parameter("leak_sensor_addresses",[66,69] ) #addresses correspond with their indicies at offset of -66
-        self.declare_parameter("leak_sensor_indicies", [0,4])
-        self.declare_parameter("leak_sensor_threshold", 1000.0)  # Analog threshold for leak detection
+        self.declare_parameter(
+            "leak_sensor_addresses", [66, 69]
+        )  # addresses correspond with their indicies at offset of -66
+        self.declare_parameter("leak_sensor_indicies", [0, 4])
+        self.declare_parameter(
+            "leak_sensor_threshold", 1000.0
+        )  # Analog threshold for leak detection
 
         serial_port = (
             self.get_parameter("serial_port").get_parameter_value().string_value
         )
         baud_rate = self.get_parameter("baud_rate").get_parameter_value().integer_value
-        self.leak_sensor_addresses = self.get_parameter("leak_sensor_addresses").get_parameter_value().integer_array_value
-        self.leak_sensor_indices = self.get_parameter("leak_sensor_indicies").get_parameter_value().integer_array_value
-        self.leak_sensor_threshold = self.get_parameter("leak_sensor_threshold").get_parameter_value().double_value
+        self.leak_sensor_addresses = (
+            self.get_parameter("leak_sensor_addresses")
+            .get_parameter_value()
+            .integer_array_value
+        )
+        self.leak_sensor_indices = (
+            self.get_parameter("leak_sensor_indicies")
+            .get_parameter_value()
+            .integer_array_value
+        )
+        self.leak_sensor_threshold = (
+            self.get_parameter("leak_sensor_threshold")
+            .get_parameter_value()
+            .double_value
+        )
 
         self.killswitch_address = (
             self.get_parameter("killswitch_address").get_parameter_value().integer_value
@@ -89,9 +105,7 @@ class ESP32BridgeNode(Node):
             MissionCommand, "mission_command", 10
         )
 
-        self.leak_sensor_pub = self.create_publisher(
-            SensorReading, "leak_sensor", 10
-        )
+        self.leak_sensor_pub = self.create_publisher(SensorReading, "leak_sensor", 10)
 
         self.environment_data_pub = self.create_publisher(
             EnvironmentData, "environment_data", 10
@@ -152,24 +166,24 @@ class ESP32BridgeNode(Node):
             env_msg = EnvironmentData()
             env_msg.header.stamp = self.get_clock().now().to_msg()
             env_msg.header.frame_id = "environment_sensor"
-            
+
             # Extract data from ESP32 message
             # Expected format: {"a": address, "temp": temperature, "hum": humidity, "press": pressure}
             env_msg.board_address = data.get("a", 0)
             env_msg.temperature = data.get("t", 0.0)
             env_msg.humidity = data.get("h", 0.0)
             env_msg.pressure = data.get("p", 0.0)
-            
+
             # Publish environment data
             self.environment_data_pub.publish(env_msg)
-            
+
             # Log environment data (can be disabled in production)
             self.get_logger().debug(
                 f"Environment data from board {env_msg.board_address}: "
                 f"T={env_msg.temperature:.1f}°C, H={env_msg.humidity:.1f}%, "
                 f"P={env_msg.pressure:.1f}hPa"
             )
-            
+
         except Exception as e:
             self.get_logger().error(f"Error processing environment sensor data: {e}")
 
@@ -181,11 +195,13 @@ class ESP32BridgeNode(Node):
         """Handle analog inputs including leak sensors"""
         # Check if this is leak sensor data
         address = data.get("a")
-        index = data.get("i") 
+        index = data.get("i")
         value = data.get("v", 0.0)
-        
+
         # Check if this matches any of our configured leak sensors
-        for i, (leak_addr, leak_idx) in enumerate(zip(self.leak_sensor_addresses, self.leak_sensor_indices)):
+        for i, (leak_addr, leak_idx) in enumerate(
+            zip(self.leak_sensor_addresses, self.leak_sensor_indices)
+        ):
             if address == leak_addr and index == leak_idx:
                 self.leak_sensor_callback(data, i)
                 break
@@ -326,7 +342,6 @@ class ESP32BridgeNode(Node):
         except Exception as e:
             self.get_logger().error(f"Error processing mission button data: {e}")
 
-
     def stop_all_motors(self):
         try:
             for i in range(self.motor_count):
@@ -342,29 +357,29 @@ class ESP32BridgeNode(Node):
             address = data.get("a")
             index = data.get("i")
             value = data.get("v", 0.0)
-            
+
             # Create and publish sensor reading message
             sensor_msg = SensorReading()
             sensor_msg.header.stamp = self.get_clock().now().to_msg()
             sensor_msg.header.frame_id = f"leak_sensor_{address}_{index}"
             sensor_msg.data = float(value)
-            
+
             self.leak_sensor_pub.publish(sensor_msg)
-            
+
             # Check threshold and issue warning
             if value > self.leak_sensor_threshold:
                 self.get_logger().error(
                     f"LEAK DETECTED! Sensor {address}:{index} reading {value:.1f} "
                     f"exceeds threshold {self.leak_sensor_threshold:.1f}"
                 )
-                 msg = MissionCommand()
-                 msg.command = MissionCommand.KILL_MISSION
-                 self.mission_command_pub.publish(msg)
+                msg = MissionCommand()
+                msg.command = MissionCommand.KILL_MISSION
+                self.mission_command_pub.publish(msg)
             else:
                 self.get_logger().debug(
                     f"Leak sensor {address}:{index} reading: {value:.1f}"
                 )
-                    
+
         except Exception as e:
             self.get_logger().error(f"Error processing leak sensor data: {e}")
 
