@@ -98,17 +98,21 @@ class ESP32BridgeNode(Node):
         self.mission_armed = False
 
     def environment_sensor_callback(self, data: dict):
-        self.get_logger().info(f"Got environment data: {data}")
+        #self.get_logger().info(f"Got environment data: {data}")
+        #FIXME new message needed for envorinment data
+        pass
 
     def pong_callback(self, data: dict):
-        self.get_logger().info(f"Got pong data: {data}")
+        #self.get_logger().info(f"Got pong data: {data}")
+        pass
 
     def sensor_board_analog_reading_callback(self, data: dict):
-        self.get_logger().info(f"Got analog data: {data}")
+        #self.get_logger().info(f"Got analog data: {data}")
+        pass
 
     def sensor_board_digital_reading_callback(self, data: dict):
         """Handle digital inputs including killswitch from sensor boards"""
-        self.get_logger().info(f"Got digital data: {data}")
+        # self.get_logger().info(f"Got digital data: {data}")
         
         # Check if this is killswitch data (configurable address)
         if data.get("a") == self.killswitch_address and data.get("i") == self.killswitch_index:
@@ -156,7 +160,7 @@ class ESP32BridgeNode(Node):
         """Handle mission button state changes from ESP32"""
         try:
             # Expect data format: {"a": address, "i": index, "v": 0/1}
-            button_pressed = data['v']
+            button_pressed = not data['v']
             current_time = self.get_clock().now()
             
             # Detect button press (rising edge)
