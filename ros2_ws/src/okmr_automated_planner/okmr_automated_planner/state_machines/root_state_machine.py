@@ -1,5 +1,6 @@
 from okmr_automated_planner.base_state_machine import BaseStateMachine
 from okmr_utils.logging import make_green_log
+from okmr_msgs.msg import MissionCommand
 
 
 class RootStateMachine(BaseStateMachine):
@@ -22,6 +23,11 @@ class RootStateMachine(BaseStateMachine):
         elif msg.command == MissionCommand.KILL_MISSION:
             self.ros_node.get_logger().warn("Mission kill command received")
             self.abort()
+        elif msg.command == MissionCommand.HARDWARE_KILL:
+            self.ros_node.get_logger().error("HARDWARE KILLSWITCH ACTIVATED - Emergency abort")
+            self.abort()
+        elif msg.command == MissionCommand.HARDWARE_KILL_RESET:
+            self.ros_node.get_logger().info("Hardware killswitch reset received")
 
     def on_enter_waiting_for_mission_start(self):
         """Wait for subscription to /mission_command topic"""
