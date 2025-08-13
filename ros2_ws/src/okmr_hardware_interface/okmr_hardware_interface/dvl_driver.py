@@ -23,11 +23,14 @@ class DvlDriverNode(Node):
             data, dvl_addr = sock_bottom.recvfrom(1024)  # buffer size is 1024 bytes
             data = data.decode('ASCII')
             #print(f"Received message: {} from {dvl_addr}")
-            self.get_logger().info(f"DVL packet received from {dvl_addr}: {data[:100]}...")  # Log first 100 chars
+            self.get_logger().info(f"DVL packet received from {dvl_addr}: {data")  # Log first 100 chars
 
 
             # Regular expression to match the PNORBT8 message format
             pattern = r"TIME=(-?\d+\.?\d*),.*?VX=(-?\d+\.\d+),VY=(-?\d+\.\d+),VZ=(-?\d+\.\d+),FOM=(-?\d+\.\d+),D1=(-?\d+\.\d+),D2=(-?\d+\.\d+),D3=(-?\d+\.\d+),D4=(-?\d+\.\d+),BATT=(-?\d+\.\d+),SS=(-?\d+\.\d+),PRESS=(-?\d+\.\d+),TEMP=(-?\d+\.\d+),STAT=(0x[0-9A-Fa-f]+)"
+            #[dvl_driver-12] [INFO] [1755071789.549515225] [dvl_driver]: DVL packet received from ('192.168.2.3', 9002): $PNORBT6,TIME=1755046583.8758,DT1=11.273,DT2=-142.114,VX=0.0202,VY=0.0432,VZ=-0.0093,FOM=0.00115,D1=1.49,D2=1.70,D3=1.39,D4=1.29*4B
+#[dvl_driver-12] 
+
 
             # Find the matches
             matches = re.search(pattern, data)
