@@ -219,11 +219,11 @@ class ESP32BridgeNode(Node):
             self.killswitch_callback(data)
 
         # Check if this is mission button data (configurable address)
-        elif (
-            data.get("a") == self.mission_button_address
-            and data.get("i") == self.mission_button_index
-        ):
-            self.mission_button_callback(data)
+        #elif (
+        #    data.get("a") == self.mission_button_address
+        #    and data.get("i") == self.mission_button_index
+        #):
+        #    self.mission_button_callback(data)
 
     def killswitch_callback(self, data: dict):
         """Handle killswitch state changes from ESP32"""
@@ -384,22 +384,6 @@ class ESP32BridgeNode(Node):
         except Exception as e:
             self.get_logger().error(f"Error processing leak sensor data: {e}")
 
-    def mission_command_callback(self, msg: MissionCommand):
-        """Handle mission command messages"""
-        if msg.command == MissionCommand.HARDWARE_KILL_RESET:
-            # Killswitch reset is now automatic when dial is physically reset
-            if not self.last_killswitch_state and self.killswitch_active:
-                self.killswitch_active = False
-                self.get_logger().info(
-                    "Hardware killswitch manually reset - system operational"
-                )
-            elif self.last_killswitch_state:
-                self.get_logger().warn(
-                    "Cannot reset killswitch while dial is still pulled"
-                )
-            else:
-                self.get_logger().info("Killswitch already reset")
-
     def ping_callback(self, msg):
         self.seaport.publish(254, {"cmd": "ping"})
 
@@ -409,7 +393,7 @@ class ESP32BridgeNode(Node):
             return
 
         # Check killswitch state before sending motor commands
-        if not self.mission_armed:
+        if self.killswitch_active:
             self.get_logger().warn("Motor command blocked - disarmed")
             # Send zero throttle to all motors as safety measure
             self.stop_all_motors()
