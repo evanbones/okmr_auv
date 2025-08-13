@@ -13,6 +13,10 @@ import serial
 import seaport as sp
 
 
+def clamp(value, min_value, max_value):
+    return max(min_value, min(value, max_value))
+
+
 class ESP32BridgeNode(Node):
     def __init__(self):
         super().__init__("esp32_bridge")
@@ -34,6 +38,8 @@ class ESP32BridgeNode(Node):
         self.declare_parameter(
             "leak_sensor_threshold", 2000.0
         )  # Analog threshold for leak detection
+        self.declare_parameter("max_throttle", 1800.0)
+        self.declare_parameter("min_throttle", 1200.0)
 
         serial_port = (
             self.get_parameter("serial_port").get_parameter_value().string_value
@@ -84,6 +90,14 @@ class ESP32BridgeNode(Node):
             self.get_parameter("motor_index_remapping")
             .get_parameter_value()
             .integer_array_value
+        )
+
+        self.max_throttle = (
+            self.get_parameter("max_throttle").get_parameter_value().double_value
+        )
+
+        self.min_throttle = (
+            self.get_parameter("min_throttle").get_parameter_value().double_value
         )
 
         self.get_logger().info(f"Motor remapping: {self.motor_index_remapping}")
@@ -417,7 +431,11 @@ class ESP32BridgeNode(Node):
         try:
             for i, throttle in enumerate(msg.throttle):
                 if throttle != 0.0:
-                    data = {str(self.motor_index_remapping[i]): float(throttle)}
+                    data = {
+                        str(self.motor_index_remapping[i]): clamp(
+                            float(throttle), self.min_throttle, self.max_throttle
+                        )
+                    }
                     self.seaport.publish(1, data)
                 # self.get_logger().info(f"Sent to ESP32: {data}")
         except Exception as e:
