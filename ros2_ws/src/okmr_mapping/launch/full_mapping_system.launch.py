@@ -53,7 +53,6 @@ def generate_launch_description():
 
     return LaunchDescription(
         [
-            use_semantic_arg,
             front_depth_to_pointcloud_node,
             # bottom_depth_to_pointcloud_node,
         ]
