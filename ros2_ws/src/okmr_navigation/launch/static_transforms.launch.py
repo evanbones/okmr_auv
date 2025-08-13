@@ -27,14 +27,14 @@ def generate_launch_description():
                     "0",
                     "0",
                     # Rotation: yaw pitch roll (radians)
-                    # Rotate to align D455 optical frame with ROS2 base_link
-                    # This is a 90° rotation around X, then 90° around Z
-                    str(-math.pi / 2),
+                    # Transform from D455 optical frame to ROS2 base_link
+                    # 90° yaw (Z-axis) + 90° pitch (Y-axis)
+                    str(math.pi / 2),
+                    str(math.pi / 2),
                     "0",
-                    str(-math.pi / 2),
                     # Parent frame -> Child frame
-                    "base_link",
                     "camera_imu_optical_frame",
+                    "base_link",
                 ],
             ),
             Node(
