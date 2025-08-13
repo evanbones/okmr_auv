@@ -33,8 +33,8 @@ def generate_launch_description():
                     "0",
                     str(-math.pi / 2),
                     # Parent frame -> Child frame
-                    "base_link",
                     "camera_imu_optical_frame",
+                    "base_link",
                 ],
             ),
             Node(
@@ -50,8 +50,8 @@ def generate_launch_description():
                     "0",
                     "0",
                     # Parent frame -> Child frame
-                    "base_link",
                     "dvl",
+                    "base_link",
                 ],
             ),
         ]
