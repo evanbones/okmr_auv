@@ -19,6 +19,10 @@ def generate_launch_description():
             ),
             Node(
                 package="okmr_hardware_interface",
+                executable="thrust_to_pwm_node",
+            ),
+            Node(
+                package="okmr_hardware_interface",
                 executable="esp32_bridge",
                 parameters=[esp32_params_file]
             ),
