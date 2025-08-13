@@ -4,8 +4,8 @@ from .finding_gate_state_machine import FindingGateStateMachine
 from .finding_marker_state_machine import FindingMarkerStateMachine
 from .test_state_machine import TestStateMachine
 from .test_scan_state_machine import TestScanStateMachine
-from qualification_state_machine import QualificationStateMachine
-from rotating_scan_state_machine import RotatingScanStateMachine
+from .qualification_state_machine import QualificationStateMachine
+from .rotating_scan_state_machine import RotatingScanStateMachine
 from .sideways_scan_state_machine import SidewaysScanStateMachine
 
 __all__ = [
@@ -15,7 +15,7 @@ __all__ = [
     'FindingMarkerStateMachine',
     'TestStateMachine',
     'TestScanStateMachine',
-    'QualificationStateMachine'
+    'QualificationStateMachine',
     'RotatingScanStateMachine',
     'SidewaysScanStateMachine'
     

@@ -72,6 +72,8 @@ class StateMachineFactory:
             "test": state_machines.TestStateMachine,
             "test_scan": state_machines.TestScanStateMachine,
             "qualifying": state_machines.QualificationStateMachine,
+            "rotating_scan": state_machines.RotatingScanStateMachine,
+            "sideways_scan": state_machines.SidewaysScanStateMachine,
         }
 
         if not machine_name in config_to_class_dict.keys():
