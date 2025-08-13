@@ -7,7 +7,7 @@ esp32_bridge:
     mission_button_address: 66
     mission_button_index: 1
     mission_button_arm_time_ms: 5000
-    battery_voltage_address: [66]
+    battery_voltage_address: [100] #dummy value - invalid address
     battery_voltage_index: [2, 3, 4, 5]
     battery_voltage_read_mult: [1.0, 3.2222, 5.4444, 5.4444]
     motor_count: 8
