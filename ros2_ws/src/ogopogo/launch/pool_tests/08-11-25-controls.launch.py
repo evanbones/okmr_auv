@@ -32,7 +32,7 @@ def generate_launch_description():
     )
 
     navigation_launch = PathJoinSubstitution(
-        [navigation_dir, "full_navigation_system.launch.py"]
+        [navigation_dir, "full_navigation_stack.launch.py"]
     )
 
     full_control_stack_launch = PathJoinSubstitution(
