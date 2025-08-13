@@ -29,12 +29,12 @@ class ESP32BridgeNode(Node):
         self.declare_parameter("mission_button_index", 1)
         self.declare_parameter("mission_button_arm_time_ms", 5000)
         self.declare_parameter("battery_voltage_address",[66])
-        self.declare_parameter("battery_voltage_index",[2])
-        self.declare_parameter("battery_voltage_read_mult",[1,3.2222, 5.4444,5.4444])
+        self.declare_parameter("battery_voltage_index",[2, 3, 4, 5])
+        self.declare_parameter("battery_voltage_read_mult",[1.0,3.2222, 5.4444,5.4444])
         self.declare_parameter("motor_count", 8)
         self.declare_parameter("motor_index_remapping", [0, 1, 2, 3, 4, 5, 6, 7])
         self.declare_parameter("leak_sensor_addresses", [66, 67, 69])  # addresses correspond with their indicies at offset of -66
-        self.declare_parameter("leak_sensor_indicies", [0,1, 4])
+        self.declare_parameter("leak_sensor_indicies", [1,1, 1])
         self.declare_parameter("leak_sensor_threshold", 2000.0)  # Analog threshold for leak detection
         self.declare_parameter("max_throttle", 1800.0)
         self.declare_parameter("min_throttle", 1200.0)
@@ -441,7 +441,7 @@ class ESP32BridgeNode(Node):
                 )
                 
                 # Clear readings for next cycle
-                self.battery_readings.clear()
+                #self.battery_readings.clear()
                 
         except Exception as e:
             self.get_logger().error(f"Error processing battery voltage data: {e}")
