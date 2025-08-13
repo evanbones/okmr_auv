@@ -50,8 +50,8 @@ def generate_launch_description():
                     "0",
                     "0",
                     # Parent frame -> Child frame
-                    "dvl",
                     "base_link",
+                    "dvl",
                 ],
             ),
         ]
