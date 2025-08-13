@@ -54,7 +54,6 @@ def generate_launch_description():
             Node(
                 package="foxglove_bridge",
                 executable="foxglove_bridge",
-                ],
             ),
             IncludeLaunchDescription(
                 full_control_stack_launch,

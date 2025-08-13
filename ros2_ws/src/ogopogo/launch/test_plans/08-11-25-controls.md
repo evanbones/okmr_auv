@@ -45,5 +45,7 @@ POSE + VELOCITY TUNING
 1. enable pose control layer
 ros2 topic pub /control_mode okmr_msgs/ControlMode "{control_mode: 0}" --once
 
-2. slowly increase pose 
+2. slowly increase pose p gain, start around 0.1
+
+3. if the response is sluggish, increase velocity p gain
 
