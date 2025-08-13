@@ -14,7 +14,9 @@ def generate_launch_description():
 
     return LaunchDescription(
         [
-            static_transforms_launch,
+            IncludeLaunchDescription(
+                static_transforms_launch,
+            ),
             Node(
                 package="okmr_navigation",
                 executable="dead_reckoning",
