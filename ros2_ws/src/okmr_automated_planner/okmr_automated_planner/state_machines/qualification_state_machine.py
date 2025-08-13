@@ -4,7 +4,7 @@ from okmr_msgs.srv import SetDeadReckoningEnabled
 from okmr_msgs.msg import MovementCommand, MissionCommand
 
 
-class TestStateMachine(BaseStateMachine):
+class QualificationStateMachine(BaseStateMachine):
 
     PARAMETERS = [
         {

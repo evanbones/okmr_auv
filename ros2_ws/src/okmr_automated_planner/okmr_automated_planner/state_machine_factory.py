@@ -71,6 +71,7 @@ class StateMachineFactory:
             "doing_gate_task": state_machines.DoingGateTaskStateMachine,
             "test": state_machines.TestStateMachine,
             "test_scan": state_machines.TestScanStateMachine,
+            "qualifying": state_machines.QualificationStateMachine,
         }
 
         if not machine_name in config_to_class_dict.keys():
