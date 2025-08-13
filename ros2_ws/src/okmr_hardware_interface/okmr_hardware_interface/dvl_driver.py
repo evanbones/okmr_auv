@@ -25,7 +25,9 @@ class DvlDriverNode(Node):
             data = data.decode("ASCII")
 
             # Regular expression to match the PNORBT8 message format
-            pattern = r"TIME=(-?\d+\.?\d*),.*?VX=(-?\d+\.\d+),VY=(-?\d+\.\d+),VZ=(-?\d+\.\d+),FOM=(-?\d+\.\d+),D1=(-?\d+\.\d+),D2=(-?\d+\.\d+),D3=(-?\d+\.\d+),D4=(-?\d+\.\d+),BATT=(-?\d+\.\d+),SS=(-?\d+\.\d+),PRESS=(-?\d+\.\d+),TEMP=(-?\d+\.\d+),STAT=(0x[0-9A-Fa-f]+)"
+            pattern = r"\$PNORBT8,TIME=(-?\d+\.?\d*),DT1=(-?\d+\.\d+),DT2=(-?\d+\.\d+),VX=(-?\d+\.\d+),VY=(-?\d+\.\d+),VZ=(-?\d+\.\d+),FOM=(-?\d+\.\d+),D1=(-?\d+\.\d+),D2=(-?\d+\.\d+),D3=(-?\d+\.\d+),D4=(-?\d+\.\d+),BATT=(-?\d+\.\d+),SS=(-?\d+\.\d+),PRESS=(-?\d+\.\d+),TEMP=(-?\d+\.\d+),STAT=(0x[0-9A-Fa-f]+)"
+            # [dvl_driver-12] [INFO] [1755071789.549515225] [dvl_driver]: DVL packet received from ('192.168.2.3', 9002): $PNORBT6,TIME=1755046583.8758,DT1=11.273,DT2=-142.114,VX=0.0202,VY=0.0432,VZ=-0.0093,FOM=0.00115,D1=1.49,D2=1.70,D3=1.39,D4=1.29*4B
+            # [dvl_driver-12]
 
             # Find the matches
             matches = re.search(pattern, data)
@@ -33,19 +35,21 @@ class DvlDriverNode(Node):
             if matches:
                 # Extracting values from regex groups
                 time_val = float(matches.group(1))
-                vx = float(matches.group(2))
-                vy = float(matches.group(3))
-                vz = float(matches.group(4))
-                fom = float(matches.group(5))
-                d1 = float(matches.group(6))
-                d2 = float(matches.group(7))
-                d3 = float(matches.group(8))
-                d4 = float(matches.group(9))
-                battery = float(matches.group(10))
-                speed_sound = float(matches.group(11))
-                pressure = float(matches.group(12))
-                temperature = float(matches.group(13))
-                status = int(matches.group(14), 16)  # Convert hex string to int
+                dt1 = float(matches.group(2))
+                dt2 = float(matches.group(3))
+                vx = float(matches.group(4))
+                vy = float(matches.group(5))
+                vz = float(matches.group(6))
+                fom = float(matches.group(7))
+                d1 = float(matches.group(8))
+                d2 = float(matches.group(9))
+                d3 = float(matches.group(10))
+                d4 = float(matches.group(11))
+                battery = float(matches.group(12))
+                speed_sound = float(matches.group(13))
+                pressure = float(matches.group(14))
+                temperature = float(matches.group(15))
+                status = int(matches.group(16), 16)  # Convert hex string to int
 
                 # Create DVL message
                 dvl_msg = Dvl()
@@ -73,13 +77,19 @@ class DvlDriverNode(Node):
                 # Publish DVL message
                 self.dvl_publisher.publish(dvl_msg)
 
+                self.get_logger().debug(
+                    f"DVL data parsed successfully - VX: {vx:.3f}, VY: {vy:.3f}, VZ: {vz:.3f}, FOM: {fom:.3f}"
+                )
+
                 # Output the extracted variables
                 # print(f"VX: {vx}, VY: {vy}, VZ: {vz}")
                 # print(f"D1: {d1}, D2: {d2}, D3: {d3}, D4: {d4}")
                 # https://support.nortekgroup.com/hc/en-us/article_attachments/19558106638620
                 # mode 358
             else:
-                print("No matches found.")
+                self.get_logger().debug(
+                    f"DVL packet parsing failed - no regex matches found"
+                )
 
 
 def main(args=None):
