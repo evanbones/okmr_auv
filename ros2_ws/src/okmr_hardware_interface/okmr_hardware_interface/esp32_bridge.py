@@ -25,19 +25,17 @@ class ESP32BridgeNode(Node):
         self.declare_parameter("baud_rate", 115200)
         self.declare_parameter("killswitch_address", 66)
         self.declare_parameter("killswitch_index", 0)
-        self.declare_parameter("motor_count", 8)
         self.declare_parameter("mission_button_address", 66)
         self.declare_parameter("mission_button_index", 1)
-        self.declare_parameter("motor_index_remapping", [0, 1, 2, 3, 4, 5, 6, 7])
-
         self.declare_parameter("mission_button_arm_time_ms", 5000)
-        self.declare_parameter(
-            "leak_sensor_addresses", [66, 69]
-        )  # addresses correspond with their indicies at offset of -66
-        self.declare_parameter("leak_sensor_indicies", [0, 4])
-        self.declare_parameter(
-            "leak_sensor_threshold", 2000.0
-        )  # Analog threshold for leak detection
+        self.declare_parameter("battery_voltage_address",[66])
+        self.declare_parameter("battery_voltage_index",[2])
+        self.declare_parameter("battery_voltage_read_mult",[1,3.2222, 5.4444,5.4444])
+        self.declare_parameter("motor_count", 8)
+        self.declare_parameter("motor_index_remapping", [0, 1, 2, 3, 4, 5, 6, 7])
+        self.declare_parameter("leak_sensor_addresses", [66, 67, 69])  # addresses correspond with their indicies at offset of -66
+        self.declare_parameter("leak_sensor_indicies", [0,1, 4])
+        self.declare_parameter("leak_sensor_threshold", 2000.0)  # Analog threshold for leak detection
         self.declare_parameter("max_throttle", 1800.0)
         self.declare_parameter("min_throttle", 1200.0)
 
@@ -85,6 +83,23 @@ class ESP32BridgeNode(Node):
             .get_parameter_value()
             .integer_value
         )
+        self.battery_voltage_address = (
+            self.get_parameter("battery_voltage_address")
+            .get_parameter_value()
+            .integer_array_value
+        )
+        self.battery_voltage_index = (
+            self.get_parameter("battery_voltage_index")
+            .get_parameter_value()
+            .integer_array_value
+        )
+
+        self.battery_voltage_read_mult = (
+            self.get_parameter("battery_voltage_read_mult")
+            .get_parameter_value()
+            .double_array_value
+        )
+
 
         self.motor_index_remapping = (
             self.get_parameter("motor_index_remapping")
@@ -208,7 +223,7 @@ class ESP32BridgeNode(Node):
         address = data.get("a")
         index = data.get("i")
         value = data.get("v", 0.0)
-
+        self.get_logger().info(f"ANALOG READING -- a: {address}, i: {index}, v: {value} ")
         # Check if this matches any of our configured leak sensors
         for i, (leak_addr, leak_idx) in enumerate(
             zip(self.leak_sensor_addresses, self.leak_sensor_indices)
@@ -216,7 +231,12 @@ class ESP32BridgeNode(Node):
             if address == leak_addr and index == leak_idx:
                 self.leak_sensor_callback(data, i)
                 break
-
+        for i, (batt_addr, batt_idx) in enumerate(
+            zip(self.battery_voltage_address, self.battery_voltage_index)
+        ):
+            if address == batt_addr and index == batt_idx:
+                self.battery_voltage_callback(data, i)
+                break
     def sensor_board_digital_reading_callback(self, data: dict):
         """Handle digital inputs including killswitch from sensor boards"""
         # self.get_logger().info(f"Got digital data: {data}")
@@ -234,6 +254,8 @@ class ESP32BridgeNode(Node):
         #    and data.get("i") == self.mission_button_index
         # ):
         #    self.mission_button_callback(data)
+    
+
 
     def killswitch_callback(self, data: dict):
         """Handle killswitch state changes from ESP32"""
@@ -360,6 +382,69 @@ class ESP32BridgeNode(Node):
                 self.seaport.publish(1, data)
         except Exception as e:
             self.get_logger().error(f"Failed to send safety stop to ESP32: {e}")
+
+    def battery_voltage_callback(self, data: dict, sensor_index: int):
+        """Handle battery voltage readings and publish"""
+        try:
+            # Expect data format: {"a": address, "i": index, "v": analog_value}
+            address = data.get("a")
+            index = data.get("i") 
+            raw_value = data.get("v", 0.0)
+            
+            # Apply multiplication factor for this sensor
+            if sensor_index < len(self.battery_voltage_read_mult):
+                voltage_reading = raw_value * self.battery_voltage_read_mult[sensor_index]
+            else:
+                voltage_reading = raw_value
+                
+            # Store reading for cell voltage calculation
+            # We expect 4 readings corresponding to pins 2,3,4,5 (cells 1,2,3,4)
+            if not hasattr(self, 'battery_readings'):
+                self.battery_readings = {}
+                
+            self.battery_readings[index] = voltage_reading
+            
+            # Check if we have all 4 cell readings (indices 2,3,4,5)
+            expected_indices = [2, 3, 4, 5]
+            if all(idx in self.battery_readings for idx in expected_indices):
+                # Sort readings by voltage (ascending order) 
+                sorted_readings = sorted([
+                    (idx, self.battery_readings[idx]) for idx in expected_indices
+                ], key=lambda x: x[1])
+                
+                # Calculate individual cell voltages
+                # Cell 1 = reading 1
+                # Cell 2 = reading 2 - reading 1  
+                # Cell 3 = reading 3 - reading 2
+                # Cell 4 = reading 4 - reading 3
+                cell_voltages = []
+                prev_voltage = 0.0
+                
+                for i, (idx, voltage) in enumerate(sorted_readings):
+                    cell_voltage = voltage - prev_voltage
+                    cell_voltages.append(cell_voltage)
+                    prev_voltage = voltage
+                    
+                # Create and publish battery voltage message
+                battery_msg = BatteryVoltage()
+                battery_msg.header.stamp = self.get_clock().now().to_msg()
+                battery_msg.header.frame_id = f"battery_voltage_{address}"
+                battery_msg.cell_voltages = cell_voltages
+                battery_msg.total_voltage = sum(cell_voltages)
+                
+                self.battery_voltage_pub.publish(battery_msg)
+                
+                self.get_logger().debug(
+                    f"Battery voltages - Cell 1: {cell_voltages[0]:.2f}V, "
+                    f"Cell 2: {cell_voltages[1]:.2f}V, Cell 3: {cell_voltages[2]:.2f}V, "
+                    f"Cell 4: {cell_voltages[3]:.2f}V, Total: {battery_msg.total_voltage:.2f}V"
+                )
+                
+                # Clear readings for next cycle
+                self.battery_readings.clear()
+                
+        except Exception as e:
+            self.get_logger().error(f"Error processing battery voltage data: {e}")
 
     def leak_sensor_callback(self, data: dict, sensor_index: int):
         """Handle leak sensor readings and publish warnings"""
