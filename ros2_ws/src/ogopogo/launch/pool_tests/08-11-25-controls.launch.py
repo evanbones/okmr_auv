@@ -47,7 +47,7 @@ def generate_launch_description():
                 parameters=[
                     {
                         "unite_imu_method": 2,
-                        "enable_gyro": "true",
+                        "enable_gyro": True,
                     }
                 ],
             ),
