@@ -23,6 +23,7 @@ class DvlDriverNode(Node):
             data, dvl_addr = sock_bottom.recvfrom(1024)  # buffer size is 1024 bytes
             data = data.decode('ASCII')
             #print(f"Received message: {} from {dvl_addr}")
+            self.get_logger().info(f"DVL packet received from {dvl_addr}: {data[:100]}...")  # Log first 100 chars
 
 
             # Regular expression to match the PNORBT8 message format
