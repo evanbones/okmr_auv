@@ -1,17 +1,15 @@
 from launch_ros.actions import Node
 from launch import LaunchDescription
 from launch.substitutions import PathJoinSubstitution
-from launch_ros.substitutions import FindPackageShare
+from ament_index_python.packages import get_package_share_directory
+import os
 
 
 def generate_launch_description():
 
-    navigation_dir = PathJoinSubstitution(
-        [FindPackageShare("okmr_navigation"), "launch"]
-    )
-
+    navigation_dir = get_package_share_directory("okmr_navigation")
     static_transforms_launch = os.path.join(
-        navigation_dir, "static_transforms.launch.py"
+        navigation_dir, "launch", "static_transforms.launch.py"
     )
 
     return LaunchDescription(
