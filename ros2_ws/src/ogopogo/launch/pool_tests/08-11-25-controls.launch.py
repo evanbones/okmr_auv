@@ -31,8 +31,8 @@ def generate_launch_description():
         [hardware_interface_launch_dir, "ogopogo_hardware_interface.launch.py"]
     )
 
-    dead_reckoning_launch = PathJoinSubstitution(
-        [navigation_dir, "dead_reckoning.launch.py"]
+    navigation_launch = PathJoinSubstitution(
+        [navigation_dir, "full_navigation_system.launch.py"]
     )
 
     full_control_stack_launch = PathJoinSubstitution(
