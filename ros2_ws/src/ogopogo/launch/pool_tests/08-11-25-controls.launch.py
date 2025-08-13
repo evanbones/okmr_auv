@@ -57,7 +57,7 @@ def generate_launch_description():
                     "folder": "pool_tests/08-11-25-thrust-alloc",
                 }.items(),
             ),
-            IncludeLaunchDescription(dead_reckoning_launch),
+            IncludeLaunchDescription(navigation_launch),
             # IncludeLaunchDescription(
             #    rs_single_camera_launch,
             # ),
