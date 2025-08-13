@@ -10,8 +10,8 @@ def generate_launch_description():
         [FindPackageShare("okmr_navigation"), "launch"]
     )
 
-    static_transforms_launch = PathJoinSubstitution(
-        [navigation_dir, "static_transforms.launch.py"]
+    static_transforms_launch = os.path.join(
+        navigation_dir, "static_transforms.launch.py"
     )
 
     return LaunchDescription(
