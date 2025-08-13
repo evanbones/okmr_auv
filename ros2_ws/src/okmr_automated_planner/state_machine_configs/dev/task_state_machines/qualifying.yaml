@@ -1,23 +1,27 @@
 qualifying:
+  states:
+    - { name: moving_forward }
+    - { name: moving_down }
+    - { name: surfacing }
+    - { name: waiting_for_mission_start }
+    - { name: enabling_subsystems }
 
-states:
-  - { name: moving_forward }
-  - { name: moving_down }
-  - { name: surfacing }
-  - { name: waiting_for_mission_start }
-  - { name: enabling_subsystems }
-
-transitions:
-  - {
-      trigger: mission_start_received,
-      source: waiting_for_mission_start,
-      dest: enabling_subsystems,
-    }
-  - {
-      trigger: enabling_subsystems_done,
-      source: enabling_subsystems,
-      dest: moving_down,
-    }
-  - { trigger: moving_down_done, source: moving_down, dest: moving_forward }
-  - { trigger: moving_forward_done, source: moving_forward, dest: surfacing }
-  - { trigger: surfacing_done, source: surfacing, dest: done }
+  transitions:
+    - {
+        trigger: initialized,
+        source: initializing,
+        dest: waiting_for_mission_start,
+      }
+    - {
+        trigger: mission_start_received,
+        source: waiting_for_mission_start,
+        dest: enabling_subsystems,
+      }
+    - {
+        trigger: enabling_subsystems_done,
+        source: enabling_subsystems,
+        dest: moving_down,
+      }
+    - { trigger: moving_down_done, source: moving_down, dest: moving_forward }
+    - { trigger: moving_forward_done, source: moving_forward, dest: surfacing }
+    - { trigger: surfacing_done, source: surfacing, dest: done }

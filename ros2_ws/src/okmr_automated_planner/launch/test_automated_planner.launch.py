@@ -89,6 +89,12 @@ def generate_launch_description():
         parameters=[{"test_mode": True}],
     )
 
+    dead_reckoning_node = Node(
+        package="okmr_navigation",
+        executable="dead_reckoning",
+        output="screen",
+    )
+
     # Set colorized output for better log readability
     colorized_output = SetEnvironmentVariable(
         name="RCUTILS_COLORIZED_OUTPUT", value="1"
@@ -105,5 +111,6 @@ def generate_launch_description():
             debug_arg,
             automated_planner_node,
             navigator_server_node,
+            dead_reckoning_node,
         ]
     )

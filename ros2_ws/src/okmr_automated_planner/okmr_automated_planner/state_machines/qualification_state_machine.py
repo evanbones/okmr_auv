@@ -26,7 +26,7 @@ class QualificationStateMachine(BaseStateMachine):
 
     def on_enter_initializing(self):
         # check system state
-        # placeholder queued method
+        # transition to waiting for mission start
         self.queued_method = self.initialized
 
     def mission_command_callback(self, msg):
@@ -84,7 +84,7 @@ class QualificationStateMachine(BaseStateMachine):
     def on_enter_moving_down(self):
         movement_msg = MovementCommand()
         movement_msg.command = MovementCommand.MOVE_RELATIVE
-        movement_msg.translation.z = -1.5
+        movement_msg.translation.z = -self.distance_down
 
         success = self.movement_client.send_movement_command(
             movement_msg,
@@ -96,15 +96,15 @@ class QualificationStateMachine(BaseStateMachine):
             self.ros_node.get_logger().error("Failed to send sinking movement command")
             self.queued_method = self.abort
 
-    def on_enter_forward(self):
+    def on_enter_moving_forward(self):
 
         movement_msg = MovementCommand()
         movement_msg.command = MovementCommand.MOVE_RELATIVE
-        #movement_msg.forward.x = 90.0
+        movement_msg.translation.x = self.distance_forward
 
         success = self.movement_client.send_movement_command(
             movement_msg,
-            on_success=self.forward_done,
+            on_success=self.moving_forward_done,
             on_failure=self.abort,
         )
 
