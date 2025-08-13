@@ -49,3 +49,5 @@ ros2 topic pub /control_mode okmr_msgs/ControlMode "{control_mode: 0}" --once
 
 3. if the response is sluggish, increase velocity p gain
 
+4. increase d gain on the pose if there is oscillation
+
