@@ -41,6 +41,16 @@ def generate_launch_description():
 
     return LaunchDescription(
         [
+            Node(
+                package="realsense2_camera",
+                executable="realsense2_camera_node",
+                parameters=[
+                    {
+                        "unite_imu_method": 2,
+                        "enable_gyro": "true",
+                    }
+                ],
+            ),
             IncludeLaunchDescription(
                 full_control_stack_launch,
                 launch_arguments={
@@ -48,9 +58,9 @@ def generate_launch_description():
                 }.items(),
             ),
             IncludeLaunchDescription(dead_reckoning_launch),
-            IncludeLaunchDescription(
-                rs_single_camera_launch,
-            ),
+            # IncludeLaunchDescription(
+            #    rs_single_camera_launch,
+            # ),
             IncludeLaunchDescription(
                 ogopogo_hardware_interface_launch,
             ),
