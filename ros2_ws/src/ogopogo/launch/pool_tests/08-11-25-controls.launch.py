@@ -23,6 +23,9 @@ def generate_launch_description():
     rs_multi_camera_launch = PathJoinSubstitution(
         [realsense_launch_dir, "rs_multi_camera_launch.py"]
     )
+    rs_single_camera_launch = PathJoinSubstitution(
+        [realsense_launch_dir, "rs_launch.py"]
+    )
 
     ogopogo_hardware_interface_launch = PathJoinSubstitution(
         [hardware_interface_launch_dir, "ogopogo_hardware_interface.launch.py"]
@@ -46,7 +49,7 @@ def generate_launch_description():
             ),
             IncludeLaunchDescription(dead_reckoning_launch),
             IncludeLaunchDescription(
-                rs_multi_camera_launch,
+                rs_single_camera_launch,
             ),
             IncludeLaunchDescription(
                 ogopogo_hardware_interface_launch,
