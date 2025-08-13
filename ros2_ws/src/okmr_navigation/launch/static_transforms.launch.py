@@ -29,7 +29,7 @@ def generate_launch_description():
                     # Rotation: yaw pitch roll (radians)
                     # Transform from D455 optical frame to ROS2 base_link
                     # Try: -90° yaw + 90° pitch to flip Y-axis sign
-                    str(-math.pi / 2),
+                    str(math.pi / 2),
                     str(-math.pi / 2),
                     "0",
                     # Parent frame -> Child frame
