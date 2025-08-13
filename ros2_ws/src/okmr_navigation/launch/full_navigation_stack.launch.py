@@ -22,7 +22,7 @@ def generate_launch_description():
                 package="okmr_navigation",
                 executable="dead_reckoning",
                 remappings=[
-                    ("/imu", "/camera1/camera1/imu"),
+                    ("/imu", "/camera/camera/imu"),
                 ],
             ),
             Node(
