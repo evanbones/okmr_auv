@@ -50,6 +50,14 @@ class DvlDriverNode(Node):
                 temperature = float(matches.group(15))
                 status = int(matches.group(16), 16)  # Convert hex string to int
 
+                # DVL data validation
+                velocity_magnitude = (vx**2 + vy**2 + vz**2)**0.5
+                if velocity_magnitude > 30.0:
+                    self.get_logger().warn(
+                        f"DVL velocity too high ({velocity_magnitude:.3f} m/s), discarding data - VX: {vx:.3f}, VY: {vy:.3f}, VZ: {vz:.3f}"
+                    )
+                    continue
+
                 # Create DVL message
                 dvl_msg = Dvl()
                 dvl_msg.header.stamp = self.get_clock().now().to_msg()
