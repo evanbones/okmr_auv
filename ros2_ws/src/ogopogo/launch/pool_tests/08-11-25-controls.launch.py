@@ -54,7 +54,7 @@ def generate_launch_description():
             IncludeLaunchDescription(
                 full_control_stack_launch,
                 launch_arguments={
-                    "folder": "pool_tests/08-11-25-thrust-alloc",
+                    "folder": "sim",
                 }.items(),
             ),
             IncludeLaunchDescription(navigation_launch),
