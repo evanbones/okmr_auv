@@ -38,7 +38,12 @@ def generate_launch_description():
 
     return LaunchDescription(
         [
-            IncludeLaunchDescription(full_control_stack_launch),
+            IncludeLaunchDescription(
+                full_control_stack_launch,
+                launch_arguments={
+                    "folder": "pool_tests/08-11-25-thrust-alloc",
+                }.items(),
+            ),
             IncludeLaunchDescription(dead_reckoning_launch),
             IncludeLaunchDescription(
                 rs_multi_camera_launch,

@@ -8,9 +8,7 @@ from launch.substitutions import PathJoinSubstitution, LaunchConfiguration
 def generate_launch_description():
 
     folder_arg = DeclareLaunchArgument(
-        'folder',
-        default_value='default',
-        description='Folder name for parameter files'
+        "folder", default_value="default", description="Folder name for parameter files"
     )
 
     # Pose Control Layer (Position → Velocity)
@@ -23,7 +21,7 @@ def generate_launch_description():
                 [
                     FindPackageShare("okmr_controls"),
                     "params",
-                    LaunchConfiguration('folder'),
+                    LaunchConfiguration("folder"),
                     "pose_control.yaml",
                 ]
             ),
@@ -38,7 +36,12 @@ def generate_launch_description():
         output="screen",
         parameters=[
             PathJoinSubstitution(
-                [FindPackageShare("okmr_controls"), "params", LaunchConfiguration('folder'), "velocity_control.yaml"]
+                [
+                    FindPackageShare("okmr_controls"),
+                    "params",
+                    LaunchConfiguration("folder"),
+                    "velocity_control.yaml",
+                ]
             ),
             {"update_frequency": 200.0},
         ],
@@ -51,7 +54,12 @@ def generate_launch_description():
         output="screen",
         parameters=[
             PathJoinSubstitution(
-                [FindPackageShare("okmr_controls"), "params", LaunchConfiguration('folder'), "accel_control.yaml"]
+                [
+                    FindPackageShare("okmr_controls"),
+                    "params",
+                    LaunchConfiguration("folder"),
+                    "accel_control.yaml",
+                ]
             ),
             {"update_frequency": 200.0},
         ],
@@ -64,7 +72,12 @@ def generate_launch_description():
         output="screen",
         parameters=[
             PathJoinSubstitution(
-                [FindPackageShare("okmr_controls"), "params", LaunchConfiguration('folder'), "thrust_allocator.yaml"]
+                [
+                    FindPackageShare("okmr_controls"),
+                    "params",
+                    LaunchConfiguration("folder"),
+                    "thrust_allocator.yaml",
+                ]
             )
         ],
     )
