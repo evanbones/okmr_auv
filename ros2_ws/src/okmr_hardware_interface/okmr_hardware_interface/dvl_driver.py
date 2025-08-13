@@ -26,8 +26,8 @@ class DvlDriverNode(Node):
             self.get_logger().debug(f"DVL packet received from {dvl_addr}: {data}")
 
 
-            # Regular expression to match the PNORBT6 message format
-            pattern = r"\$PNORBT6,TIME=(-?\d+\.?\d*),DT1=(-?\d+\.\d+),DT2=(-?\d+\.\d+),VX=(-?\d+\.\d+),VY=(-?\d+\.\d+),VZ=(-?\d+\.\d+),FOM=(-?\d+\.\d+),D1=(-?\d+\.\d+),D2=(-?\d+\.\d+),D3=(-?\d+\.\d+),D4=(-?\d+\.\d+)"
+            # Regular expression to match the PNORBT8 message format
+            pattern = r"\$PNORBT8,TIME=(-?\d+\.?\d*),DT1=(-?\d+\.\d+),DT2=(-?\d+\.\d+),VX=(-?\d+\.\d+),VY=(-?\d+\.\d+),VZ=(-?\d+\.\d+),FOM=(-?\d+\.\d+),D1=(-?\d+\.\d+),D2=(-?\d+\.\d+),D3=(-?\d+\.\d+),D4=(-?\d+\.\d+),BATT=(-?\d+\.\d+),SS=(-?\d+\.\d+),PRESS=(-?\d+\.\d+),TEMP=(-?\d+\.\d+),STAT=(0x[0-9A-Fa-f]+)"
             #[dvl_driver-12] [INFO] [1755071789.549515225] [dvl_driver]: DVL packet received from ('192.168.2.3', 9002): $PNORBT6,TIME=1755046583.8758,DT1=11.273,DT2=-142.114,VX=0.0202,VY=0.0432,VZ=-0.0093,FOM=0.00115,D1=1.49,D2=1.70,D3=1.39,D4=1.29*4B
 #[dvl_driver-12] 
 
@@ -48,13 +48,11 @@ class DvlDriverNode(Node):
                 d2 = float(matches.group(9))
                 d3 = float(matches.group(10))
                 d4 = float(matches.group(11))
-                
-                # Set default values for missing fields in PNORBT6
-                battery = 0.0  # Not available in PNORBT6
-                speed_sound = 0.0  # Not available in PNORBT6
-                pressure = 0.0  # Not available in PNORBT6
-                temperature = 0.0  # Not available in PNORBT6
-                status = 0  # Not available in PNORBT6
+                battery = float(matches.group(12))
+                speed_sound = float(matches.group(13))
+                pressure = float(matches.group(14))
+                temperature = float(matches.group(15))
+                status = int(matches.group(16), 16)  # Convert hex string to int
 
                 # Create DVL message
                 dvl_msg = Dvl()
