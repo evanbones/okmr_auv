@@ -6,6 +6,7 @@ import rclpy
 from rclpy.node import Node
 from okmr_msgs.msg import Dvl
 from geometry_msgs.msg import Vector3
+from sensor_msgs.msg import FluidPressure
 
 
 class DvlDriverNode(Node):
@@ -26,8 +27,6 @@ class DvlDriverNode(Node):
 
             # Regular expression to match the PNORBT8 message format
             pattern = r"\$PNORBT8,TIME=(-?\d+\.?\d*),DT1=(-?\d+\.\d+),DT2=(-?\d+\.\d+),VX=(-?\d+\.\d+),VY=(-?\d+\.\d+),VZ=(-?\d+\.\d+),FOM=(-?\d+\.\d+),D1=(-?\d+\.\d+),D2=(-?\d+\.\d+),D3=(-?\d+\.\d+),D4=(-?\d+\.\d+),BATT=(-?\d+\.\d+),SS=(-?\d+\.\d+),PRESS=(-?\d+\.\d+),TEMP=(-?\d+\.\d+),STAT=(0x[0-9A-Fa-f]+)"
-            # [dvl_driver-12] [INFO] [1755071789.549515225] [dvl_driver]: DVL packet received from ('192.168.2.3', 9002): $PNORBT6,TIME=1755046583.8758,DT1=11.273,DT2=-142.114,VX=0.0202,VY=0.0432,VZ=-0.0093,FOM=0.00115,D1=1.49,D2=1.70,D3=1.39,D4=1.29*4B
-            # [dvl_driver-12]
 
             # Find the matches
             matches = re.search(pattern, data)
@@ -63,7 +62,15 @@ class DvlDriverNode(Node):
 
                 # Set environmental data
                 dvl_msg.water_temperature = temperature
-                dvl_msg.pressure = pressure
+
+                # Create FluidPressure message for pressure
+                pressure_msg = FluidPressure()
+                pressure_msg.header.stamp = dvl_msg.header.stamp
+                pressure_msg.header.frame_id = "dvl"
+                pressure_msg.fluid_pressure = pressure
+                pressure_msg.variance = 0.0  # Set appropriate variance if known
+                dvl_msg.pressure = pressure_msg
+
                 dvl_msg.figure_of_merit = fom
 
                 # Set beam distances
