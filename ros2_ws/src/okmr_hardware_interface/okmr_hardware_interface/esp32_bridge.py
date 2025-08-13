@@ -108,10 +108,6 @@ class ESP32BridgeNode(Node):
 
         self.ping_sub = self.create_subscription(String, "ping", self.ping_callback, 10)
 
-        self.mission_command_sub = self.create_subscription(
-            MissionCommand, "mission_command", self.mission_command_callback, 10
-        )
-
         self.battery_voltage_pub = self.create_publisher(
             BatteryVoltage, "battery_voltage", 10
         )
@@ -233,10 +229,10 @@ class ESP32BridgeNode(Node):
             self.killswitch_callback(data)
 
         # Check if this is mission button data (configurable address)
-        #elif (
+        # elif (
         #    data.get("a") == self.mission_button_address
         #    and data.get("i") == self.mission_button_index
-        #):
+        # ):
         #    self.mission_button_callback(data)
 
     def killswitch_callback(self, data: dict):
