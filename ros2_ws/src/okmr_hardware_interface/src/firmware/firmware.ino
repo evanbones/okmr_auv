@@ -1,8 +1,6 @@
-#include <ESP32Servo.h>
-// Define throttle signal values
+#include <Servo.h>
 const int minThrottle = 1100; // Minimum throttle in microseconds (1ms)
 const int maxThrottle = 1900; // Maximum throttle in microseconds (2ms)
-bool armed = false;
 
 int pins[] = {2, 3, 4, 5, 6, 7, 8, 9};
 int killSwitchPin = 35;
@@ -10,40 +8,19 @@ int ledPin1 = 25;
 int ledPin2 = 25;
 int ledPin3 = 25;
 int leakSensorPin = 33;
-int max_throttle = 45;
-
-bool lastPressed = false;
-long pressTime = 0;
+int frquency = 200;
+bool killSwitchEnabled = false;
 
 Servo motors[8];
 
 void killSwitch() {
-  if (digitalRead(killSwitchPin) == HIGH) {
-    if (lastPressed == false ) {
-      pressTime = millis();
-    }
-    lastPressed = true;
-  }
-  else {
-    if (lastPressed == true) {
-      if (millis() - pressTime > 3000 && millis() - pressTime < 7000) {
-        armed = true;
-        Serial.println("Armed!");
-      }
-      else if (millis() - pressTime > 5 && millis() - pressTime < 300) {
-        armed = false;
-        Serial.println("Disarmed!");
-        for (int i = 0; i < 8; i++)
-          motors[i].writeMicroseconds(throttle2pwm(0));
-      }
-    }
-    lastPressed = false;
-  }
+  int switchState = digitalRead(killSwitchPin);
+  killSwitchEnabled = (switchState == LOW);  
+  Serial.print("killswitch<");
+  Serial.print(switchState);
+  Serial.println();
 }
 
-float throttle2pwm(float throttle) {
-  return map(throttle, -100, 100, minThrottle, maxThrottle);
-}
 void escArm() {
   delay(500);
   for (int i = 0; i < 8; i++) {
@@ -63,7 +40,7 @@ void setup() {
 
   Serial.begin(115200);
   Serial.println("Arming ESC...");
-  pinMode(killSwitchPin, INPUT_PULLDOWN);
+  pinMode(killSwitchPin, INPUT_PULLUP);
   pinMode(leakSensorPin, INPUT);
   pinMode(ledPin1, OUTPUT);
   pinMode(ledPin2, OUTPUT);
@@ -114,39 +91,24 @@ void parseNewData(){
     throttle[currMotor] = atof(strtokIndx);     // convert this part to a float
     newData = false;
 }
+
 void loop() {
   // Check for serial input
   killSwitch();
   int leakReading = analogRead(leakSensorPin);
-  if(leakReading > 200){
-    Serial.println(leakReading);
-  }
-  if (armed) {
-    analogWrite(ledPin1, 100);
-    //analogWrite(ledPin2, 100);
-    //analogWrite(ledPin3, 100);
-  }
-  else {
-    analogWrite(ledPin1, 0);
-    analogWrite(ledPin2, 0);
-    analogWrite(ledPin3, 0);
-  }
+  Serial.print("leak<");
+  Serial.print(leakReading);
+  Serial.println();
   recvWithEndMarker();
   if(newData)parseNewData();
-  if (armed) {
+  if (killSwitchEnabled) {
     for (int i = 0; i < 8; i++) {
-      motors[i].writeMicroseconds(throttle2pwm(throttle[i]));
-      /*
-        Serial.print("sending ");
-        Serial.print(throttle2pwm(throttle[i]));
-        Serial.print(" to motor ");
-        Serial.println(i);
-      */
+      motors[i].writeMicroseconds((int)throttle[i]);
     }
-  }
-  else {
+  } else {
     for (int i = 0; i < 8; i++) {
       motors[i].writeMicroseconds(1500);
     }
   }
+  delay(1000 / frequency);
 }
