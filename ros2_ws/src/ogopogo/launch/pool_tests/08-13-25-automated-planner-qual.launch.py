@@ -17,6 +17,9 @@ def generate_launch_description():
     # by default use the dev folder
     pkg_share = get_package_share_directory("okmr_automated_planner")
     config_share_path = os.path.join(pkg_share, "state_machine_configs")
+    navigation_dir = PathJoinSubstitution(
+        [FindPackageShare("okmr_navigation"), "launch"]
+    )
 
     # Launch arguments
     config_share_path_arg = DeclareLaunchArgument(
@@ -84,38 +87,20 @@ def generate_launch_description():
         ],
     )
 
-    navigator_server_node = Node(
-        package="okmr_navigation",
-        executable="navigator_action_server",
-        parameters=[{"test_mode": False}],
-    )
-
-    dead_reckoning_node = Node(
-        package="okmr_navigation",
-        executable="dead_reckoning",
-        output="screen",
-    )
-
-    serial_output_node = Node(
-        package="okmr_hardware_interface",
-        executable="serial_output",
-        output="screen",
-    )
-
     # RealSense Camera
     realsense_node = Node(
         package="realsense2_camera",
         executable="realsense2_camera_node",
         parameters=[{
-            'camera_name': 'camera',
-            'camera_namespace': 'camera', 
             'enable_gyro': True,
             'enable_accel': True,
             'unite_imu_method': 2,
-            'enable_depth': True,
-            'enable_color': True
         }],
         output="screen",
+    )
+    
+    navigation_launch = PathJoinSubstitution(
+        [navigation_dir, "full_navigation_stack.launch.py"]
     )
 
     # Include Full Control Stack Launch
@@ -126,6 +111,9 @@ def generate_launch_description():
                 "launch", "full_control_stack.launch.py"
             ])
         ])
+        launch_arguments={
+            "folder": "pool_tests/08-13-25-pid-tuning",
+        }.items(),
     )
 
     # Include Object Detection Launch
@@ -166,6 +154,7 @@ def generate_launch_description():
     # Return the launch description
     return LaunchDescription(
         [
+            navigation_launch,
             colorized_output,
             config_share_path_arg,
             config_folder_arg,
@@ -173,12 +162,9 @@ def generate_launch_description():
             root_config_arg,
             debug_arg,
             automated_planner_node,
-            navigator_server_node,
-            dead_reckoning_node,
-            serial_output_node,
             realsense_node,
             control_stack_launch,
-            object_detection_launch,
+            #object_detection_launch,
             hardware_interface_launch,
             static_transforms_launch,
         ]
