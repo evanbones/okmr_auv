@@ -11,6 +11,9 @@ int ledPin3 = 12;
 int leakSensorPin = 8;
 int frequency = 40;
 bool killSwitchEnabled = false;
+unsigned long lastKillswitchPrintTime = 0;
+const unsigned long KILLSWITCH_PRINT_INTERVAL = 100; // Print killswitch status every 100ms
+int lastKillswitchState = -1; // Track previous state for change detection
 
 Servo motors[8];
 
@@ -28,9 +31,17 @@ void killSwitch() {
     digitalWrite(ledPin1, HIGH); // Turn on LED when killswitch is not enabled
   }
 
-  Serial.print("killswitch<");
-  Serial.print(switchState);
-  Serial.println();
+  // Print immediately if state changed, otherwise check time throttling
+  bool stateChanged = (switchState != lastKillswitchState);
+  bool timeToSend = (millis() - lastKillswitchPrintTime >= KILLSWITCH_PRINT_INTERVAL);
+  
+  if (stateChanged || timeToSend) {
+    Serial.print("killswitch<");
+    Serial.print(switchState);
+    Serial.println();
+    lastKillswitchPrintTime = millis();
+    lastKillswitchState = switchState;
+  }
 }
 
 void escArm() {
