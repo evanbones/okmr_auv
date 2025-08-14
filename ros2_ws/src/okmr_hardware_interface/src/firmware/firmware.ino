@@ -4,10 +4,10 @@ const int maxThrottle = 1900; // Maximum throttle in microseconds (2ms)
 float throttle[8] = {1500, 1500, 1500, 1500, 1500, 1500, 1500, 1500};
 
 int pins[] = {2, 3, 4, 5, 6, 7, 8, 9};
-int killSwitchPin = 12;
-int ledPin1 = 11;
+int killSwitchPin = 13;
+int ledPin1 = 10;
 int ledPin2 = 11;
-int ledPin3 = 11;
+int ledPin3 = 12;
 int leakSensorPin = 8;
 int frequency = 40;
 bool killSwitchEnabled = false;
@@ -38,7 +38,7 @@ void escArm() {
   for (int i = 0; i < 8; i++) {
     motors[i].writeMicroseconds(1500);
   }
-  delay(3000);
+  delay(2000);
   for (int i = 0; i < 8; i++) {
     motors[i].writeMicroseconds(1500);
   }
@@ -53,7 +53,7 @@ void setup() {
   Serial.begin(115200);
   Serial.println("Arming ESC...");
   pinMode(killSwitchPin, INPUT_PULLUP);
-  pinMode(leakSensorPin, INPUT);
+  //pinMode(leakSensorPin, INPUT);
   pinMode(ledPin1, OUTPUT);
   pinMode(ledPin2, OUTPUT);
   pinMode(ledPin3, OUTPUT);
@@ -112,10 +112,12 @@ void parseNewData(){
 void loop() {
   // Check for serial input
   killSwitch();
+  /*
   int leakReading = analogRead(leakSensorPin);
   Serial.print("leak<");
   Serial.print(leakReading);
   Serial.println();
+  */
   recvWithEndMarker();
   if(newData)parseNewData();
 
