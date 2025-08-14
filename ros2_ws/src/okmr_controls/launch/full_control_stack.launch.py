@@ -25,7 +25,6 @@ def generate_launch_description():
                     "pose_control.yaml",
                 ]
             ),
-            {"update_frequency": 200.0},
         ],
     )
 
@@ -43,7 +42,6 @@ def generate_launch_description():
                     "velocity_control.yaml",
                 ]
             ),
-            {"update_frequency": 200.0},
         ],
     )
 
@@ -61,7 +59,6 @@ def generate_launch_description():
                     "accel_control.yaml",
                 ]
             ),
-            {"update_frequency": 200.0},
         ],
     )
 
