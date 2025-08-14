@@ -247,7 +247,9 @@ class DeadReckoningNode : public rclcpp::Node {
         current_twist.twist.linear.z = dvl_velocity_alpha_ * transformed_velocity.z +
                                        (1.0 - dvl_velocity_alpha_) * current_twist.twist.linear.z;
 
-        dvl_beams = msg.beam_distances;
+        for (int i = 0; i < 4; i++) {
+            dvl_beams[i] = msg->beam_distances[i];
+        }
     }
 
     void get_pose_twist_accel_callback (
