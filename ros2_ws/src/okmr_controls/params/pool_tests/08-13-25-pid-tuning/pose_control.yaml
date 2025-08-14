@@ -7,14 +7,15 @@ pose_control_layer:
     x_linear.u_min: -0.6
     x_linear.clamp_values: true
     
-    y_angular.p_gain: 1.0
+    y_angular.p_gain: 2.0
+    y_angular.d_gain: 0.1
 
     y_linear.p_gain: 1.0
-    y_linear.u_max: 0.3
-    y_linear.u_min: -0.3
+    y_linear.u_max: 0.5
+    y_linear.u_min: -0.5
     y_linear.clamp_values: true
 
-    z_angular.p_gain: 0.5
+    z_angular.p_gain: 1.0
 
     z_linear.p_gain: 1.0
     z_linear.u_max: 0.5 #max 0.5m/s setpoint
