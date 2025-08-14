@@ -6,7 +6,12 @@ from launch.substitutions import (
     PathJoinSubstitution,
     PythonExpression,
 )
-from launch.actions import DeclareLaunchArgument, SetEnvironmentVariable, GroupAction, IncludeLaunchDescription
+from launch.actions import (
+    DeclareLaunchArgument,
+    SetEnvironmentVariable,
+    GroupAction,
+    IncludeLaunchDescription,
+)
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from ament_index_python.packages import get_package_share_directory
 import os
@@ -91,26 +96,33 @@ def generate_launch_description():
     realsense_node = Node(
         package="realsense2_camera",
         executable="realsense2_camera_node",
-        parameters=[{
-            'enable_gyro': True,
-            'enable_accel': True,
-            'unite_imu_method': 2,
-        }],
+        parameters=[
+            {
+                "enable_gyro": True,
+                "enable_accel": True,
+                "unite_imu_method": 2,
+            }
+        ],
         output="screen",
     )
-    
-    navigation_launch = PathJoinSubstitution(
-        [navigation_dir, "full_navigation_stack.launch.py"]
+
+    navigation_launch = IncludeLaunchDescription(
+        PathJoinSubstitution([navigation_dir, "full_navigation_stack.launch.py"])
     )
 
     # Include Full Control Stack Launch
     control_stack_launch = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource([
-            PathJoinSubstitution([
-                get_package_share_directory("okmr_controls"),
-                "launch", "full_control_stack.launch.py"
-            ])
-        ])
+        PythonLaunchDescriptionSource(
+            [
+                PathJoinSubstitution(
+                    [
+                        get_package_share_directory("okmr_controls"),
+                        "launch",
+                        "full_control_stack.launch.py",
+                    ]
+                )
+            ]
+        ),
         launch_arguments={
             "folder": "pool_tests/08-13-25-pid-tuning",
         }.items(),
@@ -118,32 +130,47 @@ def generate_launch_description():
 
     # Include Object Detection Launch
     object_detection_launch = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource([
-            PathJoinSubstitution([
-                get_package_share_directory("okmr_object_detection"),
-                "launch", "full_object_detection_system.launch.py"
-            ])
-        ])
+        PythonLaunchDescriptionSource(
+            [
+                PathJoinSubstitution(
+                    [
+                        get_package_share_directory("okmr_object_detection"),
+                        "launch",
+                        "full_object_detection_system.launch.py",
+                    ]
+                )
+            ]
+        )
     )
 
     # Include Hardware Interface Launch (includes DVL, ESP32 bridge, temp sensor)
     hardware_interface_launch = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource([
-            PathJoinSubstitution([
-                get_package_share_directory("okmr_hardware_interface"),
-                "launch", "ogopogo_hardware_interface.launch.py"
-            ])
-        ])
+        PythonLaunchDescriptionSource(
+            [
+                PathJoinSubstitution(
+                    [
+                        get_package_share_directory("okmr_hardware_interface"),
+                        "launch",
+                        "ogopogo_hardware_interface.launch.py",
+                    ]
+                )
+            ]
+        )
     )
 
     # Include Static Transforms Launch
     static_transforms_launch = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource([
-            PathJoinSubstitution([
-                get_package_share_directory("okmr_navigation"),
-                "launch", "static_transforms.launch.py"
-            ])
-        ])
+        PythonLaunchDescriptionSource(
+            [
+                PathJoinSubstitution(
+                    [
+                        get_package_share_directory("okmr_navigation"),
+                        "launch",
+                        "static_transforms.launch.py",
+                    ]
+                )
+            ]
+        )
     )
 
     # Set colorized output for better log readability
@@ -164,7 +191,7 @@ def generate_launch_description():
             automated_planner_node,
             realsense_node,
             control_stack_launch,
-            #object_detection_launch,
+            # object_detection_launch,
             hardware_interface_launch,
             static_transforms_launch,
         ]
