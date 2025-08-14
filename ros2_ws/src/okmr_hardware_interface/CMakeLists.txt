@@ -48,6 +48,13 @@ install(PROGRAMS
     RENAME temp_sensor
 )
 
+install(PROGRAMS
+    ${PROJECT_NAME}/clutch_mega_driver.py
+    DESTINATION lib/${PROJECT_NAME}
+    RENAME clutch_mega_driver
+)
+
+
 install(DIRECTORY include/
   DESTINATION include
 )

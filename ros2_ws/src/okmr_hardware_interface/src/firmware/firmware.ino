@@ -1,23 +1,23 @@
 #include <Servo.h>
 const int minThrottle = 1100; // Minimum throttle in microseconds (1ms)
 const int maxThrottle = 1900; // Maximum throttle in microseconds (2ms)
-
 float throttle[8] = {1500, 1500, 1500, 1500, 1500, 1500, 1500, 1500};
+
 int pins[] = {2, 3, 4, 5, 6, 7, 8, 9};
-int killSwitchPin = 22;
-int ledPin1 = 25;
-int ledPin2 = 25;
-int ledPin3 = 25;
-int leakSensorPin = 23;
-int frequency = 200;
+int killSwitchPin = 12;
+int ledPin1 = 11;
+int ledPin2 = 11;
+int ledPin3 = 11;
+int leakSensorPin = 8;
+int frequency = 10;
 bool killSwitchEnabled = false;
 
 Servo motors[8];
 
 void killSwitch() {
   int switchState = digitalRead(killSwitchPin);
-  killSwitchEnabled = (switchState == LOW);  
-  
+  killSwitchEnabled = (switchState == HIGH);
+
   if (killSwitchEnabled) {
     // Set all throttle values to neutral when killswitch is enabled
     for (int i = 0; i < 8; i++) {
@@ -27,7 +27,7 @@ void killSwitch() {
   } else {
     digitalWrite(ledPin1, HIGH); // Turn on LED when killswitch is not enabled
   }
-  
+
   Serial.print("killswitch<");
   Serial.print(switchState);
   Serial.println();
@@ -62,7 +62,7 @@ void setup() {
   while(Serial.available() > 0){
     Serial.read();
   }
-  
+
 }
 const byte numChars = 32;
 char receivedChars[numChars];   // an array to store the received data
@@ -72,7 +72,7 @@ void recvWithEndMarker() {
     static byte ndx = 0;
     char endMarker = '\n';
     char rc;
-    
+
     if (Serial.available() > 0) {
         rc = Serial.read();
 
@@ -92,8 +92,9 @@ void recvWithEndMarker() {
 }
 
 unsigned long lastThrottleTime = 0;
-const unsigned long THROTTLE_TIMEOUT = 1000;  // 1 second timeout
+const unsigned long THROTTLE_TIMEOUT = 2000;  // 2 second timeout
 int currMotor = 0;
+
 void parseNewData(){
     char * strtokIndx; // this is used by strtok() as an index
 
@@ -117,17 +118,19 @@ void loop() {
   Serial.println();
   recvWithEndMarker();
   if(newData)parseNewData();
-  
+
   // Check for throttle timeout
   if (millis() - lastThrottleTime > THROTTLE_TIMEOUT) {
+    //Serial.println("RESET");
     for (int i = 0; i < 8; i++) {
       throttle[i] = 1500;
     }
   }
-  
+
   for (int i = 0; i < 8; i++) {
     motors[i].writeMicroseconds((int)throttle[i]);
+    Serial.println(throttle[i]);
   }
-  
+
   delay(1000 / frequency);
 }
