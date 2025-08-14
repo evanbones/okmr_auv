@@ -9,7 +9,7 @@ int ledPin1 = 11;
 int ledPin2 = 11;
 int ledPin3 = 11;
 int leakSensorPin = 8;
-int frequency = 10;
+int frequency = 40;
 bool killSwitchEnabled = false;
 
 Servo motors[8];
