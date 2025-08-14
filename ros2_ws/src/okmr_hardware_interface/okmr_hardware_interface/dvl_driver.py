@@ -56,7 +56,7 @@ class DvlDriverNode(Node):
                     #self.get_logger().warn(
                     #    f"DVL velocity too high ({velocity_magnitude:.3f} m/s), discarding data - VX: {vx:.3f}, VY: {vy:.3f}, VZ: {vz:.3f}"
                     #)
-                    vx,vy,vz = 0.0
+                    vx = vy = vz = 0.0
                     
 
                 # Create DVL message
