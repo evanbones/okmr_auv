@@ -28,7 +28,7 @@ def generate_launch_description():
     )
 
     ogopogo_hardware_interface_launch = PathJoinSubstitution(
-        [hardware_interface_launch_dir, "no_output.launch.py"]
+        [hardware_interface_launch_dir, "ogopogo_hardware_interface.launch.py"]
     )
 
     navigation_launch = PathJoinSubstitution(
