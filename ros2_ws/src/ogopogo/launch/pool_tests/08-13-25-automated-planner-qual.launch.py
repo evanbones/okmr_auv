@@ -135,7 +135,7 @@ def generate_launch_description():
             ]
         ),
         launch_arguments={
-            "folder": "pool_tests/08-13-25-pid-tuning",
+            "folder": "default",
         }.items(),
     )
 
