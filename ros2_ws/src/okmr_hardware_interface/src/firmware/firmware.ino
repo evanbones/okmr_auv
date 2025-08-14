@@ -131,8 +131,5 @@ void loop() {
 
   for (int i = 0; i < 8; i++) {
     motors[i].writeMicroseconds((int)throttle[i]);
-    Serial.println(throttle[i]);
   }
-
-  delay(1000 / frequency);
 }
