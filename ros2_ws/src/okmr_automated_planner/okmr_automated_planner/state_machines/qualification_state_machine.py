@@ -16,7 +16,7 @@ class QualificationStateMachine(BaseStateMachine):
             "name": "distance_down",
             "value": 1.5,
             "descriptor": "distance to move down",
-        }
+        },
     ]
 
     def __init__(self, *args, **kwargs):
@@ -41,7 +41,7 @@ class QualificationStateMachine(BaseStateMachine):
                 )
         elif msg.command == MissionCommand.KILL_MISSION:
             self.ros_node.get_logger().warn("Mission kill command received")
-            self.abort()
+            # self.abort()
 
     def on_enter_waiting_for_mission_start(self):
         """Wait for subscription to /mission_command topic"""
@@ -112,7 +112,6 @@ class QualificationStateMachine(BaseStateMachine):
             self.ros_node.get_logger().error("Failed to send forward movement command")
             self.queued_method = self.abort
 
-    
     def on_enter_surfacing(self):
         movement_msg = MovementCommand()
         movement_msg.command = MovementCommand.SURFACE_PASSIVE
@@ -131,4 +130,6 @@ class QualificationStateMachine(BaseStateMachine):
         pass
 
     def on_completion(self):
-        self.ros_node.get_logger().info(make_green_log("Qualification State Machine Exiting"))
+        self.ros_node.get_logger().info(
+            make_green_log("Qualification State Machine Exiting")
+        )
