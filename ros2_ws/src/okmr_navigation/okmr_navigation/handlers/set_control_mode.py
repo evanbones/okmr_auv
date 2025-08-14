@@ -41,6 +41,7 @@ def set_control_mode(mode):
         for i in range(20):
             control_publisher.publish(control_msg)
             control_msg.header.stamp = self.get_clock().now()
+            time.sleep(0.05)
 
         mode_names = {
             ControlMode.POSE: "POSE",
