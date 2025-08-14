@@ -45,6 +45,7 @@ class DeadReckoningNode : public rclcpp::Node {
 
     // DVL-derived acceleration
     geometry_msgs::msg::Vector3 dvl_accel;
+    float dvl_beams[4] = {0, 0, 0, 0};
 
     // Filtered/smoothed values using Vector3
     geometry_msgs::msg::Vector3 smoothed_angular_vel;
@@ -66,6 +67,7 @@ class DeadReckoningNode : public rclcpp::Node {
     double dvl_accel_smoothing_alpha_ = 0.7;
     double angular_vel_filter_alpha_ = 0.7;
     double angular_accel_filter_alpha_ = 0.7;
+    double dvl_altitude_filter_alpha_ = 0.3;
 
     // TF2 for coordinate transforms
     std::unique_ptr<tf2_ros::Buffer> tf_buffer_;
@@ -122,6 +124,13 @@ class DeadReckoningNode : public rclcpp::Node {
         desc.floating_point_range[0].to_value = 1.0;
         this->declare_parameter ("angular_accel_filter_alpha", angular_accel_filter_alpha_, desc);
 
+        desc.description =
+            "Complementary filter coefficient for DVL altitude estimation (1.0=dead reckoning "
+            "only, 0.0=DVL altitude only)";
+        desc.floating_point_range[0].from_value = 0.0;
+        desc.floating_point_range[0].to_value = 1.0;
+        this->declare_parameter ("dvl_altitude_filter_alpha", dvl_altitude_filter_alpha_, desc);
+
         // Get parameters
         update_frequency_ = this->get_parameter ("update_frequency").as_double ();
         complementary_filter_alpha_ =
@@ -132,6 +141,7 @@ class DeadReckoningNode : public rclcpp::Node {
         angular_vel_filter_alpha_ = this->get_parameter ("angular_vel_filter_alpha").as_double ();
         angular_accel_filter_alpha_ =
             this->get_parameter ("angular_accel_filter_alpha").as_double ();
+        dvl_altitude_filter_alpha_ = this->get_parameter ("dvl_altitude_filter_alpha").as_double ();
 
         // Initialize TF2
         tf_buffer_ = std::make_unique<tf2_ros::Buffer> (this->get_clock ());
@@ -236,6 +246,8 @@ class DeadReckoningNode : public rclcpp::Node {
                                        (1.0 - dvl_velocity_alpha_) * current_twist.twist.linear.y;
         current_twist.twist.linear.z = dvl_velocity_alpha_ * transformed_velocity.z +
                                        (1.0 - dvl_velocity_alpha_) * current_twist.twist.linear.z;
+
+        dvl_beams = msg.beam_distances;
     }
 
     void get_pose_twist_accel_callback (
@@ -305,6 +317,8 @@ class DeadReckoningNode : public rclcpp::Node {
                 angular_vel_filter_alpha_ = param.as_double ();
             } else if (param.get_name () == "angular_accel_filter_alpha") {
                 angular_accel_filter_alpha_ = param.as_double ();
+            } else if (param.get_name () == "dvl_altitude_filter_alpha") {
+                dvl_altitude_filter_alpha_ = param.as_double ();
             }
         }
 
@@ -449,12 +463,30 @@ class DeadReckoningNode : public rclcpp::Node {
         tf2::Quaternion q;
         q.setRPY (rotation_estimate.x, rotation_estimate.y, rotation_estimate.z);
         tf2::Matrix3x3 tf_R (q);
-        tf2::Vector3 rotated_point = tf_R * tf2::Vector3 (current_twist.twist.linear.x * dt,
-                                                          current_twist.twist.linear.y * dt,
-                                                          current_twist.twist.linear.z * dt);
-        translation_estimate.x += rotated_point.x ();
-        translation_estimate.y += rotated_point.y ();
-        translation_estimate.z += rotated_point.z ();
+        tf2::Vector3 translation_update = tf_R * tf2::Vector3 (current_twist.twist.linear.x * dt,
+                                                               current_twist.twist.linear.y * dt,
+                                                               current_twist.twist.linear.z * dt);
+        translation_estimate.x += translation_update.x ();
+        translation_estimate.y += translation_update.y ();
+        translation_estimate.z += translation_update.z ();
+
+        // Calculate average altitude from DVL beam distances
+        double dvl_altitude = 0.0;
+        int valid_beams = 0;
+        for (int i = 0; i < 4; i++) {
+            if (dvl_beams[i] > 0.0) {  // Only use valid beam readings
+                dvl_altitude += dvl_beams[i];
+                valid_beams++;
+            }
+        }
+
+        if (valid_beams > 0) {
+            dvl_altitude /= valid_beams;  // Average the valid beam distances
+
+            // Apply complementary filter for altitude estimation
+            translation_estimate.z = dvl_altitude_filter_alpha_ * dvl_altitude +
+                                     (1.0 - dvl_altitude_filter_alpha_) * translation_estimate.z;
+        }
 
         // Update pose message
         current_pose.pose.orientation = tf2::toMsg (q);
