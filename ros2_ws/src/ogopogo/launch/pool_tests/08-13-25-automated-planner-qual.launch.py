@@ -64,7 +64,7 @@ def generate_launch_description():
         executable="automated_planner",
         name="automated_planner",
         respawn=True,
-        respawn_delay=1.0
+        respawn_delay=1.0,
         parameters=[
             {
                 "config_base_path": PathJoinSubstitution(
