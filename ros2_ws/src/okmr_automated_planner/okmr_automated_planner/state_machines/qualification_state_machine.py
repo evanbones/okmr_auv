@@ -9,12 +9,12 @@ class QualificationStateMachine(BaseStateMachine):
     PARAMETERS = [
         {
             "name": "distance_forward",
-            "value": 2.0,
+            "value": 4.0,
             "descriptor": "distance to move forward",
         },
         {
             "name": "distance_down",
-            "value": 1.5,
+            "value": 0.5,
             "descriptor": "distance to move down",
         },
     ]
