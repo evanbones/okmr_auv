@@ -104,7 +104,8 @@ def generate_launch_description():
                 "unite_imu_method": 2,
             }
         ],
-        output="screen",
+        arguments=["--ros-args", "--log-level", "error"],
+        output="log",
     )
 
     navigation_launch = IncludeLaunchDescription(
