@@ -1,0 +1,15 @@
+to launch the qualifier sm: 
+```
+ros2 launch ogopogo 08-13-25-automated-planner-qual.launch.py root_config:='task_state_machines/qualifying.yaml'
+```
+
+to start mission:
+```
+ros2 topic pub /mission_command okmr_msgs/msg/MissionCommand "{command: 1}" --once
+```
+
+to pub an empty imu message:
+```
+ros2 topic pub /imu sensor_msgs/msg/Imu "{header: {frame_id: 'imu'}, linear_acceleration: {x: 0.0, y: 0.0, z: 9.81}, angular_velocity: {x: 0.0, y: 0.0, z: 0.0}}" --once
+```
+
