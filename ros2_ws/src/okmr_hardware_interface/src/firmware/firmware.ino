@@ -2,6 +2,7 @@
 const int minThrottle = 1100; // Minimum throttle in microseconds (1ms)
 const int maxThrottle = 1900; // Maximum throttle in microseconds (2ms)
 
+float throttle[8] = {1500, 1500, 1500, 1500, 1500, 1500, 1500, 1500};
 int pins[] = {2, 3, 4, 5, 6, 7, 8, 9};
 int killSwitchPin = 22;
 int ledPin1 = 25;
@@ -90,7 +91,6 @@ void recvWithEndMarker() {
     }
 }
 
-float throttle[8] = {1500, 1500, 1500, 1500, 1500, 1500, 1500, 1500};
 unsigned long lastThrottleTime = 0;
 const unsigned long THROTTLE_TIMEOUT = 1000;  // 1 second timeout
 int currMotor = 0;
