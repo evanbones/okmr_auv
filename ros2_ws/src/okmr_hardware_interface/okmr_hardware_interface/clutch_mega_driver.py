@@ -61,7 +61,7 @@ class SerialOutputNode(Node):
         try:
             for i, throttle_value in enumerate(msg.throttle):
                 remapped_index = self.motor_index_remapping[i]
-                serial_msg = f"{remapped_index}<{throttle_value}\n"
+                serial_msg = f"{remapped_index}<{round(throttle_value,2)}\n"
                 self.serial_port.write(serial_msg.encode("utf-8"))
         except serial.SerialException as e:
             self.get_logger().error(f"Error writing to serial port: {e}")
