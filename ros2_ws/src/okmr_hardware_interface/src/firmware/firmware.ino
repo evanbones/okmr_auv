@@ -101,7 +101,9 @@ void parseNewData(){
     currMotor=atoi(strtokIndx);
 
     strtokIndx = strtok(NULL, "<");
-    throttle[currMotor] = atof(strtokIndx);     // convert this part to a float
+    float value = atof(strtokIndx);     // convert this part to a float
+    // Clamp throttle values to safe range
+    throttle[currMotor] = constrain(value, minThrottle, maxThrottle);
     lastThrottleTime = millis();  // Update last received time
     newData = false;
 }
