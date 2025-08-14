@@ -16,6 +16,14 @@ Servo motors[8];
 void killSwitch() {
   int switchState = digitalRead(killSwitchPin);
   killSwitchEnabled = (switchState == LOW);  
+  
+  if (killSwitchEnabled) {
+    // Set all throttle values to neutral when killswitch is enabled
+    for (int i = 0; i < 8; i++) {
+      throttle[i] = 1500;
+    }
+  }
+  
   Serial.print("killswitch<");
   Serial.print(switchState);
   Serial.println();
@@ -79,7 +87,9 @@ void recvWithEndMarker() {
     }
 }
 
-float throttle[8];
+float throttle[8] = {1500, 1500, 1500, 1500, 1500, 1500, 1500, 1500};
+unsigned long lastThrottleTime = 0;
+const unsigned long THROTTLE_TIMEOUT = 1000;  // 1 second timeout
 int currMotor = 0;
 void parseNewData(){
     char * strtokIndx; // this is used by strtok() as an index
@@ -89,6 +99,7 @@ void parseNewData(){
 
     strtokIndx = strtok(NULL, "<");
     throttle[currMotor] = atof(strtokIndx);     // convert this part to a float
+    lastThrottleTime = millis();  // Update last received time
     newData = false;
 }
 
@@ -101,14 +112,17 @@ void loop() {
   Serial.println();
   recvWithEndMarker();
   if(newData)parseNewData();
-  if (killSwitchEnabled) {
+  
+  // Check for throttle timeout
+  if (millis() - lastThrottleTime > THROTTLE_TIMEOUT) {
     for (int i = 0; i < 8; i++) {
-      motors[i].writeMicroseconds((int)throttle[i]);
-    }
-  } else {
-    for (int i = 0; i < 8; i++) {
-      motors[i].writeMicroseconds(1500);
+      throttle[i] = 1500;
     }
   }
+  
+  for (int i = 0; i < 8; i++) {
+    motors[i].writeMicroseconds((int)throttle[i]);
+  }
+  
   delay(1000 / frequency);
 }
