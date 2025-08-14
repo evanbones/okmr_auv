@@ -9,12 +9,12 @@ class QualificationStateMachine(BaseStateMachine):
     PARAMETERS = [
         {
             "name": "distance_forward",
-            "value": 4.0,
+            "value": 1.0,
             "descriptor": "distance to move forward",
         },
         {
             "name": "distance_down",
-            "value": 0.5,
+            "value": 0.3,
             "descriptor": "distance to move down",
         },
     ]
@@ -22,7 +22,10 @@ class QualificationStateMachine(BaseStateMachine):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.distance_forward = self.get_local_parameter("distance_forward")
+        self.ros_node.get_logger().info(f"Distance forward: {self.distance_forward}")
+
         self.distance_down = self.get_local_parameter("distance_down")
+        self.ros_node.get_logger().info(f"Distance down: {self.distance_down}")
 
     def on_enter_initializing(self):
         # check system state

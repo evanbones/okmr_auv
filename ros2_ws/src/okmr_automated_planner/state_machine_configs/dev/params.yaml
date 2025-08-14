@@ -20,6 +20,6 @@ automated_planner:
       set_depth: 1.0
     
     qualifying:
-      distance_forward: 6.0
-      distance_down: 0.5
+      distance_forward: 0.8
+      distance_down: 0.2
 
