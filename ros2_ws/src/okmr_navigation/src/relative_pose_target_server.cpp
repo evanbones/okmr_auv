@@ -96,8 +96,8 @@ class RelativePoseTargetServer : public rclcpp::Node {
         bool was_enabled = is_enabled_;
         is_enabled_ = (msg->control_mode == okmr_msgs::msg::ControlMode::POSE);
 
-        RCLCPP_DEBUG (this->get_logger (), "RelativePoseTargetServer: enabled: %s -> %s",
-                      was_enabled ? "true" : "false", is_enabled_ ? "true" : "false");
+        RCLCPP_INFO (this->get_logger (), "RelativePoseTargetServer: enabled: %s -> %s",
+                     was_enabled ? "true" : "false", is_enabled_ ? "true" : "false");
 
         if (was_enabled && !is_enabled_) {
             // Mode changed from pose to something else - cancel timer
