@@ -33,4 +33,4 @@ thrust_allocator:
     
     #right
     motor_7_position: [-0.3175, -0.24, 0.0]
-    motor_7_direction: [0.866, -0.5, 0.0]
+    motor_7_direction: [-0.866, 0.5, 0.0]

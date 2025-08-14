@@ -103,6 +103,7 @@ void ControlLayerBase::reset_controllers () {
 void ControlLayerBase::declare_parameters () {
     // Update frequency parameter
     this->declare_parameter ("update_frequency", 200.0);
+    this->declare_parameter ("SAVE_LOCATION", "/tmp");
     update_frequency_ = this->get_parameter ("update_frequency").as_double ();
 
     // Controller parameters
