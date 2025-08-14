@@ -38,7 +38,7 @@ def set_control_mode(mode):
 
         # Get publisher and publish
         control_publisher = node.get_publisher("/control_mode", ControlMode, 10)
-        for i in range(10):
+        for i in range(20):
             control_publisher.publish(control_msg)
             time.sleep(0.05)
 
