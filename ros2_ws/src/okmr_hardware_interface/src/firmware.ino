@@ -15,7 +15,7 @@ int leakSensorPin = 33;
 int max_throttle = 45;
  */
 
-int pins[] = {15, 2, 0, 4, 16, 17, 5, 18};
+int pins[] = {2, 3, 4, 5, 6, 7, 8, 9};
 int killSwitchPin = 35;
 int ledPin1 = 25;
 int ledPin2 = 25;
