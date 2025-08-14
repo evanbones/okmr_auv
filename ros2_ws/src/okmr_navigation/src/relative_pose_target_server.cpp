@@ -29,7 +29,7 @@ class RelativePoseTargetServer : public rclcpp::Node {
         // Declare parameters
         this->declare_parameter ("update_frequency", 100.0);
         this->declare_parameter ("holding_radius", 0.5);
-        this->declare_parameter ("yaw_tolerance", 5.0);  // degrees
+        this->declare_parameter ("yaw_tolerance", 15.0);  // degrees
         update_frequency_ = this->get_parameter ("update_frequency").as_double ();
         holding_radius_ = this->get_parameter ("holding_radius").as_double ();
         yaw_tolerance_ = this->get_parameter ("yaw_tolerance").as_double ();
@@ -224,16 +224,9 @@ class RelativePoseTargetServer : public rclcpp::Node {
         bool yaw_on_target = std::abs (yaw_error) <= yaw_tolerance_;
 
         // Translation target - only publish if yaw is on target when outside holding radius
-        if (xy_trig_dist < holding_radius_) {
-            relative_pose_target.translation.x = relative_translation.x;
-            relative_pose_target.translation.y = relative_translation.y;
-            relative_pose_target.translation.z = relative_translation.z;
-        } else {
-            // Zero translation when yaw is not on target and outside holding radius
-            relative_pose_target.translation.x = 0.0;
-            relative_pose_target.translation.y = 0.0;
-            relative_pose_target.translation.z = 0.0;
-        }
+        relative_pose_target.translation.x = relative_translation.x;
+        relative_pose_target.translation.y = relative_translation.y;
+        relative_pose_target.translation.z = relative_translation.z;
 
         // Rotation target - always publish
         relative_pose_target.rotation.x = (roll - current_eulers.x);
