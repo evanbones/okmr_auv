@@ -8,7 +8,7 @@ import serial  # Import pyserial
 
 class SerialOutputNode(Node):
     def __init__(self):
-        super().__init__("serial_output_node")
+        super().__init__("clutch_mega_driver")
 
         self.declare_parameter("serial_port", "/dev/ttyUSB0")
         self.declare_parameter("baud_rate", 115200)

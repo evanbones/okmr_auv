@@ -1,4 +1,4 @@
-esp32_bridge:
+clutch_mega_driver:
   ros__parameters:
     serial_port: '/dev/ttyACM0'
     baud_rate: 115200
