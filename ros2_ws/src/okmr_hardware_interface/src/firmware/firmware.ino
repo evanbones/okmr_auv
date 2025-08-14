@@ -3,11 +3,11 @@ const int minThrottle = 1100; // Minimum throttle in microseconds (1ms)
 const int maxThrottle = 1900; // Maximum throttle in microseconds (2ms)
 
 int pins[] = {2, 3, 4, 5, 6, 7, 8, 9};
-int killSwitchPin = 35;
+int killSwitchPin = 2;
 int ledPin1 = 25;
 int ledPin2 = 25;
 int ledPin3 = 25;
-int leakSensorPin = 33;
+int leakSensorPin = 23;
 int frquency = 200;
 bool killSwitchEnabled = false;
 
@@ -22,6 +22,9 @@ void killSwitch() {
     for (int i = 0; i < 8; i++) {
       throttle[i] = 1500;
     }
+    digitalWrite(ledPin1, LOW);  // Turn off LED when killswitch is enabled
+  } else {
+    digitalWrite(ledPin1, HIGH); // Turn on LED when killswitch is not enabled
   }
   
   Serial.print("killswitch<");
