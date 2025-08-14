@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import rclpy
 from rclpy.node import Node
 from okmr_msgs.msg import MotorThrottle, MissionCommand, ControlMode
@@ -95,11 +97,11 @@ class SerialOutputNode(Node):
                     value = int(parts[1])
 
                     if sensor_type == "killswitch":
-                        killswitch_active = (value == 1)  # Killswitch disabled (pin HIGH)
+                        killswitch_active = value == 1  # Killswitch disabled (pin HIGH)
                         if killswitch_active and not self.last_killswitch_state:
                             # Killswitch just went off - log warning
                             self.get_logger().warn("KILLSWITCH ACTIVATED!")
-                        
+
                         if killswitch_active:
                             # Send KILL_MISSION and OFF mode
                             mission_msg = MissionCommand()
@@ -110,14 +112,17 @@ class SerialOutputNode(Node):
                             control_msg.header.stamp = self.get_clock().now().to_msg()
                             control_msg.control_mode = ControlMode.OFF
                             self.control_mode_publisher.publish(control_msg)
-                        
+
                         self.last_killswitch_state = killswitch_active
 
                     elif sensor_type == "leak":
                         if value > self.leak_threshold:  # Leak detected
                             # Log fatal warning (throttled to 1Hz)
-                            self.get_logger().fatal(f"LEAK DETECTED! Sensor reading: {value}, threshold: {self.leak_threshold}", throttle_duration_sec=1.0)
-                            
+                            self.get_logger().fatal(
+                                f"LEAK DETECTED! Sensor reading: {value}, threshold: {self.leak_threshold}",
+                                throttle_duration_sec=1.0,
+                            )
+
                             # Send KILL_MISSION and OFF mode
                             mission_msg = MissionCommand()
                             mission_msg.command = MissionCommand.KILL_MISSION
