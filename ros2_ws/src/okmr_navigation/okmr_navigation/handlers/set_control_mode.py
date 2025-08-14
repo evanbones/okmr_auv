@@ -40,7 +40,7 @@ def set_control_mode(mode):
         control_publisher = node.get_publisher("/control_mode", ControlMode, 10)
         for i in range(20):
             control_publisher.publish(control_msg)
-            time.sleep(0.05)
+            control_msg.header.stamp = self.get_clock().now()
 
         mode_names = {
             ControlMode.POSE: "POSE",
