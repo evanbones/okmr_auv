@@ -40,7 +40,7 @@ def set_control_mode(mode):
         control_publisher = node.get_publisher("/control_mode", ControlMode, 10)
         for i in range(20):
             control_publisher.publish(control_msg)
-            control_msg.header.stamp = node.get_clock().now()
+            control_msg.header.stamp = node.get_clock().now().to_msg()
             time.sleep(0.05)
 
         mode_names = {
