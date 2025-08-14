@@ -34,7 +34,6 @@ class SerialOutputNode(Node):
         
         self.timer = self.create_timer(1.0 / polling_rate, self.read_serial_callback)
         self.serial_buffer = ""
-        self.last_killswitch_state = None
 
     def throttle_callback(self, msg):
         if not self.serial_port or not self.serial_port.is_open:
