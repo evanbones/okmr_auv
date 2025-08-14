@@ -9,7 +9,6 @@ int ledPin1 = 10;
 int ledPin2 = 11;
 int ledPin3 = 12;
 int leakSensorPin = 8;
-int frequency = 40;
 bool killSwitchEnabled = false;
 unsigned long lastKillswitchPrintTime = 0;
 const unsigned long KILLSWITCH_PRINT_INTERVAL = 100; // Print killswitch status every 100ms
@@ -84,20 +83,28 @@ void recvWithEndMarker() {
     char endMarker = '\n';
     char rc;
 
-    if (Serial.available() > 0) {
+    // Process multiple characters per call to prevent buffer buildup
+    while (Serial.available() > 0 && ndx < numChars - 1) {
         rc = Serial.read();
 
         if (rc != endMarker) {
             receivedChars[ndx] = rc;
             ndx++;
-            if (ndx >= numChars) {
-                ndx = numChars - 1;
-            }
         }
         else {
             receivedChars[ndx] = '\0'; // terminate the string
             ndx = 0;
             newData = true;
+            break; // Process one complete message per call
+        }
+    }
+    
+    // Clear buffer if overflow detected
+    if (ndx >= numChars - 1) {
+        ndx = 0;
+        // Clear remaining data in serial buffer to prevent corruption
+        while (Serial.available() > 0) {
+            Serial.read();
         }
     }
 }
