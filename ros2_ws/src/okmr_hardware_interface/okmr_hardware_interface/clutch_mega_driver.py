@@ -97,10 +97,17 @@ class SerialOutputNode(Node):
                     value = int(parts[1])
 
                     if sensor_type == "killswitch":
-                        killswitch_active = value == 1  # Killswitch disabled (pin HIGH)
+                        killswitch_active = (
+                            value == 1
+                        )  # disarmed / switch open (pin HIGH because its pullup)
                         if killswitch_active and not self.last_killswitch_state:
-                            # Killswitch just went off - log warning
                             self.get_logger().warn("KILLSWITCH ACTIVATED!")
+
+                        if not killswitch_active and self.last_killswitch_state:
+                            self.get_logger().warn("MISSION START RECEIVED!")
+                            mission_msg = MissionCommand()
+                            mission_msg.command = MissionCommand.START_MISSION
+                            self.mission_publisher.publish(mission_msg)
 
                         if killswitch_active:
                             # Send KILL_MISSION and OFF mode
@@ -116,8 +123,7 @@ class SerialOutputNode(Node):
                         self.last_killswitch_state = killswitch_active
 
                     elif sensor_type == "leak":
-                        if value > self.leak_threshold:  # Leak detected
-                            # Log fatal warning (throttled to 1Hz)
+                        if value > self.leak_threshold:
                             self.get_logger().fatal(
                                 f"LEAK DETECTED! Sensor reading: {value}, threshold: {self.leak_threshold}",
                                 throttle_duration_sec=1.0,
