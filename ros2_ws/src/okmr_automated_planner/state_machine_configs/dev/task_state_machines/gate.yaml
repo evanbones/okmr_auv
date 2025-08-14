@@ -1,0 +1,27 @@
+gate:
+  states:
+    - { name: scanning_for_gate }
+    - { name: gate_locked }
+    - { name: approaching_gate }
+    - { name: waiting_for_mission_start }
+    - { name: enabling_subsystems }
+
+  transitions:
+    - {
+        trigger: initialized,
+        source: initializing,
+        dest: waiting_for_mission_start,
+      }
+    - {
+        trigger: mission_start_received,
+        source: waiting_for_mission_start,
+        dest: enabling_subsystems,
+      }
+    - {
+        trigger: enabling_subsystems_done,
+        source: enabling_subsystems,
+        dest: scanning_for_gate,
+      }
+    - { trigger: gate_found, source: scanning_for_gate, dest: gate_locked }
+    - { trigger: gate_locked_done, source: gate_locked, dest: approaching_gate }
+    - { trigger: approaching_gate_done, source: approaching_gate, dest: done }

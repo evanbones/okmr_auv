@@ -95,6 +95,17 @@ def generate_launch_description():
         output="screen",
     )
 
+    object_locator_node = Node(
+        package="okmr_mapping",
+        executable="object_locator",
+        output="screen",
+        parameters=[
+            {"max_pointclouds": 5},
+            {"leaf_size": 0.05},
+            {"max_update_distance": 0.5},
+        ],
+    )
+
     # Set colorized output for better log readability
     colorized_output = SetEnvironmentVariable(
         name="RCUTILS_COLORIZED_OUTPUT", value="1"
@@ -112,5 +123,6 @@ def generate_launch_description():
             automated_planner_node,
             navigator_server_node,
             dead_reckoning_node,
+            object_locator_node,
         ]
     )

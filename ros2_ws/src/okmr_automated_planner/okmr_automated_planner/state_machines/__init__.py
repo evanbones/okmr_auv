@@ -5,6 +5,7 @@ from .finding_marker_state_machine import FindingMarkerStateMachine
 from .test_state_machine import TestStateMachine
 from .test_scan_state_machine import TestScanStateMachine
 from .qualification_state_machine import QualificationStateMachine
+from .gate_state_machine import GateStateMachine
 
 __all__ = [
     'RootStateMachine',
@@ -13,5 +14,6 @@ __all__ = [
     'FindingMarkerStateMachine',
     'TestStateMachine',
     'TestScanStateMachine',
-    'QualificationStateMachine'
+    'QualificationStateMachine',
+    'GateStateMachine'
 ]
