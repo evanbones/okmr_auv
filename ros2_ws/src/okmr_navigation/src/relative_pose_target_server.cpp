@@ -224,7 +224,7 @@ class RelativePoseTargetServer : public rclcpp::Node {
         bool yaw_on_target = std::abs (yaw_error) <= yaw_tolerance_;
 
         // Translation target - only publish if yaw is on target when outside holding radius
-        if (xy_trig_dist < holding_radius_ || yaw_on_target) {
+        if (xy_trig_dist < holding_radius_) {
             relative_pose_target.translation.x = relative_translation.x;
             relative_pose_target.translation.y = relative_translation.y;
             relative_pose_target.translation.z = relative_translation.z;
