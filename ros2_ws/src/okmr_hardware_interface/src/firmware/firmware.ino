@@ -4,21 +4,21 @@ const int maxThrottle = 1900; // Maximum throttle in microseconds (2ms)
 float throttle[8] = {1500, 1500, 1500, 1500, 1500, 1500, 1500, 1500};
 
 #define NUM_SERVOS 1
-#define NUM_ACTUATORS 2
+#define NUM_ACTUATORS 3
 
-int pins[] = {2, 3, 4, 5, 6, 7, 8, 9}; //motor 9 is servo
-int servo_pins[] = {10};
+int pins[] = {12, 13, 14, 25, 26, 27, 32, 35}; //motor 9 is servo
+int servo_pins[] = {17};
 int servo_inits[] = {1500};
-int actuator_pins[] = {15, 16};
+int actuator_pins[] = {16, 4, 5};
 //note: add servo and actuator commands
 //100<1500\n for servo command on servo_pins[0] (pwm same as motors)
 //200<1\n for actuator command on actuaotr_pins[0] (digital high or low)
 //add command interpretation to recvWithEndMarker
 
-int killSwitchPin = 13;
-int ledPin1 = 10;
-int ledPin2 = 11;
-int ledPin3 = 12;
+int killSwitchPin = 15;
+int ledPin1 = 1;
+int ledPin2 = 22;
+int ledPin3 = 23;
 int leakSensorPin = 8;
 bool killSwitchEnabled = false;
 unsigned long lastKillswitchPrintTime = 0;
@@ -45,7 +45,7 @@ void killSwitch() {
   // Print immediately if state changed, otherwise check time throttling
   bool stateChanged = (switchState != lastKillswitchState);
   bool timeToSend = (millis() - lastKillswitchPrintTime >= KILLSWITCH_PRINT_INTERVAL);
-  
+
   if (stateChanged || timeToSend) {
     Serial.print("killswitch<");
     Serial.print(switchState);
@@ -83,13 +83,13 @@ void setup() {
   escArm();
   Serial.println("ESCs Armed.");
   initServos();
-  
+
   // Initialize actuator pins
   for (int i = 0; i < NUM_ACTUATORS; i++) {
     pinMode(actuator_pins[i], OUTPUT);
     digitalWrite(actuator_pins[i], LOW);
   }
-  
+
   while(Serial.available() > 0){
     Serial.read();
   }
@@ -127,7 +127,7 @@ void recvWithEndMarker() {
             break; // Process one complete message per call
         }
     }
-    
+
     // Clear buffer if overflow detected
     if (ndx >= numChars - 1) {
         ndx = 0;
@@ -150,7 +150,7 @@ void parseNewData(){
 
     strtokIndx = strtok(NULL, "<");
     float value = atof(strtokIndx);     // convert this part to a float
-    
+
     if (command >= 100 && command < 200) {
       // Servo command: 100 + servo_index
       int servoIndex = command - 100;
@@ -160,7 +160,7 @@ void parseNewData(){
       }
     }
     else if (command >= 200 && command < 300) {
-      // Actuator command: 200 + actuator_index  
+      // Actuator command: 200 + actuator_index
       int actuatorIndex = command - 200;
       if (actuatorIndex >= 0 && actuatorIndex < NUM_ACTUATORS) {
         digitalWrite(actuator_pins[actuatorIndex], value > 0 ? HIGH : LOW);
