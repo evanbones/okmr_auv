@@ -4,6 +4,7 @@ import rclpy
 from rclpy.node import Node
 from okmr_msgs.msg import MotorThrottle, MissionCommand, ControlMode
 import serial  # Import pyserial
+import time
 
 
 class SerialOutputNode(Node):
@@ -109,8 +110,10 @@ class SerialOutputNode(Node):
                         if not killswitch_active and self.last_killswitch_state:
                             self.get_logger().warn("MISSION START RECEIVED!")
                             mission_msg = MissionCommand()
-                            mission_msg.command = MissionCommand.START_MISSION
-                            self.mission_publisher.publish(mission_msg)
+                            for i in range(3):
+                                mission_msg.command = MissionCommand.START_MISSION
+                                self.mission_publisher.publish(mission_msg)
+                                time.sleep(0.1)
 
                         if killswitch_active:
                             # Send KILL_MISSION and OFF mode

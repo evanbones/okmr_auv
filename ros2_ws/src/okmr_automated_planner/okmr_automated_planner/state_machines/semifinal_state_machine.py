@@ -2,6 +2,7 @@ from okmr_automated_planner.base_state_machine import BaseStateMachine
 from okmr_utils.logging import make_green_log
 from okmr_msgs.srv import SetDeadReckoningEnabled
 from okmr_msgs.msg import MovementCommand, MissionCommand
+import time
 
 
 class SemifinalStateMachine(BaseStateMachine):
@@ -9,42 +10,42 @@ class SemifinalStateMachine(BaseStateMachine):
     PARAMETERS = [
         {
             "name": "distance_forward1",
-            "value": 3.0,
+            "value": 4.0,
             "descriptor": "distance to move forward in segment 1",
         },
         {
             "name": "distance_forward2",
-            "value": 0.5,
+            "value": 2.0,
             "descriptor": "distance to move forward in segment 2",
         },
         {
             "name": "distance_forward3",
-            "value": 0.6,
+            "value": 2.0,
             "descriptor": "distance to move forward in segment 3",
         },
         {
             "name": "distance_forward4",
-            "value": 0.5,
+            "value": 4.0,
             "descriptor": "distance to move forward in segment 4",
         },
         {
             "name": "distance_down",
-            "value": 1.0,
+            "value": 0.75,
             "descriptor": "distance to move down",
         },
         {
             "name": "turning_angle1",
-            "value": 45.0,
+            "value": 60.0,
             "descriptor": "turning angle for turn 1 (degrees)",
         },
         {
             "name": "turning_angle2",
-            "value": 45.0,
+            "value": -40.0,
             "descriptor": "turning angle for turn 2 (degrees)",
         },
         {
             "name": "turning_angle3",
-            "value": 45.0,
+            "value": 50.0,
             "descriptor": "turning angle for turn 3 (degrees)",
         },
         {
@@ -90,6 +91,7 @@ class SemifinalStateMachine(BaseStateMachine):
         if msg.command == MissionCommand.START_MISSION:
             if self.is_waiting_for_mission_start():
                 self.ros_node.get_logger().info("Mission start command received")
+                time.sleep(3.0)
                 self.mission_start_received()
             else:
                 self.ros_node.get_logger().warn(
@@ -287,12 +289,12 @@ class SemifinalStateMachine(BaseStateMachine):
         movement_msg = MovementCommand()
         movement_msg.command = MovementCommand.BARREL_ROLL
         movement_msg.goal_velocity.twist.angular.x = -100.0
-        movement_msg.goal_velocity.duration = 360.0 / 100.0 * number_of_rolls
+        movement_msg.goal_velocity.duration = 7.2
         movement_msg.goal_velocity.integrate = True
 
         success = self.movement_client.send_movement_command(
             movement_msg,
-            on_success=self.barrel_rolling_done,
+            on_success=self.barrel_roll_done,
             on_failure=self.abort,
         )
 
