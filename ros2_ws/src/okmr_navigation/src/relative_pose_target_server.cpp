@@ -229,8 +229,8 @@ class RelativePoseTargetServer : public rclcpp::Node {
         relative_pose_target.translation.z = relative_translation.z;
 
         // Rotation target - always publish
-        relative_pose_target.rotation.x = (roll - current_eulers.x);
-        relative_pose_target.rotation.y = (pitch - current_eulers.y);
+        relative_pose_target.rotation.x = 0.0;  //(roll - current_eulers.x);
+        relative_pose_target.rotation.y = 0.0;  //(pitch - current_eulers.y);
         relative_pose_target.rotation.z = yaw_error;
 
         relative_pose_pub_->publish (relative_pose_target);
