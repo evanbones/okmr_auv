@@ -58,7 +58,7 @@ def generate_launch_description():
             IncludeLaunchDescription(
                 full_control_stack_launch,
                 launch_arguments={
-                    "folder": "7-motor",
+                    "folder": "default",
                 }.items(),
             ),
             IncludeLaunchDescription(navigation_launch),
