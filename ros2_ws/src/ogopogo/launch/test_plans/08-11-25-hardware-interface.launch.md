@@ -63,7 +63,7 @@ ros2 topic pub /motor_throttle okmr_msgs/MotorThrottle "{throttle: [1600.0, 1600
 
 **Stop (All Thrusts Zero):**
 ```sh
-ros2 topic pub /motor_thrust okmr_msgs/msg/MotorThrust "thrust: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]"
+ros2 topic pub /motor_thrust okmr_msgs/MotorThrust "{thrust: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}"
 ```
 
 **Forward Example (Modify as needed):**

@@ -2,5 +2,3 @@ int8 command
 
 int8 START_MISSION = 1
 int8 KILL_MISSION = 2
-int8 HARDWARE_KILL = 3
-int8 HARDWARE_KILL_RESET = 4

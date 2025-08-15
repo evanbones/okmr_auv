@@ -6,7 +6,14 @@ from launch.substitutions import (
     PathJoinSubstitution,
     PythonExpression,
 )
-from launch.actions import DeclareLaunchArgument, SetEnvironmentVariable, GroupAction
+from launch.actions import (
+    DeclareLaunchArgument,
+    SetEnvironmentVariable,
+    GroupAction,
+    IncludeLaunchDescription,
+)
+from launch_ros.substitutions import FindPackageShare
+from launch.launch_description_sources import PythonLaunchDescriptionSource
 from ament_index_python.packages import get_package_share_directory
 import os
 
@@ -16,6 +23,9 @@ def generate_launch_description():
     # by default use the dev folder
     pkg_share = get_package_share_directory("okmr_automated_planner")
     config_share_path = os.path.join(pkg_share, "state_machine_configs")
+    navigation_dir = PathJoinSubstitution(
+        [FindPackageShare("okmr_navigation"), "launch"]
+    )
 
     # Launch arguments
     config_share_path_arg = DeclareLaunchArgument(
@@ -53,6 +63,8 @@ def generate_launch_description():
         package="okmr_automated_planner",
         executable="automated_planner",
         name="automated_planner",
+        respawn=True,
+        respawn_delay=1.0,
         parameters=[
             {
                 "config_base_path": PathJoinSubstitution(
@@ -63,6 +75,13 @@ def generate_launch_description():
                 )
             },
             {"root_config": LaunchConfiguration("root_config")},
+            PathJoinSubstitution(
+                [
+                    LaunchConfiguration("config_share_path"),
+                    LaunchConfiguration("config_folder"),
+                    LaunchConfiguration("param_file"),
+                ]
+            ),
         ],
         output="screen",
         ros_arguments=[
@@ -83,16 +102,86 @@ def generate_launch_description():
         ],
     )
 
-    navigator_server_node = Node(
-        package="okmr_navigation",
-        executable="navigator_action_server",
-        parameters=[{"test_mode": True}],
+    # RealSense Camera
+    realsense_node = Node(
+        package="realsense2_camera",
+        executable="realsense2_camera_node",
+        parameters=[
+            {
+                "enable_gyro": True,
+                "enable_accel": True,
+                "unite_imu_method": 2,
+            }
+        ],
+        arguments=["--ros-args", "--log-level", "error"],
+        output="log",
     )
 
-    dead_reckoning_node = Node(
-        package="okmr_navigation",
-        executable="dead_reckoning",
-        output="screen",
+    navigation_launch = IncludeLaunchDescription(
+        PathJoinSubstitution([navigation_dir, "full_navigation_stack.launch.py"])
+    )
+
+    # Include Full Control Stack Launch
+    control_stack_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            [
+                PathJoinSubstitution(
+                    [
+                        get_package_share_directory("okmr_controls"),
+                        "launch",
+                        "full_control_stack.launch.py",
+                    ]
+                )
+            ]
+        ),
+        launch_arguments={
+            "folder": "default",
+        }.items(),
+    )
+
+    # Include Object Detection Launch
+    object_detection_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            [
+                PathJoinSubstitution(
+                    [
+                        get_package_share_directory("okmr_object_detection"),
+                        "launch",
+                        "full_object_detection_system.launch.py",
+                    ]
+                )
+            ]
+        )
+    )
+
+    # Include Hardware Interface Launch (includes DVL, ESP32 bridge, temp sensor)
+    hardware_interface_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            [
+                PathJoinSubstitution(
+                    [
+                        get_package_share_directory("okmr_hardware_interface"),
+                        "launch",
+                        "ogopogo_hardware_interface.launch.py",
+                    ]
+                )
+            ]
+        )
+    )
+
+    # Include Static Transforms Launch
+    static_transforms_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            [
+                PathJoinSubstitution(
+                    [
+                        get_package_share_directory("okmr_navigation"),
+                        "launch",
+                        "static_transforms.launch.py",
+                    ]
+                )
+            ]
+        )
     )
 
     # Set colorized output for better log readability
@@ -103,6 +192,7 @@ def generate_launch_description():
     # Return the launch description
     return LaunchDescription(
         [
+            navigation_launch,
             colorized_output,
             config_share_path_arg,
             config_folder_arg,
@@ -110,7 +200,10 @@ def generate_launch_description():
             root_config_arg,
             debug_arg,
             automated_planner_node,
-            navigator_server_node,
-            dead_reckoning_node,
+            realsense_node,
+            control_stack_launch,
+            # object_detection_launch,
+            hardware_interface_launch,
+            static_transforms_launch,
         ]
     )

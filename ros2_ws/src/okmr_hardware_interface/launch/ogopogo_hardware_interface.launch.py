@@ -6,10 +6,11 @@ import os
 
 
 def generate_launch_description():
-    
+
     # Get path to parameter file
-    package_dir = get_package_share_directory('okmr_hardware_interface')
-    esp32_params_file = os.path.join(package_dir, 'params', 'esp32_bridge.yaml')
+    package_dir = get_package_share_directory("okmr_hardware_interface")
+    mega_params_file = os.path.join(package_dir, "params", "mega_params.yaml")
+    thrust_curve_file = os.path.join(package_dir, "tables", "t200.csv")
 
     return LaunchDescription(
         [
@@ -19,8 +20,13 @@ def generate_launch_description():
             ),
             Node(
                 package="okmr_hardware_interface",
-                executable="esp32_bridge",
-                parameters=[esp32_params_file]
+                executable="thrust_to_pwm_node",
+                parameters=[{"thrust_curve_file": thrust_curve_file}],
+            ),
+            Node(
+                package="okmr_hardware_interface",
+                executable="clutch_mega_driver",
+                parameters=[mega_params_file],
             ),
             Node(
                 package="okmr_hardware_interface",

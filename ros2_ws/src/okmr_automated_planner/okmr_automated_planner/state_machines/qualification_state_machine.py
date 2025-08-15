@@ -9,24 +9,27 @@ class QualificationStateMachine(BaseStateMachine):
     PARAMETERS = [
         {
             "name": "distance_forward",
-            "value": 2.0,
+            "value": 1.0,
             "descriptor": "distance to move forward",
         },
         {
             "name": "distance_down",
-            "value": 1.5,
+            "value": 0.3,
             "descriptor": "distance to move down",
-        }
+        },
     ]
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.distance_forward = self.get_local_parameter("distance_forward")
+        self.ros_node.get_logger().info(f"Distance forward: {self.distance_forward}")
+
         self.distance_down = self.get_local_parameter("distance_down")
+        self.ros_node.get_logger().info(f"Distance down: {self.distance_down}")
 
     def on_enter_initializing(self):
         # check system state
-        # placeholder queued method
+        # transition to waiting for mission start
         self.queued_method = self.initialized
 
     def mission_command_callback(self, msg):
@@ -41,7 +44,7 @@ class QualificationStateMachine(BaseStateMachine):
                 )
         elif msg.command == MissionCommand.KILL_MISSION:
             self.ros_node.get_logger().warn("Mission kill command received")
-            self.abort()
+            # self.abort()
 
     def on_enter_waiting_for_mission_start(self):
         """Wait for subscription to /mission_command topic"""
@@ -84,7 +87,7 @@ class QualificationStateMachine(BaseStateMachine):
     def on_enter_moving_down(self):
         movement_msg = MovementCommand()
         movement_msg.command = MovementCommand.MOVE_RELATIVE
-        movement_msg.translation.z = -1.5
+        movement_msg.translation.z = -self.distance_down
 
         success = self.movement_client.send_movement_command(
             movement_msg,
@@ -96,15 +99,15 @@ class QualificationStateMachine(BaseStateMachine):
             self.ros_node.get_logger().error("Failed to send sinking movement command")
             self.queued_method = self.abort
 
-    def on_enter_forward(self):
+    def on_enter_moving_forward(self):
 
         movement_msg = MovementCommand()
         movement_msg.command = MovementCommand.MOVE_RELATIVE
-        #movement_msg.forward.x = 90.0
+        movement_msg.translation.x = self.distance_forward
 
         success = self.movement_client.send_movement_command(
             movement_msg,
-            on_success=self.forward_done,
+            on_success=self.moving_forward_done,
             on_failure=self.abort,
         )
 
@@ -112,7 +115,6 @@ class QualificationStateMachine(BaseStateMachine):
             self.ros_node.get_logger().error("Failed to send forward movement command")
             self.queued_method = self.abort
 
-    
     def on_enter_surfacing(self):
         movement_msg = MovementCommand()
         movement_msg.command = MovementCommand.SURFACE_PASSIVE
@@ -131,4 +133,6 @@ class QualificationStateMachine(BaseStateMachine):
         pass
 
     def on_completion(self):
-        self.ros_node.get_logger().info(make_green_log("Qualification State Machine Exiting"))
+        self.ros_node.get_logger().info(
+            make_green_log("Qualification State Machine Exiting")
+        )

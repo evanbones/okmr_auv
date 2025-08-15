@@ -28,8 +28,8 @@ class RelativePoseTargetServer : public rclcpp::Node {
     RelativePoseTargetServer () : Node ("relative_pose_target_server") {
         // Declare parameters
         this->declare_parameter ("update_frequency", 100.0);
-        this->declare_parameter ("holding_radius", 1.5);
-        this->declare_parameter ("yaw_tolerance", 5.0);  // degrees
+        this->declare_parameter ("holding_radius", 0.5);
+        this->declare_parameter ("yaw_tolerance", 15.0);  // degrees
         update_frequency_ = this->get_parameter ("update_frequency").as_double ();
         holding_radius_ = this->get_parameter ("holding_radius").as_double ();
         yaw_tolerance_ = this->get_parameter ("yaw_tolerance").as_double ();
@@ -99,14 +99,10 @@ class RelativePoseTargetServer : public rclcpp::Node {
         RCLCPP_DEBUG (this->get_logger (), "RelativePoseTargetServer: enabled: %s -> %s",
                       was_enabled ? "true" : "false", is_enabled_ ? "true" : "false");
 
-        if (was_enabled && !is_enabled_) {
-            // Mode changed from pose to something else - cancel timer
-            RCLCPP_DEBUG (this->get_logger (), "Pose mode disabled, canceling timer");
-            timer_->cancel ();
-        } else if (!was_enabled && is_enabled_) {
+        if (!was_enabled && is_enabled_) {
             // Mode changed to pose - start timer and set goal to current pose for safety
             RCLCPP_DEBUG (this->get_logger (), "Pose mode enabled, starting timer");
-            current_goal_pose_msg_.pose = current_pose_msg_.pose;
+            // current_goal_pose_msg_.pose = current_pose_msg_.pose;
 
             auto timer_period = std::chrono::duration_cast<std::chrono::milliseconds> (
                 std::chrono::duration<double> (1.0 / update_frequency_));
@@ -228,16 +224,9 @@ class RelativePoseTargetServer : public rclcpp::Node {
         bool yaw_on_target = std::abs (yaw_error) <= yaw_tolerance_;
 
         // Translation target - only publish if yaw is on target when outside holding radius
-        if (xy_trig_dist < holding_radius_ || yaw_on_target) {
-            relative_pose_target.translation.x = relative_translation.x;
-            relative_pose_target.translation.y = relative_translation.y;
-            relative_pose_target.translation.z = relative_translation.z;
-        } else {
-            // Zero translation when yaw is not on target and outside holding radius
-            relative_pose_target.translation.x = 0.0;
-            relative_pose_target.translation.y = 0.0;
-            relative_pose_target.translation.z = 0.0;
-        }
+        relative_pose_target.translation.x = relative_translation.x;
+        relative_pose_target.translation.y = relative_translation.y;
+        relative_pose_target.translation.z = relative_translation.z;
 
         // Rotation target - always publish
         relative_pose_target.rotation.x = (roll - current_eulers.x);
