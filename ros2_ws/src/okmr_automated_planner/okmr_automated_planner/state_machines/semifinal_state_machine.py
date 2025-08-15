@@ -61,19 +61,19 @@ class SemifinalStateMachine(BaseStateMachine):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        
+
         self.distance_forward1 = self.get_local_parameter("distance_forward1")
         self.distance_forward2 = self.get_local_parameter("distance_forward2")
         self.distance_forward3 = self.get_local_parameter("distance_forward3")
         self.distance_forward4 = self.get_local_parameter("distance_forward4")
         self.distance_down = self.get_local_parameter("distance_down")
-        
+
         self.turning_angle1 = self.get_local_parameter("turning_angle1")
         self.turning_angle2 = self.get_local_parameter("turning_angle2")
         self.turning_angle3 = self.get_local_parameter("turning_angle3")
         self.turning_angle4 = self.get_local_parameter("turning_angle4")
         self.barrel_roll_angle = self.get_local_parameter("barrel_roll_angle")
-        
+
         self.ros_node.get_logger().info(
             f"Semifinal parameters - Forward distances: [{self.distance_forward1}, {self.distance_forward2}, {self.distance_forward3}, {self.distance_forward4}], "
             f"Down: {self.distance_down}, Turning angles: [{self.turning_angle1}, {self.turning_angle2}, {self.turning_angle3}, {self.turning_angle4}], "
@@ -164,7 +164,9 @@ class SemifinalStateMachine(BaseStateMachine):
         )
 
         if not success:
-            self.ros_node.get_logger().error("Failed to send forward movement command 1")
+            self.ros_node.get_logger().error(
+                "Failed to send forward movement command 1"
+            )
             self.queued_method = self.abort
 
     def on_enter_moving_forward2(self):
@@ -179,7 +181,9 @@ class SemifinalStateMachine(BaseStateMachine):
         )
 
         if not success:
-            self.ros_node.get_logger().error("Failed to send forward movement command 2")
+            self.ros_node.get_logger().error(
+                "Failed to send forward movement command 2"
+            )
             self.queued_method = self.abort
 
     def on_enter_moving_forward3(self):
@@ -194,7 +198,9 @@ class SemifinalStateMachine(BaseStateMachine):
         )
 
         if not success:
-            self.ros_node.get_logger().error("Failed to send forward movement command 3")
+            self.ros_node.get_logger().error(
+                "Failed to send forward movement command 3"
+            )
             self.queued_method = self.abort
 
     def on_enter_moving_forward4(self):
@@ -209,7 +215,9 @@ class SemifinalStateMachine(BaseStateMachine):
         )
 
         if not success:
-            self.ros_node.get_logger().error("Failed to send forward movement command 4")
+            self.ros_node.get_logger().error(
+                "Failed to send forward movement command 4"
+            )
             self.queued_method = self.abort
 
     def on_enter_turning1(self):
@@ -272,22 +280,29 @@ class SemifinalStateMachine(BaseStateMachine):
             self.ros_node.get_logger().error("Failed to send turning command 4")
             self.queued_method = self.abort
 
-    def on_enter_barrel_roll(self):
+     def on_enter_barrel_rolling(self):
+        """Execute barrel roll using the new BARREL_ROLL command"""
+        number_of_rolls = 2
+
         movement_msg = MovementCommand()
-        movement_msg.command = MovementCommand.MOVE_RELATIVE
-        movement_msg.rotation.x = self.barrel_roll_angle
+        movement_msg.command = MovementCommand.BARREL_ROLL
+        movement_msg.goal_velocity.twist.angular.x = -100.0
+        movement_msg.goal_velocity.duration = (
+            360.0 / abs(self.barrel_roll_speed) * number_of_rolls
+        )
+        movement_msg.goal_velocity.integrate = True
 
         success = self.movement_client.send_movement_command(
             movement_msg,
-            on_success=self.barrel_roll_done,
+            on_success=self.barrel_rolling_done,
             on_failure=self.abort,
         )
 
         if not success:
-            self.ros_node.get_logger().error("Failed to send barrel roll command")
-            self.queued_method = self.abort
-
-    def on_enter_surfacing(self):
+            self.ros_node.get_logger().error(
+                "Failed to send barrel roll movement command"
+            )
+            self.queued_method = self.abort    def on_enter_surfacing(self):
         movement_msg = MovementCommand()
         movement_msg.command = MovementCommand.SURFACE_PASSIVE
 

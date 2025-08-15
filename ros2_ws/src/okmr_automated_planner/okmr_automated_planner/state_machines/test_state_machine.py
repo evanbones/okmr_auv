@@ -111,13 +111,13 @@ class TestStateMachine(BaseStateMachine):
             self.ros_node.get_logger().error("Failed to send roll movement command")
             self.queued_method = self.abort
 
-    def on_enter_barrel_rolling(self):
+    def on_enter_barrel_roll(self):
         """Execute barrel roll using the new BARREL_ROLL command"""
         number_of_rolls = 2
 
         movement_msg = MovementCommand()
         movement_msg.command = MovementCommand.BARREL_ROLL
-        movement_msg.goal_velocity.twist.angular.x = self.barrel_roll_speed
+        movement_msg.goal_velocity.twist.angular.x = -100.0
         movement_msg.goal_velocity.duration = (
             360.0 / self.barrel_roll_speed * number_of_rolls
         )
@@ -125,7 +125,7 @@ class TestStateMachine(BaseStateMachine):
 
         success = self.movement_client.send_movement_command(
             movement_msg,
-            on_success=self.barrel_rolling_done,
+            on_success=self.barrel_roll_done,
             on_failure=self.abort,
         )
 
