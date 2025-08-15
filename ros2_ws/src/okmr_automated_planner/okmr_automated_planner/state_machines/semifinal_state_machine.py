@@ -287,9 +287,7 @@ class SemifinalStateMachine(BaseStateMachine):
         movement_msg = MovementCommand()
         movement_msg.command = MovementCommand.BARREL_ROLL
         movement_msg.goal_velocity.twist.angular.x = -100.0
-        movement_msg.goal_velocity.duration = (
-            360.0 / abs(self.barrel_roll_speed) * number_of_rolls
-        )
+        movement_msg.goal_velocity.duration = 360.0 / 100.0 * number_of_rolls
         movement_msg.goal_velocity.integrate = True
 
         success = self.movement_client.send_movement_command(
