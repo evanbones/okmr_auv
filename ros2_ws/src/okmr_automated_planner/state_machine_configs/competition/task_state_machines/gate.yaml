@@ -1,0 +1,16 @@
+doing_gate_task:
+  states:
+    - { name: moving_forward }
+    - { name: barrel_roll_one}
+    - { name: readjusting_depth_one }
+    - { name: barrel_roll_two }
+    - { name: readjusting_depth_two }
+
+  transitions:
+    - { trigger: initializing_done, source: initializing, dest: moving_forward}
+    - { trigger: moving_forward_done, source: moving_forward, dest: barrel_roll_one }
+    - { trigger: barrel_roll_one_done, source: barrel_roll_one, dest: readjusting_depth_one }
+    - { trigger: readjusting_depth_one_done, source: readjusting_depth_one, dest: barrel_roll_two }
+    - { trigger: barrel_roll_two_done, source: barrel_roll_two, dest: readjusting_depth_two }
+    - { trigger: readjusting_depth_two_done, source: readjusting_depth_two, dest: done }
+

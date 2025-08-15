@@ -1,0 +1,21 @@
+root:
+  states:
+  - {name: initializing}
+  - {name: waiting_for_mission_start}
+  - {name: enabling_subsystems}
+  - {name: moving_down}
+  - {name: gate, config_path: "task_state_machines/gate.yaml"}
+  - {name: turn_marker_one}
+  - {name: slalom, config_path: "task_state_machines/slalom.yaml"}
+  - {name: turn_marker_two}
+
+  transitions:
+  - {trigger: initialized, source: initializing, dest: waiting_for_mission_start}
+  - {trigger: mission_start_received, source: waiting_for_mission_start, dest: enabling_subsystems}
+  - {trigger: enabling_subsystems_done, source: enabling_subsystems, dest: moving_down}
+  - {trigger: moving_down_done, source: moving_down, dest: gate}
+  - {trigger: gate_done, source: gate, dest: turn_marker_one}
+  - {trigger: turn_marker_one_done, source: turn_marker_one, dest: slalom}
+  - {trigger: slalom_done, source: slalom, dest: turn_marker_two}
+  - {trigger: turn_marker_two_done, source: turn_marker_two, dest: done}
+
