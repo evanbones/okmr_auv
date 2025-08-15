@@ -280,7 +280,7 @@ class SemifinalStateMachine(BaseStateMachine):
             self.ros_node.get_logger().error("Failed to send turning command 4")
             self.queued_method = self.abort
 
-     def on_enter_barrel_rolling(self):
+    def on_enter_barrel_roll(self):
         """Execute barrel roll using the new BARREL_ROLL command"""
         number_of_rolls = 2
 
