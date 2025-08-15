@@ -4,7 +4,8 @@ velocity_control_layer:
     update_frequency: 100.0
     x_angular.p_gain: 0.1
     x_linear.p_gain: 2.0
-    y_angular.p_gain: 0.1
+    y_angular.p_gain: 0.3
+    y_angular.d_gain: 0.02
     y_linear.p_gain: 2.0
     z_angular.p_gain: 0.15
     z_angular.d_gain: 0.03
