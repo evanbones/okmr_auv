@@ -2,10 +2,10 @@ velocity_control_layer:
   ros__parameters:
     SAVE_LOCATION: ~/okmr_auv/ros2_ws/src/okmr_controls/params/temp/velocity_control.yaml
     update_frequency: 100.0
-    x_angular.p_gain: 0.1
+    x_angular.p_gain: 0.175
+    x_angular.p_gain: 0.01
     x_linear.p_gain: 2.0
-    y_angular.p_gain: 0.175
-    y_angular.d_gain: 0.01
+    y_angular.p_gain: 0.1
     y_linear.p_gain: 2.0
     z_angular.p_gain: 0.15
     z_angular.d_gain: 0.03
