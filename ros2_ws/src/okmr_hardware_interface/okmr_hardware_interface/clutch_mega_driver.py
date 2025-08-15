@@ -87,6 +87,9 @@ class SerialOutputNode(Node):
         except UnicodeDecodeError as e:
             self.get_logger().error(f"Error decoding serial data: {e}")
             self.serial_buffer = ""  # Clear buffer on decode error
+            # Clear serial port input buffer to flush corrupted data
+            if self.serial_port and self.serial_port.is_open:
+                self.serial_port.reset_input_buffer()
 
     def process_serial_line(self, line):
         if "<" in line:
