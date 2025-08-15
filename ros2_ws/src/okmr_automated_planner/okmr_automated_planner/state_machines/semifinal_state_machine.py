@@ -29,7 +29,7 @@ class SemifinalStateMachine(BaseStateMachine):
         },
         {
             "name": "distance_down",
-            "value": 1.25,
+            "value": 1.0,
             "descriptor": "distance to move down",
         },
         {
