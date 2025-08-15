@@ -155,6 +155,7 @@ class FindingGateStateMachine(BaseStateMachine):
         # we will want to do a relative yaw rotation of ~40 degrees
 
         calculated_yaw_rotation = 20.0  # TEMPORARY
+        #frame is 640x480, (0,0 top left), therefore center is found ebing half both of theose values, if center is greater than the given center of gate, then shift towards left, if less than shift towards right
 
         movement_msg = MovementCommand()
         movement_msg.command = MovementCommand.MOVE_RELATIVE

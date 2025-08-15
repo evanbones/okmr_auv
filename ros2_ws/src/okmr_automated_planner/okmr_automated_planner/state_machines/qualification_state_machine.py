@@ -100,7 +100,6 @@ class QualificationStateMachine(BaseStateMachine):
             self.queued_method = self.abort
 
     def on_enter_moving_forward(self):
-
         movement_msg = MovementCommand()
         movement_msg.command = MovementCommand.MOVE_RELATIVE
         movement_msg.translation.x = self.distance_forward
