@@ -6,7 +6,7 @@ float throttle[8] = {1500, 1500, 1500, 1500, 1500, 1500, 1500, 1500};
 #define NUM_SERVOS 1
 #define NUM_ACTUATORS 3
 
-int pins[] = {12, 13, 14, 25, 26, 27, 32, 35}; //motor 9 is servo
+int pins[] = {12, 13, 14, 25, 26, 27, 32, 34}; 
 int servo_pins[] = {17};
 int servo_inits[] = {1500};
 int actuator_pins[] = {16, 4, 5};
