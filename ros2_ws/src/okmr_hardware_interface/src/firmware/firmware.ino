@@ -1,9 +1,20 @@
-#include <Servo.h>
+#include <ESP32Servo.h>
 const int minThrottle = 1100; // Minimum throttle in microseconds (1ms)
 const int maxThrottle = 1900; // Maximum throttle in microseconds (2ms)
 float throttle[8] = {1500, 1500, 1500, 1500, 1500, 1500, 1500, 1500};
 
-int pins[] = {2, 3, 4, 5, 6, 7, 8, 9};
+#define NUM_SERVOS 1
+#define NUM_ACTUATORS 2
+
+int pins[] = {2, 3, 4, 5, 6, 7, 8, 9}; //motor 9 is servo
+int servo_pins[] = {10};
+int servo_inits[] = {1500};
+int actuator_pins[] = {15, 16};
+//note: add servo and actuator commands
+//100<1500\n for servo command on servo_pins[0] (pwm same as motors)
+//200<1\n for actuator command on actuaotr_pins[0] (digital high or low)
+//add command interpretation to recvWithEndMarker
+
 int killSwitchPin = 13;
 int ledPin1 = 10;
 int ledPin2 = 11;
@@ -15,6 +26,7 @@ const unsigned long KILLSWITCH_PRINT_INTERVAL = 100; // Print killswitch status 
 int lastKillswitchState = -1; // Track previous state for change detection
 
 Servo motors[8];
+Servo servos[NUM_SERVOS];
 
 void killSwitch() {
   int switchState = digitalRead(killSwitchPin);
@@ -53,6 +65,7 @@ void escArm() {
     motors[i].writeMicroseconds(1500);
   }
 }
+
 void setup() {
   // Initialize PWM for the ESC
   for (int i = 0; i < 8; i++) {
@@ -69,10 +82,26 @@ void setup() {
   pinMode(ledPin3, OUTPUT);
   escArm();
   Serial.println("ESCs Armed.");
+  initServos();
+  
+  // Initialize actuator pins
+  for (int i = 0; i < NUM_ACTUATORS; i++) {
+    pinMode(actuator_pins[i], OUTPUT);
+    digitalWrite(actuator_pins[i], LOW);
+  }
+  
   while(Serial.available() > 0){
     Serial.read();
   }
 
+}
+
+void initServos() {
+  for (int i = 0; i < NUM_SERVOS; i++) {
+    servos[i].attach(servo_pins[i]);
+    servos[i].writeMicroseconds(servo_inits[i]);
+  }
+  Serial.println("Servos initialized.");
 }
 const byte numChars = 32;
 char receivedChars[numChars];   // an array to store the received data
@@ -117,13 +146,35 @@ void parseNewData(){
     char * strtokIndx; // this is used by strtok() as an index
 
     strtokIndx = strtok(receivedChars,"<");      // get the first part - the string
-    currMotor=atoi(strtokIndx);
+    int command = atoi(strtokIndx);
 
     strtokIndx = strtok(NULL, "<");
     float value = atof(strtokIndx);     // convert this part to a float
-    // Clamp throttle values to safe range
-    throttle[currMotor] = constrain(value, minThrottle, maxThrottle);
-    lastThrottleTime = millis();  // Update last received time
+    
+    if (command >= 100 && command < 200) {
+      // Servo command: 100 + servo_index
+      int servoIndex = command - 100;
+      if (servoIndex >= 0 && servoIndex < NUM_SERVOS) {
+        int servoValue = constrain(value, minThrottle, maxThrottle);
+        servos[servoIndex].writeMicroseconds(servoValue);
+      }
+    }
+    else if (command >= 200 && command < 300) {
+      // Actuator command: 200 + actuator_index  
+      int actuatorIndex = command - 200;
+      if (actuatorIndex >= 0 && actuatorIndex < NUM_ACTUATORS) {
+        digitalWrite(actuator_pins[actuatorIndex], value > 0 ? HIGH : LOW);
+      }
+    }
+    else {
+      // Motor command: 0-7
+      currMotor = command;
+      if (currMotor >= 0 && currMotor < 8) {
+        // Clamp throttle values to safe range
+        throttle[currMotor] = constrain(value, minThrottle, maxThrottle);
+        lastThrottleTime = millis();  // Update last received time
+      }
+    }
     newData = false;
 }
 
