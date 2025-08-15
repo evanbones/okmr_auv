@@ -6,7 +6,7 @@ from geometry_msgs.msg import Vector3
 from okmr_automated_planner.state_machines.sideways_scan_state_machine import SidewaysScanStateMachine
 
 
-class DoingsharkTaskStateMachine(BaseStateMachine):
+class DoingGateTaskStateMachine(BaseStateMachine):
 
     PARAMETERS = [
     #Copied from finding shark because shark object detection could be same as shark???????
@@ -110,10 +110,3 @@ class DoingsharkTaskStateMachine(BaseStateMachine):
         # disable object detection
         pass
 
-states = [
-    InitialState,
-    SidewaysScanStateMachine,
-    ApproachingGate,
-    ReturnInitialGate,
-    CompletedState,
-]

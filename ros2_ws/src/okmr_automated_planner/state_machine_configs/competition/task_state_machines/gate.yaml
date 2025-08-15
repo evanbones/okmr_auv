@@ -1,4 +1,4 @@
-gate:
+doing_gate_task:
   states:
     - { name: moving_forward }
     - { name: barrel_roll_one}

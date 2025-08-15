@@ -1,0 +1,13 @@
+test:
+  states:
+  - {name: move_forward_one}
+  - {name: move_forward_two}
+  - {name: turn_one}
+  - {name: turn_two}
+
+  transitions:
+  - {trigger: initializing_done, source: initializing, dest: turn_one}
+  - {trigger: turn_one_done, source: turn_one, dest: move_forward_one}
+  - {trigger: move_forward_one_done, source: move_forward_one, dest: turn_two}
+  - {trigger: turn_two_done, source: turn_two, dest: move_forward_two}
+  - {trigger: move_forward_two_done, source: move_forward_two, dest: done}
