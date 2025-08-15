@@ -58,7 +58,7 @@ def generate_launch_description():
             IncludeLaunchDescription(
                 full_control_stack_launch,
                 launch_arguments={
-                    "folder": "pool_tests/08-13-25-pid-tuning",
+                    "folder": "7-motor",
                 }.items(),
             ),
             IncludeLaunchDescription(navigation_launch),
