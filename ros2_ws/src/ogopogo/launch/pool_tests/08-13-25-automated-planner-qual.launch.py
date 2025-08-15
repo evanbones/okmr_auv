@@ -200,7 +200,7 @@ def generate_launch_description():
             root_config_arg,
             debug_arg,
             automated_planner_node,
-            realsense_node,
+            #realsense_node,
             control_stack_launch,
             # object_detection_launch,
             hardware_interface_launch,
