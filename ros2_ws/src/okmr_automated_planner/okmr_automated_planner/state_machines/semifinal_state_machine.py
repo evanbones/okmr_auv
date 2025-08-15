@@ -302,7 +302,9 @@ class SemifinalStateMachine(BaseStateMachine):
             self.ros_node.get_logger().error(
                 "Failed to send barrel roll movement command"
             )
-            self.queued_method = self.abort    def on_enter_surfacing(self):
+        self.queued_method = self.abort
+
+    def on_enter_surfacing(self):
         movement_msg = MovementCommand()
         movement_msg.command = MovementCommand.SURFACE_PASSIVE
 
