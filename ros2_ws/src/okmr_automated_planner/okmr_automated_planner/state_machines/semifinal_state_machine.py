@@ -9,27 +9,27 @@ class SemifinalStateMachine(BaseStateMachine):
     PARAMETERS = [
         {
             "name": "distance_forward1",
-            "value": 1.0,
+            "value": 3.0,
             "descriptor": "distance to move forward in segment 1",
         },
         {
             "name": "distance_forward2",
-            "value": 1.0,
+            "value": 0.5,
             "descriptor": "distance to move forward in segment 2",
         },
         {
             "name": "distance_forward3",
-            "value": 1.0,
+            "value": 0.6,
             "descriptor": "distance to move forward in segment 3",
         },
         {
             "name": "distance_forward4",
-            "value": 1.0,
+            "value": 0.5,
             "descriptor": "distance to move forward in segment 4",
         },
         {
             "name": "distance_down",
-            "value": 0.3,
+            "value": 1.25,
             "descriptor": "distance to move down",
         },
         {
