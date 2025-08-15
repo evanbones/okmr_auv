@@ -67,7 +67,7 @@ class DeadReckoningNode : public rclcpp::Node {
     double dvl_accel_smoothing_alpha_ = 0.7;
     double angular_vel_filter_alpha_ = 0.7;
     double angular_accel_filter_alpha_ = 0.7;
-    double dvl_altitude_filter_alpha_ = 0.02;
+    double dvl_altitude_filter_alpha_ = 0.00;
 
     // TF2 for coordinate transforms
     std::unique_ptr<tf2_ros::Buffer> tf_buffer_;

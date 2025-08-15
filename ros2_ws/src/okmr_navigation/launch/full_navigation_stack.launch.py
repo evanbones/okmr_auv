@@ -9,6 +9,9 @@ import os
 def generate_launch_description():
 
     navigation_dir = get_package_share_directory("okmr_navigation")
+    dead_reckoning_params = os.path.join(
+        navigation_dir, "params", "dead_reckoning.yaml"
+    )
     static_transforms_launch = os.path.join(
         navigation_dir, "launch", "static_transforms.launch.py"
     )
@@ -24,6 +27,7 @@ def generate_launch_description():
                 remappings=[
                     ("/imu", "/camera/camera/imu"),
                 ],
+                parameters=[]
             ),
             Node(
                 package="okmr_navigation",

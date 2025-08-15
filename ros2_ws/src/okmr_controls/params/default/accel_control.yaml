@@ -2,7 +2,7 @@ accel_control_layer:
     ros__parameters:
         SAVE_LOCATION: ~/okmr_auv/ros2_ws/src/okmr_controls/params/temp/accel_control.yaml
         update_frequency: 50.0
-        kbuoyancy: 0.01 
+        kbuoyancy: 0.17
         kdrag_x: 1.0
         kdrag_y: 3.0
         kdrag_yaw: 0.0
