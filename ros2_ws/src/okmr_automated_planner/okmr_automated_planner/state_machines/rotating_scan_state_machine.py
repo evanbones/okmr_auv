@@ -1,6 +1,6 @@
 from okmr_automated_planner.base_state_machine import BaseStateMachine
 from okmr_utils.logging import make_green_log
-from okmr_msgs.msg import MissionCommand
+from okmr_msgs.msg import MissionCommand, MovementCommand
 
 
 class RotatingScanStateMachine(BaseStateMachine):
@@ -8,7 +8,7 @@ class RotatingScanStateMachine(BaseStateMachine):
     PARAMETERS = [
         {'name' : 'scan_angle', 
         'value': 180, 
-        '  descriptor': 'angle to scan in degrees, cw and ccw, and return to center'},
+        'descriptor': 'angle to scan in degrees, cw and ccw, and return to center'},
         { 'name': 'scan_speed',
         'value': 0.5,
         'descriptor': 'speed of rotation during scan in radians per second'}
@@ -25,7 +25,7 @@ class RotatingScanStateMachine(BaseStateMachine):
     def on_enter_rotating_cw(self):
         movement_msg = MovementCommand()
         movement_msg.command = MovementCommand.MOVE_RELATIVE
-        movement_msg.translation.y = -self.scan_angle
+        movement_msg.rotation.z = -self.scan_angle
         
         success = self.movement_client.send_movement_command(
             movement_msg,
@@ -39,11 +39,11 @@ class RotatingScanStateMachine(BaseStateMachine):
     def on_enter_return_to_center_cw(self):
         movement_msg = MovementCommand()
         movement_msg.command = MovementCommand.MOVE_RELATIVE
-        movement_msg.translation.y = self.scan_angle
+        movement_msg.rotation.z = self.scan_angle
         
         success = self.movement_client.send_movement_command(
             movement_msg,
-            on_success=self.rotating_cw_done,
+            on_success=self.return_to_center_cw_done,
             on_failure=self.abort,
         )
         
@@ -54,7 +54,7 @@ class RotatingScanStateMachine(BaseStateMachine):
     def on_enter_rotating_ccw(self):
         movement_msg = MovementCommand()
         movement_msg.command = MovementCommand.MOVE_RELATIVE
-        movement_msg.translation.y = self.scan_angle
+        movement_msg.rotation.z = self.scan_angle
         
         success = self.movement_client.send_movement_command(
             movement_msg,
@@ -68,7 +68,7 @@ class RotatingScanStateMachine(BaseStateMachine):
     def on_enter_return_to_center_ccw(self):
         movement_msg = MovementCommand()
         movement_msg.command = MovementCommand.MOVE_RELATIVE
-        movement_msg.translation.y = -self.scan_angle
+        movement_msg.rotation.z = -self.scan_angle
         
         success = self.movement_client.send_movement_command(
             movement_msg,
