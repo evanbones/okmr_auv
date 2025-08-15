@@ -1,3 +1,0 @@
-dead_reckoning_node:
-    ros__parameters:
-        angular_vel_filter_alpha: 0.95
