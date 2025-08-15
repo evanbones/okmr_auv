@@ -2,6 +2,7 @@ qualifying:
   states:
     - { name: moving_forward }
     - { name: moving_down }
+      { name: turn }
     - { name: surfacing }
     - { name: waiting_for_mission_start }
     - { name: enabling_subsystems }
@@ -23,5 +24,7 @@ qualifying:
         dest: moving_down,
       }
     - { trigger: moving_down_done, source: moving_down, dest: moving_forward }
-    - { trigger: moving_forward_done, source: moving_forward, dest: surfacing }
-    - { trigger: surfacing_done, source: surfacing, dest: done }
+    - { trigger: moving_forward_done, source: moving_forward, dest: turn }
+    - { trigger: turn_done, source: turn, dest: surfacing }
+      { trigger: surfacing_done, source: surfacing, dest: done }
+

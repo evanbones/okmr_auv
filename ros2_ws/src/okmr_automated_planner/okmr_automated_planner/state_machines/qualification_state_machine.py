@@ -9,7 +9,7 @@ class QualificationStateMachine(BaseStateMachine):
     PARAMETERS = [
         {
             "name": "distance_forward",
-            "value": 1.0,
+            "value": 2.0,
             "descriptor": "distance to move forward",
         },
         {
@@ -17,6 +17,12 @@ class QualificationStateMachine(BaseStateMachine):
             "value": 0.3,
             "descriptor": "distance to move down",
         },
+        {
+            "name": "turn",
+            "value": 180,
+            "descriptor": "turn",
+        },
+
     ]
 
     def __init__(self, *args, **kwargs):
@@ -26,6 +32,8 @@ class QualificationStateMachine(BaseStateMachine):
 
         self.distance_down = self.get_local_parameter("distance_down")
         self.ros_node.get_logger().info(f"Distance down: {self.distance_down}")
+
+        self.rotation = self.get_local_parameter("")
 
     def on_enter_initializing(self):
         # check system state
@@ -113,6 +121,22 @@ class QualificationStateMachine(BaseStateMachine):
         if not success:
             self.ros_node.get_logger().error("Failed to send forward movement command")
             self.queued_method = self.abort
+    
+    def on_enter_turn(self):
+        movement_msg = MovementCommand()
+        movement_msg.command = MovementCommand.MOVE_RELATIVE
+        movement_msg.rotation.z = self.distance_forward
+
+        success = self.movement_client.send_movement_command(
+            movement_msg,
+            on_success=self.moving_forward_done,
+            on_failure=self.abort,
+        )
+
+        if not success:
+            self.ros_node.get_logger().error("Failed to send forward movement command")
+            self.queued_method = self.abort
+
 
     def on_enter_surfacing(self):
         movement_msg = MovementCommand()
