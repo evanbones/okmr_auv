@@ -21,8 +21,11 @@ def handle_move_absolute(goal_handle):
 
     altitude = goal_handle.request.command_msg.altitude
 
+    if altitude >= node.min_altitude:
+        goal_handle.request.command_msg.goal_pose.pose.position.z = altitude
+
     goal_handle.request.command_msg.goal_pose.pose.position.z = max(
-        altitude, node.min_altitude
+        goal_handle.request.command_msg.goal_pose.pose.position.z, node.min_altitude
     )
 
     return execute_movement_with_monitoring(

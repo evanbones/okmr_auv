@@ -49,8 +49,7 @@ class DeadReckoningNode : public rclcpp::Node {
 
     // Filtered/smoothed values using Vector3
     geometry_msgs::msg::Vector3 smoothed_angular_vel;
-    geometry_msgs::msg::Vector3
-        prev_angular_vel;  // Fixed: this should track previous angular velocity, not DVL
+    geometry_msgs::msg::Vector3 prev_angular_vel;
 
     // State tracking
     bool gotFirstTime = false;
@@ -67,7 +66,7 @@ class DeadReckoningNode : public rclcpp::Node {
     double dvl_accel_smoothing_alpha_ = 0.7;
     double angular_vel_filter_alpha_ = 0.7;
     double angular_accel_filter_alpha_ = 0.7;
-    double dvl_altitude_filter_alpha_ = 0.00;
+    double dvl_altitude_filter_alpha_ = 0.02;
 
     // TF2 for coordinate transforms
     std::unique_ptr<tf2_ros::Buffer> tf_buffer_;
@@ -125,8 +124,8 @@ class DeadReckoningNode : public rclcpp::Node {
         this->declare_parameter ("angular_accel_filter_alpha", angular_accel_filter_alpha_, desc);
 
         desc.description =
-            "Complementary filter coefficient for DVL altitude estimation (1.0=dead reckoning "
-            "only, 0.0=DVL altitude only)";
+            "Complementary filter coefficient for DVL altitude estimation (0.0=dead reckoning "
+            "only, 1.0=DVL altitude only)";
         desc.floating_point_range[0].from_value = 0.0;
         desc.floating_point_range[0].to_value = 1.0;
         this->declare_parameter ("dvl_altitude_filter_alpha", dvl_altitude_filter_alpha_, desc);

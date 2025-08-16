@@ -13,6 +13,9 @@ class DvlDriverNode(Node):
     def __init__(self):
         super().__init__("dvl_driver")
         self.dvl_publisher = self.create_publisher(Dvl, "/dvl", 10)
+        self.last_vx = 0.0
+        self.last_vy = 0.0
+        self.last_vz = 0.0
 
     def udp_server(self):
         # Create a UDP socket
@@ -51,13 +54,19 @@ class DvlDriverNode(Node):
                 status = int(matches.group(16), 16)  # Convert hex string to int
 
                 # DVL data validation
-                velocity_magnitude = (vx**2 + vy**2 + vz**2)**0.5
+                velocity_magnitude = (vx**2 + vy**2 + vz**2) ** 0.5
                 if velocity_magnitude > 30.0:
-                    #self.get_logger().warn(
-                    #    f"DVL velocity too high ({velocity_magnitude:.3f} m/s), discarding data - VX: {vx:.3f}, VY: {vy:.3f}, VZ: {vz:.3f}"
-                    #)
-                    vx = vy = vz = 0.0
-                    
+                    self.get_logger().warn(
+                        f"DVL velocity too high ({velocity_magnitude:.3f} m/s), last velocity - VX: {self.last_vx:.3f}, VY: {self.last_vy:.3f}, VZ: {self.last_vz:.3f}",
+                        throttle_duration_sec=1.0,
+                    )
+                    vx = self.last_vx
+                    vy = self.last_vy
+                    vz = self.last_vz
+                else:
+                    self.last_vx = vx
+                    self.last_vy = vy
+                    self.last_vz = vz
 
                 # Create DVL message
                 dvl_msg = Dvl()
