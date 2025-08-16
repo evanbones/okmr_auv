@@ -14,7 +14,7 @@ def generate_launch_description():
         [FindPackageShare("okmr_hardware_interface"), "launch"]
     )
 
-    ogopgo_dir = PathJoinSubstitution([FindPackageShare("ogopgo"), "launch"])
+    ogopogo_dir = PathJoinSubstitution([FindPackageShare("ogopogo"), "launch"])
 
     controls_dir = PathJoinSubstitution([FindPackageShare("okmr_controls"), "launch"])
 

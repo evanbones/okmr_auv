@@ -159,7 +159,7 @@ def generate_launch_description():
         name="RCUTILS_COLORIZED_OUTPUT", value="1"
     )
 
-    ogopogo_dir = PathJoinSubstitution([FindPackageShare("ogopgo"), "launch"])
+    ogopogo_dir = PathJoinSubstitution([FindPackageShare("ogopogo"), "launch"])
 
     cameras_launch = IncludeLaunchDescription(
         PathJoinSubstitution([ogopogo_dir, "cameras.launch.py"])
