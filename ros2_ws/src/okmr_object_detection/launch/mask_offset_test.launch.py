@@ -6,8 +6,8 @@ def generate_launch_description():
     return LaunchDescription([
         Node(
             package='okmr_object_detection',
-            executable='example_detector',
-            name='example_detector',
+            executable='onnx_segmentation_detector',
+            name='onnx_segmentation_detector',
             output='screen'
         ),
         Node(

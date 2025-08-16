@@ -77,7 +77,7 @@ class FindingGateStateMachine(BaseStateMachine):
     def detection_callback(self, msg):
         if abs(msg.y_offset) > 0.1:
             self.cached_mask_offset = msg
-            if not self.is_following_detection()
+            if not self.is_following_detection():
                 self.follow_detection()
 
     def on_enter_initializing(self):
