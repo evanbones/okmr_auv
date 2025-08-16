@@ -40,8 +40,8 @@ def generate_launch_description():
             object_detection_param_path,
         ],
         remappings=[
-            ("/rgb", "/camera1/camera1/image_raw"),
-            ("/depth", "/camera1/camera1/image_depth"),
+            ("/rgb", "/ogopogo/front/color/image_raw"),
+            ("/depth", "/ogopogo/front/depth/image_rect_raw"),
             ("/labeled_image", "/labeled_image"),
         ],
         ros_arguments=debug_ros_args,

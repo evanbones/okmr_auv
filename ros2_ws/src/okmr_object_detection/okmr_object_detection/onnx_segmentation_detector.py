@@ -198,8 +198,24 @@ class OnnxSegmentationDetector(ObjectDetectorNode):
             self.get_logger().error(f"Failed to load ONNX model: {e}")
             raise
 
-    def preprocess(self, img: np.ndarray) -> Tuple[np.ndarray, float, int, int]:
+    def apply_depth_masking(self, img: np.ndarray, depth: np.ndarray) -> np.ndarray:
+        """Apply depth-based masking to turn distant pixels blue"""
+        img_masked = img.copy()
+        
+        # Create mask for pixels at 10+ meters (assuming depth is in meters)
+        distant_mask = depth >= 10.0
+        
+        # Set distant pixels to blue (BGR format: [255, 0, 0])
+        img_masked[distant_mask] = [255, 90, 90]
+        
+        return img_masked
+
+    def preprocess(self, img: np.ndarray, depth: Optional[np.ndarray] = None) -> Tuple[np.ndarray, float, int, int]:
         """Preprocess image for ONNX inference"""
+        # Apply depth masking if depth data is available
+        if depth is not None:
+            img = self.apply_depth_masking(img, depth)
+        
         h0, w0 = img.shape[:2]
         scale = self.input_size / max(h0, w0)
         nw, nh = int(w0 * scale), int(h0 * scale)
@@ -339,7 +355,7 @@ class OnnxSegmentationDetector(ObjectDetectorNode):
                     self.get_logger().debug(f"DEBUG: Input depth shape: {depth.shape}")
 
             # Preprocess image
-            inp, scale, pad_x, pad_y = self.preprocess(rgb)
+            inp, scale, pad_x, pad_y = self.preprocess(rgb, depth)
 
             if self.debug:
                 self.get_logger().debug(f"DEBUG: Preprocessed input shape: {inp.shape}")
