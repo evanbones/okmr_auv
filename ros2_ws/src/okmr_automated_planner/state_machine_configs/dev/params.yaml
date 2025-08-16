@@ -29,9 +29,9 @@ automated_planner:
       distance_forward3: 2.0
       distance_forward4: 4.0
       distance_down: 0.75
-      turning_angle1: -45.0
-      turning_angle2: 0.0
+      turning_angle1: 60.0
+      turning_angle2: -40.0
       turning_angle3: 0.0
-      turning_angle4: -30.0
+      turning_angle4: 0.0
       barrel_roll_angle: 360.0
 
