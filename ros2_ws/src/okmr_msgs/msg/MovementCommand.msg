@@ -14,6 +14,8 @@ float32 angle_threshold
 okmr_msgs/GoalVelocity goal_velocity #for set velocity commands
 okmr_msgs/GoalPose goal_pose #for absolute move commands
 
+float32 altitude
+
 std_msgs/Header header
 
 int8 FREEZE = 0
