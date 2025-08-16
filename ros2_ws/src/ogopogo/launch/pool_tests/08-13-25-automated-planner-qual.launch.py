@@ -135,7 +135,7 @@ def generate_launch_description():
             ]
         ),
         launch_arguments={
-            "folder": "7-motor",
+            "folder": "default",
         }.items(),
     )
 

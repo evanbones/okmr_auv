@@ -119,12 +119,12 @@ class SerialOutputNode(Node):
                             # Send KILL_MISSION and OFF mode
                             mission_msg = MissionCommand()
                             mission_msg.command = MissionCommand.KILL_MISSION
-                            self.mission_publisher.publish(mission_msg)
+                            #self.mission_publisher.publish(mission_msg)
 
                             control_msg = ControlMode()
                             control_msg.header.stamp = self.get_clock().now().to_msg()
                             control_msg.control_mode = ControlMode.OFF
-                            self.control_mode_publisher.publish(control_msg)
+                            #self.control_mode_publisher.publish(control_msg)
 
                         self.last_killswitch_state = killswitch_active
 

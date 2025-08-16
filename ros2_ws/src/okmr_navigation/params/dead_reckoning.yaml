@@ -1,3 +1,3 @@
 dead_reckoning_node:
     ros__parameters:
-      dvl_altitude_filter_alpha: 0.02
+      dvl_altitude_filter_alpha: 0.05
