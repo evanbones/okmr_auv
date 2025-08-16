@@ -102,21 +102,6 @@ def generate_launch_description():
         ],
     )
 
-    # RealSense Camera
-    realsense_node = Node(
-        package="realsense2_camera",
-        executable="realsense2_camera_node",
-        parameters=[
-            {
-                "enable_gyro": True,
-                "enable_accel": True,
-                "unite_imu_method": 2,
-            }
-        ],
-        arguments=["--ros-args", "--log-level", "error"],
-        output="log",
-    )
-
     navigation_launch = IncludeLaunchDescription(
         PathJoinSubstitution([navigation_dir, "full_navigation_stack.launch.py"])
     )
@@ -169,32 +154,15 @@ def generate_launch_description():
         )
     )
 
-    # Include Static Transforms Launch
-    static_transforms_launch = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            [
-                PathJoinSubstitution(
-                    [
-                        get_package_share_directory("okmr_navigation"),
-                        "launch",
-                        "static_transforms.launch.py",
-                    ]
-                )
-            ]
-        )
-    )
-
     # Set colorized output for better log readability
     colorized_output = SetEnvironmentVariable(
         name="RCUTILS_COLORIZED_OUTPUT", value="1"
     )
 
-    realsense_launch_dir = PathJoinSubstitution(
-        [FindPackageShare("realsense2_camera"), "launch"]
-    )
+    ogopgo_dir = PathJoinSubstitution([FindPackageShare("ogopgo"), "launch"])
 
-    rs_multi_camera_launch = PathJoinSubstitution(
-        [realsense_launch_dir, "rs_multi_camera_launch.py"]
+    cameras_launch = IncludeLaunchDescription(
+        PathJoinSubstitution([ogopogo_dir, "cameras.launch.py"])
     )
 
     # Return the launch description
@@ -212,9 +180,5 @@ def generate_launch_description():
             control_stack_launch,
             # object_detection_launch,
             hardware_interface_launch,
-            static_transforms_launch,
-            # IncludeLaunchDescription(
-            #    rs_multi_camera_launch,
-            # ),
         ]
     )
