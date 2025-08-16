@@ -189,6 +189,14 @@ def generate_launch_description():
         name="RCUTILS_COLORIZED_OUTPUT", value="1"
     )
 
+    realsense_launch_dir = PathJoinSubstitution(
+        [FindPackageShare("realsense2_camera"), "launch"]
+    )
+
+    rs_multi_camera_launch = PathJoinSubstitution(
+        [realsense_launch_dir, "rs_multi_camera_launch.py"]
+    )
+
     # Return the launch description
     return LaunchDescription(
         [
@@ -205,5 +213,8 @@ def generate_launch_description():
             # object_detection_launch,
             hardware_interface_launch,
             static_transforms_launch,
+            # IncludeLaunchDescription(
+            #    rs_multi_camera_launch,
+            # ),
         ]
     )

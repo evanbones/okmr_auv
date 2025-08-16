@@ -30,7 +30,7 @@ class ObjectDetectorNode(Node):
             1,
         )  # Example size (you can adjust this to your needs)
         tss.registerCallback(self.synced_callback)
-        self.publisher_ = self.create_publisher(Image, "/labeled_image", 10)
+        self.publisher_ = self.create_publisher(Image, "/mask", 10)
 
     def inference(self, rgb, depth):
         # rgb and depth are both opencv images / numpy arrays
