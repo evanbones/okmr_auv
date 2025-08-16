@@ -45,12 +45,12 @@ class SemifinalStateMachine(BaseStateMachine):
         },
         {
             "name": "turning_angle3",
-            "value": 50.0,
+            "value": 00.0,
             "descriptor": "turning angle for turn 3 (degrees)",
         },
         {
             "name": "turning_angle4",
-            "value": 45.0,
+            "value": 0.0,
             "descriptor": "turning angle for turn 4 (degrees)",
         },
         {
@@ -142,7 +142,7 @@ class SemifinalStateMachine(BaseStateMachine):
     def on_enter_moving_down(self):
         movement_msg = MovementCommand()
         movement_msg.command = MovementCommand.MOVE_RELATIVE
-        movement_msg.translation.z = -self.distance_down
+        movement_msg.altitude = 1.0
 
         success = self.movement_client.send_movement_command(
             movement_msg,
