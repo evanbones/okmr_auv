@@ -177,7 +177,7 @@ def generate_launch_description():
             debug_arg,
             automated_planner_node,
             control_stack_launch,
-            cameras_launch
+            cameras_launch,
             # object_detection_launch,
             hardware_interface_launch,
         ]
