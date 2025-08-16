@@ -5,7 +5,7 @@ velocity_control_layer:
     x_angular.p_gain: 0.12
     x_linear.p_gain: 2.0
     y_angular.p_gain: 0.1
-    y_linear.p_gain: 2.0
+    y_linear.p_gain: 1.0
     z_angular.p_gain: 0.15
     z_angular.d_gain: 0.03
     z_linear.p_gain: 3.0
