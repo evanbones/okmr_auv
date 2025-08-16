@@ -4,7 +4,7 @@ accel_control_layer:
         update_frequency: 50.0
         kbuoyancy: 0.17
         kdrag_x: 1.0
-        kdrag_y: 3.0
+        kdrag_y: 0.0
         kdrag_yaw: 0.0
         kdrag_z: 0.0
         kmass_pitch: 0.13
