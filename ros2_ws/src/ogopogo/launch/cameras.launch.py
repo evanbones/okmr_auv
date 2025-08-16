@@ -18,7 +18,7 @@ def generate_launch_description():
             'device_type': 'd455',
             'camera_name': 'front',
             'camera_namespace': 'ogopogo',
-            'log_level': 'ERROR',
+            'log_level': 'FATAL',
             'unite_imu_method': '2',
             'enable_gyro': 'true',
             'enable_accel': 'true'
@@ -31,7 +31,7 @@ def generate_launch_description():
             'device_type': 'd405',
             'camera_name': 'bottom',
             'camera_namespace': 'ogopogo',
-            'log_level': 'ERROR'
+            'log_level': 'FATAL'
         }.items()
     )
 
