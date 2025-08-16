@@ -318,8 +318,7 @@ class OnnxSegmentationDetector(ObjectDetectorNode):
             mask = sigmoid(mask_logit)
 
             # Handle aspect ratio correction
-            aspect_ratio = W0 / H0
-            corrected_height = int(W0 / aspect_ratio)
+            corrected_height = int(H0*1.333)
             mask_resized = cv2.resize(mask, (W0, corrected_height))
 
             if corrected_height > H0:
