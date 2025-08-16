@@ -37,6 +37,7 @@ setup(
             "color_detector = okmr_object_detection.color_detector:main",
             "lid_detector = okmr_object_detection.lid_detector:main",
             "onnx_segmentation_detector = okmr_object_detection.onnx_segmentation_detector:main",
+            "mask_offset_node = okmr_object_detection.mask_offset_node:main",
         ],
     },
 )

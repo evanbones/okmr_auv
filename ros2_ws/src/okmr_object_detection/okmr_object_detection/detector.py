@@ -48,7 +48,8 @@ class ObjectDetectorNode(Node):
 
         label_image = self.inference(
             color_frame, depth_frame
-        )  # image must be returned in 32FC2 format, [class, confidence]
+        )  # image must be returned in 32FC1 format, [class]
+        # FIXME SHOULD NOT REPRESENT CLASS AS A FLOAT
 
         try:
             label_msg = self.bridge.cv2_to_imgmsg(label_image, encoding="passthrough")
