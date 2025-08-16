@@ -180,7 +180,6 @@ void parseNewData(){
 
 void loop() {
   // Check for serial input
-  killSwitch();
   /*
   int leakReading = analogRead(leakSensorPin);
   Serial.print("leak<");
@@ -198,6 +197,8 @@ void loop() {
     }
   }
 
+  killSwitch();
+  
   for (int i = 0; i < 8; i++) {
     motors[i].writeMicroseconds((int)throttle[i]);
   }
