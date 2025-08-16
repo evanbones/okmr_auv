@@ -5,6 +5,7 @@ semifinal:
     - { name: moving_forward3 }
     - { name: moving_forward4 }
     - { name: moving_down }
+    - { name: finding_gate, config_path: "task_state_machines/finding_gate.yaml" }
     - { name: turning1 }
     - { name: turning2 }
     - { name: turning3 }
@@ -33,8 +34,14 @@ semifinal:
     - { 
         trigger: moving_down_done, 
         source: moving_down, 
+        dest: finding_gate,
+      }
+    - { 
+        trigger: finding_gate_done, 
+        source: finding_gate, 
         dest: moving_forward1,
       }
+
     - { 
         trigger: moving_forward1_done, 
         source: moving_forward1, 

@@ -1,7 +1,7 @@
 from okmr_automated_planner.base_state_machine import BaseStateMachine
 from okmr_utils.logging import make_green_log
 from okmr_msgs.srv import SetDeadReckoningEnabled
-from okmr_msgs.msg import MovementCommand, MissionCommand
+from okmr_msgs.msg import MovementCommand, MissionCommand, MaskOffset
 import time
 
 
@@ -153,6 +153,11 @@ class SemifinalStateMachine(BaseStateMachine):
         if not success:
             self.ros_node.get_logger().error("Failed to send sinking movement command")
             self.queued_method = self.abort
+
+    def on_enter_finding_gate(self):
+        self.start_current_state_sub_machine(
+            success_callback=self.finding_gate_done, fail_callback=self.abort
+        )
 
     def on_enter_moving_forward1(self):
         movement_msg = MovementCommand()
