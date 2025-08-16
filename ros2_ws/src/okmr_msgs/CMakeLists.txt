@@ -31,6 +31,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
     msg/RelativePose.msg
     msg/MissionCommand.msg
     msg/SemanticDepth.msg
+    msg/ServoCommand.msg
     msg/DetectedObject.msg
     msg/EnvironmentData.msg
     srv/FindObject.srv
