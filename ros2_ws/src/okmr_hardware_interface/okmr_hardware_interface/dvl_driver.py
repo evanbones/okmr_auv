@@ -78,7 +78,7 @@ class DvlDriverNode(Node):
                     )
                     vx = self.last_vx
                     vy = self.last_vy
-                    vz = self.last_vz
+                    vz = 0.0
                 else:
                     self.last_vx = vx
                     self.last_vy = vy
