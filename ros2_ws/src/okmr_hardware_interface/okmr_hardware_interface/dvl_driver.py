@@ -13,16 +13,20 @@ class DvlDriverNode(Node):
     def __init__(self):
         super().__init__("dvl_driver")
         self.dvl_publisher = self.create_publisher(Dvl, "/dvl", 10)
-        
+
         # Declare ROS2 parameter for beam range threshold
-        self.declare_parameter('beam_range_threshold', 0.5)
-        self.beam_range_threshold = self.get_parameter('beam_range_threshold').get_parameter_value().double_value
-        
+        self.declare_parameter("beam_range_threshold", 0.8)
+        self.beam_range_threshold = (
+            self.get_parameter("beam_range_threshold")
+            .get_parameter_value()
+            .double_value
+        )
+
         # Store previous velocity values for outlier rejection
         self.last_vx = 0.0
         self.last_vy = 0.0
         self.last_vz = 0.0
-        
+
         # Store previous beam distances for outlier rejection
         self.last_d1 = 0.0
         self.last_d2 = 0.0
@@ -83,7 +87,7 @@ class DvlDriverNode(Node):
                 # DVL beam distance validation
                 beam_distances = [d1, d2, d3, d4]
                 beam_range = max(beam_distances) - min(beam_distances)
-                
+
                 if beam_range > self.beam_range_threshold:
                     self.get_logger().warn(
                         f"DVL beam range too large ({beam_range:.3f} m), using previous values - D1: {self.last_d1:.3f}, D2: {self.last_d2:.3f}, D3: {self.last_d3:.3f}, D4: {self.last_d4:.3f}",
