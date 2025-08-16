@@ -7,7 +7,7 @@ float throttle[8] = {1500, 1500, 1500, 1500, 1500, 1500, 1500, 1500};
 #define NUM_ACTUATORS 3
 
 int pins[] = {12, 13, 14, 25, 26, 27, 32, 2}; 
-int servo_pins[] = {17};
+int servo_pins[] = {21};
 int servo_inits[] = {1500};
 int actuator_pins[] = {16, 4, 4};
 //note: add servo and actuator commands
