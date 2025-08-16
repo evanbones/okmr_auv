@@ -13,9 +13,21 @@ class DvlDriverNode(Node):
     def __init__(self):
         super().__init__("dvl_driver")
         self.dvl_publisher = self.create_publisher(Dvl, "/dvl", 10)
+        
+        # Declare ROS2 parameter for beam range threshold
+        self.declare_parameter('beam_range_threshold', 0.5)
+        self.beam_range_threshold = self.get_parameter('beam_range_threshold').get_parameter_value().double_value
+        
+        # Store previous velocity values for outlier rejection
         self.last_vx = 0.0
         self.last_vy = 0.0
         self.last_vz = 0.0
+        
+        # Store previous beam distances for outlier rejection
+        self.last_d1 = 0.0
+        self.last_d2 = 0.0
+        self.last_d3 = 0.0
+        self.last_d4 = 0.0
 
     def udp_server(self):
         # Create a UDP socket
@@ -53,7 +65,7 @@ class DvlDriverNode(Node):
                 temperature = float(matches.group(15))
                 status = int(matches.group(16), 16)  # Convert hex string to int
 
-                # DVL data validation
+                # DVL velocity validation
                 velocity_magnitude = (vx**2 + vy**2 + vz**2) ** 0.5
                 if velocity_magnitude > 30.0:
                     self.get_logger().warn(
@@ -67,6 +79,25 @@ class DvlDriverNode(Node):
                     self.last_vx = vx
                     self.last_vy = vy
                     self.last_vz = vz
+
+                # DVL beam distance validation
+                beam_distances = [d1, d2, d3, d4]
+                beam_range = max(beam_distances) - min(beam_distances)
+                
+                if beam_range > self.beam_range_threshold:
+                    self.get_logger().warn(
+                        f"DVL beam range too large ({beam_range:.3f} m), using previous values - D1: {self.last_d1:.3f}, D2: {self.last_d2:.3f}, D3: {self.last_d3:.3f}, D4: {self.last_d4:.3f}",
+                        throttle_duration_sec=1.0,
+                    )
+                    d1 = self.last_d1
+                    d2 = self.last_d2
+                    d3 = self.last_d3
+                    d4 = self.last_d4
+                else:
+                    self.last_d1 = d1
+                    self.last_d2 = d2
+                    self.last_d3 = d3
+                    self.last_d4 = d4
 
                 # Create DVL message
                 dvl_msg = Dvl()
