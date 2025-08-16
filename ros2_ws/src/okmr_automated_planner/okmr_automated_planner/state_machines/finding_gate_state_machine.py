@@ -4,7 +4,7 @@ from okmr_msgs.srv import Status
 from geometry_msgs.msg import Vector3
 
 # TODO: Replace with actual BoundingBox message when available
-from std_msgs.msg import String as BoundingBox  # Placeholder
+from okmr_msgs.msg import MaskOffset
 
 from okmr_automated_planner.base_state_machine import BaseStateMachine
 from okmr_utils.logging import make_green_log
@@ -34,6 +34,7 @@ class FindingGateStateMachine(BaseStateMachine):
             "value": 4,
             "descriptor": "how many times do we scan back and forth before giving up",
         },
+        # above params not used
         {
             "name": "scan_speed",
             "value": 30.0,
@@ -69,32 +70,15 @@ class FindingGateStateMachine(BaseStateMachine):
 
         # Subscribe to gate detection topic
         self.detection_subscription = self.ros_node.create_subscription(
-            BoundingBox, "/gate_detection", self.detection_callback, 10
+            MaskOffset, "/mask_offset", self.detection_callback, 10
         )
         self._subscriptions.append(self.detection_subscription)
 
     def detection_callback(self, msg):
-        """Callback for gate detection messages"""
-        # TODO: Replace with actual BoundingBox message parsing when available
-        # For now, simulate confidence as 1.0
-        confidence = 1.0
-        self.cached_gate_bounding_box = msg
-
-        if confidence > self.confidence_threshold:
-            self.high_confidence_frame_count += 1
-
-            # If currently scanning, initiate look at gate sequence
-            if (
-                (self.is_scanning_cw() or self.is_scanning_ccw())
-                and self.high_confidence_frame_count
-                > self.initial_detection_frame_threshold
-            ):
-                self.ros_node.get_logger().info(
-                    make_green_log(
-                        f"High confidence detection (confidence: {confidence:.2f}), following detection"
-                    )
-                )
-                self.object_detected()
+        if abs(msg.y_offset) > 0.1:
+            self.cached_mask_offset = msg
+            if not self.is_following_detection()
+                self.follow_detection()
 
     def on_enter_initializing(self):
         # start up object detection model
@@ -107,11 +91,11 @@ class FindingGateStateMachine(BaseStateMachine):
         movement_msg.command = MovementCommand.SET_VELOCITY
         movement_msg.goal_velocity = GoalVelocity()
 
-        movement_msg.goal_velocity.twist.angular.z = self.scan_speed
-        movement_msg.goal_velocity.duration = self.scan_angle / self.scan_speed
+        movement_msg.goal_velocity.twist.angular.z = -self.scan_speed
+        movement_msg.goal_velocity.duration = self.scan_angle / abs(self.scan_speed)
         movement_msg.goal_velocity.integrate = True
 
-        movement_msg.timeout_sec = self.scan_angle / self.scan_speed * 2
+        movement_msg.timeout_sec = self.scan_angle / abs(self.scan_speed) * 2
 
         success = self.movement_client.send_movement_command(
             movement_msg,
@@ -130,11 +114,11 @@ class FindingGateStateMachine(BaseStateMachine):
         movement_msg.command = MovementCommand.SET_VELOCITY
         movement_msg.goal_velocity = GoalVelocity()
 
-        movement_msg.goal_velocity.twist.angular.z = -self.scan_speed
-        movement_msg.goal_velocity.duration = self.scan_angle / self.scan_speed
+        movement_msg.goal_velocity.twist.angular.z = self.scan_speed
+        movement_msg.goal_velocity.duration = self.scan_angle / abs(self.scan_speed)
         movement_msg.goal_velocity.integrate = True
 
-        movement_msg.timeout_sec = self.scan_angle / self.scan_speed * 2
+        movement_msg.timeout_sec = self.scan_angle / abs(self.scan_speed) * 2
 
         success = self.movement_client.send_movement_command(
             movement_msg,
@@ -154,20 +138,18 @@ class FindingGateStateMachine(BaseStateMachine):
         # ex. if FOV of camera is 90 deg, and center is on the far edges
         # we will want to do a relative yaw rotation of ~40 degrees
 
-        calculated_yaw_rotation = 20.0  # TEMPORARY
-        #frame is 640x480, (0,0 top left), therefore center is found ebing half both of theose values, if center is greater than the given center of gate, then shift towards left, if less than shift towards right
+        calculated_yaw_rotation = 43.0 * self.cached_mask_offset.y_offset  # TEMPORARY
 
         movement_msg = MovementCommand()
         movement_msg.command = MovementCommand.MOVE_RELATIVE
-        movement_msg.translation = Vector3(x=0.0, y=0.0, z=0.0)
         movement_msg.rotation = Vector3(
             x=0.0, y=0.0, z=calculated_yaw_rotation
-        )  # Small rotation to center
-        movement_msg.timeout_sec = 5.0  # generous time estimate to rotate
+        )  
+        movement_msg.timeout_sec = 15.0  # generous time estimate to rotate
 
         success = self.movement_client.send_movement_command(
             movement_msg,
-            on_success=self.validate_detection_is_true_positive,
+            on_success=self.check_centered_on_gate,
             on_failure=self.handle_movement_failure,
         )
 
@@ -177,6 +159,13 @@ class FindingGateStateMachine(BaseStateMachine):
             )
             self.queued_method = self.abort
 
+    def check_centered_on_gate(self):
+        if self.cached_mask_offset.y_offset < 0.1:
+            self.following_detection_done()
+        else:
+            self.resume_scan()
+
+    '''
     def validate_detection_is_true_positive(self):
         """Validate if we have enough high confidence frames to confirm the detected object is a true positive"""
 
@@ -187,6 +176,7 @@ class FindingGateStateMachine(BaseStateMachine):
                 f"Gate validation failed. Only {self.high_confidence_frame_count} frames received, but {self.true_positive_frame_threshold} needed to continue"
             )
             self.object_detection_false_positive()
+    '''
 
     def on_completion(self):
         self.ros_node.get_logger().info("FindingGate state machine completed")

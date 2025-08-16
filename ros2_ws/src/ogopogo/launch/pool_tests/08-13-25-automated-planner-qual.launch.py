@@ -102,21 +102,6 @@ def generate_launch_description():
         ],
     )
 
-    # RealSense Camera
-    realsense_node = Node(
-        package="realsense2_camera",
-        executable="realsense2_camera_node",
-        parameters=[
-            {
-                "enable_gyro": True,
-                "enable_accel": True,
-                "unite_imu_method": 2,
-            }
-        ],
-        arguments=["--ros-args", "--log-level", "error"],
-        output="log",
-    )
-
     navigation_launch = IncludeLaunchDescription(
         PathJoinSubstitution([navigation_dir, "full_navigation_stack.launch.py"])
     )
@@ -135,7 +120,7 @@ def generate_launch_description():
             ]
         ),
         launch_arguments={
-            "folder": "7-motor",
+            "folder": "default",
         }.items(),
     )
 
@@ -169,24 +154,15 @@ def generate_launch_description():
         )
     )
 
-    # Include Static Transforms Launch
-    static_transforms_launch = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            [
-                PathJoinSubstitution(
-                    [
-                        get_package_share_directory("okmr_navigation"),
-                        "launch",
-                        "static_transforms.launch.py",
-                    ]
-                )
-            ]
-        )
-    )
-
     # Set colorized output for better log readability
     colorized_output = SetEnvironmentVariable(
         name="RCUTILS_COLORIZED_OUTPUT", value="1"
+    )
+
+    ogopogo_dir = PathJoinSubstitution([FindPackageShare("ogopogo"), "launch"])
+
+    cameras_launch = IncludeLaunchDescription(
+        PathJoinSubstitution([ogopogo_dir, "cameras.launch.py"])
     )
 
     # Return the launch description
@@ -200,10 +176,9 @@ def generate_launch_description():
             root_config_arg,
             debug_arg,
             automated_planner_node,
-            realsense_node,
             control_stack_launch,
+            cameras_launch,
             # object_detection_launch,
             hardware_interface_launch,
-            static_transforms_launch,
         ]
     )

@@ -7,19 +7,19 @@ float throttle[8] = {1500, 1500, 1500, 1500, 1500, 1500, 1500, 1500};
 #define NUM_ACTUATORS 3
 
 int pins[] = {12, 13, 14, 25, 26, 27, 32, 2}; 
-int servo_pins[] = {17};
+int servo_pins[] = {21};
 int servo_inits[] = {1500};
-int actuator_pins[] = {16, 4, 4};
+int actuator_pins[] = {4, 4, 4};
 //note: add servo and actuator commands
 //100<1500\n for servo command on servo_pins[0] (pwm same as motors)
 //200<1\n for actuator command on actuaotr_pins[0] (digital high or low)
 //add command interpretation to recvWithEndMarker
 
 int killSwitchPin = 15;
-int ledPin1 = 1;
+int ledPin1 = 19;
 int ledPin2 = 22;
 int ledPin3 = 23;
-int leakSensorPin = 8;
+int leakSensorPin = 4;
 bool killSwitchEnabled = false;
 unsigned long lastKillswitchPrintTime = 0;
 const unsigned long KILLSWITCH_PRINT_INTERVAL = 100; // Print killswitch status every 100ms
@@ -180,7 +180,6 @@ void parseNewData(){
 
 void loop() {
   // Check for serial input
-  killSwitch();
   /*
   int leakReading = analogRead(leakSensorPin);
   Serial.print("leak<");
@@ -198,6 +197,8 @@ void loop() {
     }
   }
 
+  killSwitch();
+  
   for (int i = 0; i < 8; i++) {
     motors[i].writeMicroseconds((int)throttle[i]);
   }
