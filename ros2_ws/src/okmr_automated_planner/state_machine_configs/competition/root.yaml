@@ -3,19 +3,46 @@ root:
   - {name: initializing}
   - {name: waiting_for_mission_start}
   - {name: enabling_subsystems}
-  - {name: moving_down}
-  - {name: gate, config_path: "task_state_machines/gate.yaml"}
+  - {name: sinking_start}
+  - {name: gate}
+  - {name: barrel_roll}
   - {name: turn_marker_one}
-  - {name: slalom, config_path: "task_state_machines/slalom.yaml"}
+  - {name: approaching_slalom}
+  - {name: slalom_turn_one}
+  - {name: slalom_move_forward_one}
+  - {name: slalom_turn_two}
+  - {name: slalom_move_forward_two}
   - {name: turn_marker_two}
+  - {name: approaching_dropper}
+  - {name: actuating_servo}
+  - {name: turn_to_octagon}
+  - {name: approaching_octagon}
+  - {name: surfacing_octagon}
+  - {name: sinking_octagon}
+  - {name: return_home}
+  - {name: pass_gate}
+  - {name: surface}
 
   transitions:
   - {trigger: initialized, source: initializing, dest: waiting_for_mission_start}
   - {trigger: mission_start_received, source: waiting_for_mission_start, dest: enabling_subsystems}
-  - {trigger: enabling_subsystems_done, source: enabling_subsystems, dest: moving_down}
-  - {trigger: moving_down_done, source: moving_down, dest: gate}
-  - {trigger: gate_done, source: gate, dest: turn_marker_one}
-  - {trigger: turn_marker_one_done, source: turn_marker_one, dest: slalom}
-  - {trigger: slalom_done, source: slalom, dest: turn_marker_two}
-  - {trigger: turn_marker_two_done, source: turn_marker_two, dest: done}
+  - {trigger: enabling_subsystems_done, source: enabling_subsystems, dest: sinking_start}
+  - {trigger: sinking_start_done, source: sinking_start, dest: gate}
+  - {trigger: gate_done, source: gate, dest: barrel_roll}
+  - {trigger: barrel_roll_done, source: barrel_roll, dest: turn_marker_one}
+  - {trigger: turn_marker_one_done, source: turn_marker_one, dest: approaching_slalom}
+  - {trigger: approaching_slalom_done, source: approaching_slalom, dest: slalom_turn_one}
+  - {trigger: slalom_turn_one_done, source: slalom_turn_one, dest: slalom_move_forward_one}
+  - {trigger: slalom_move_forward_one_done, source: slalom_move_forward_one, dest: slalom_turn_two}
+  - {trigger: slalom_turn_two_done, source: slalom_turn_two, dest: slalom_move_forward_two}
+  - {trigger: slalom_move_forward_two_done, source: slalom_move_forward_two, dest: turn_marker_two}
+  - {trigger: turn_marker_two_done, source: turn_marker_two, dest: approaching_dropper}
+  - {trigger: approaching_dropper_done, source: approaching_dropper, dest: actuating_servo}
+  - {trigger: actuating_servo_done, source: actuating_servo, dest: turn_to_octagon}
+  - {trigger: turn_to_octagon_done, source: turn_to_octagon, dest: approaching_octagon}
+  - {trigger: approaching_octagon_done, source: approaching_octagon, dest: surfacing_octagon}
+  - {trigger: surfacing_octagon_done, source: surfacing_octagon, dest: sinking_octagon}
+  - {trigger: sinking_octagon_done, source: sinking_octagon, dest: return_home}
+  - {trigger: return_home_done, source: return_home, dest: pass_gate}
+  - {trigger: pass_gate_done, source: pass_gate, dest: surface}
 
