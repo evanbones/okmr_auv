@@ -39,7 +39,7 @@ semifinal:
     - { 
         trigger: moving_forward1_done, 
         source: moving_forward1, 
-        dest: barrel_roll,
+        dest: turning1, #barrel_roll, augment
       }
     - { 
         trigger: barrel_roll_done,
@@ -49,7 +49,7 @@ semifinal:
     - { 
         trigger: turning1_done, 
         source: turning1, 
-        dest: moving_forward2,
+        dest: surfacing, #moving_forward2, augment
       }
     - { 
         trigger: moving_forward2_done, 

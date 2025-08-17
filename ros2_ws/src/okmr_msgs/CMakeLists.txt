@@ -45,6 +45,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
     srv/ClearPose.srv
     srv/DistanceFromGoal.srv
     srv/ChangeModel.srv
+    srv/SetInferenceCamera.srv
     msg/VoxelGrid.msg
     msg/Classes.msg
     action/Movement.action
