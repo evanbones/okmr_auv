@@ -24,7 +24,9 @@ class RootStateMachine(BaseStateMachine):
             self.ros_node.get_logger().warn("Mission kill command received")
             self.abort()
         elif msg.command == MissionCommand.HARDWARE_KILL:
-            self.ros_node.get_logger().error("HARDWARE KILLSWITCH ACTIVATED - Emergency abort")
+            self.ros_node.get_logger().error(
+                "HARDWARE KILLSWITCH ACTIVATED - Emergency abort"
+            )
             self.abort()
         elif msg.command == MissionCommand.HARDWARE_KILL_RESET:
             self.ros_node.get_logger().info("Hardware killswitch reset received")
@@ -73,7 +75,7 @@ class RootStateMachine(BaseStateMachine):
         self.record_initial_start_time()
         movement_msg = MovementCommand()
         movement_msg.command = MovementCommand.MOVE_RELATIVE
-        movement_msg.translation.z = -1.5
+        movement_msg.altitude = 0.75
 
         movement_msg.timeout_sec = 10.0
 

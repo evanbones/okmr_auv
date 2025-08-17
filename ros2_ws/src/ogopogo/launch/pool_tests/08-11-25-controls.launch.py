@@ -14,18 +14,15 @@ def generate_launch_description():
         [FindPackageShare("okmr_hardware_interface"), "launch"]
     )
 
+    ogopogo_dir = PathJoinSubstitution([FindPackageShare("ogopogo"), "launch"])
+
     controls_dir = PathJoinSubstitution([FindPackageShare("okmr_controls"), "launch"])
 
     navigation_dir = PathJoinSubstitution(
         [FindPackageShare("okmr_navigation"), "launch"]
     )
 
-    rs_multi_camera_launch = PathJoinSubstitution(
-        [realsense_launch_dir, "rs_multi_camera_launch.py"]
-    )
-    rs_single_camera_launch = PathJoinSubstitution(
-        [realsense_launch_dir, "rs_launch.py"]
-    )
+    cameras_launch = PathJoinSubstitution([ogopogo_dir, "cameras.launch.py"])
 
     ogopogo_hardware_interface_launch = PathJoinSubstitution(
         [hardware_interface_launch_dir, "ogopogo_hardware_interface.launch.py"]
@@ -41,20 +38,7 @@ def generate_launch_description():
 
     return LaunchDescription(
         [
-            Node(
-                package="realsense2_camera",
-                executable="realsense2_camera_node",
-                parameters=[
-                    {
-                        "unite_imu_method": 2,
-                        "enable_gyro": True,
-                    }
-                ],
-            ),
-            Node(
-                package="foxglove_bridge",
-                executable="foxglove_bridge",
-            ),
+            IncludeLaunchDescription(cameras_launch),
             IncludeLaunchDescription(
                 full_control_stack_launch,
                 launch_arguments={
@@ -62,9 +46,6 @@ def generate_launch_description():
                 }.items(),
             ),
             IncludeLaunchDescription(navigation_launch),
-            # IncludeLaunchDescription(
-            #    rs_single_camera_launch,
-            # ),
             IncludeLaunchDescription(
                 ogopogo_hardware_interface_launch,
             ),

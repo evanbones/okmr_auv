@@ -33,7 +33,7 @@ def generate_launch_description():
                     str(-math.pi / 2),
                     "0",
                     # Parent frame -> Child frame
-                    "camera_imu_optical_frame",
+                    "front_imu_optical_frame",
                     "base_link",
                 ],
             ),

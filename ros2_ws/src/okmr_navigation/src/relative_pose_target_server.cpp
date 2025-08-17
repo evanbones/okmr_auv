@@ -102,7 +102,7 @@ class RelativePoseTargetServer : public rclcpp::Node {
         if (!was_enabled && is_enabled_) {
             // Mode changed to pose - start timer and set goal to current pose for safety
             RCLCPP_DEBUG (this->get_logger (), "Pose mode enabled, starting timer");
-            // current_goal_pose_msg_.pose = current_pose_msg_.pose;
+            current_goal_pose_msg_.pose = current_pose_msg_.pose;
 
             auto timer_period = std::chrono::duration_cast<std::chrono::milliseconds> (
                 std::chrono::duration<double> (1.0 / update_frequency_));
@@ -223,14 +223,17 @@ class RelativePoseTargetServer : public rclcpp::Node {
 
         bool yaw_on_target = std::abs (yaw_error) <= yaw_tolerance_;
 
-        // Translation target - only publish if yaw is on target when outside holding radius
-        relative_pose_target.translation.x = relative_translation.x;
-        relative_pose_target.translation.y = relative_translation.y;
-        relative_pose_target.translation.z = relative_translation.z;
+        // Translation target - only publish if yaw is on target
+        if (yaw_on_target || xy_trig_dist < holding_radius_) {
+            relative_pose_target.translation.x = relative_translation.x;
+            relative_pose_target.translation.y = relative_translation.y;
+            relative_pose_target.translation.z = relative_translation.z;
+        }
 
-        // Rotation target - always publish
-        relative_pose_target.rotation.x = (roll - current_eulers.x);
-        relative_pose_target.rotation.y = (pitch - current_eulers.y);
+        // relative_pose_target.rotation.x = (roll - current_eulers.x);
+        // relative_pose_target.rotation.y = (pitch - current_eulers.y);
+        relative_pose_target.rotation.x = -current_eulers.x;  // forced 0 on roll
+        relative_pose_target.rotation.y = -current_eulers.y;  // forced 0 on pitch
         relative_pose_target.rotation.z = yaw_error;
 
         relative_pose_pub_->publish (relative_pose_target);

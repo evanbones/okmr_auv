@@ -2,7 +2,7 @@
 
 import rclpy
 from rclpy.node import Node
-from okmr_msgs.msg import MotorThrottle, MissionCommand, ControlMode
+from okmr_msgs.msg import MotorThrottle, MissionCommand, ControlMode, ServoCommand
 import serial  # Import pyserial
 import time
 
@@ -43,6 +43,10 @@ class SerialOutputNode(Node):
             MotorThrottle, "/motor_throttle", self.throttle_callback, 10
         )
 
+        self.servo_subscription = self.create_subscription(
+            ServoCommand, "/servo_command", self.servo_command_callback, 10
+        )
+
         self.mission_publisher = self.create_publisher(
             MissionCommand, "/mission_command", 10
         )
@@ -53,6 +57,18 @@ class SerialOutputNode(Node):
         self.timer = self.create_timer(1.0 / polling_rate, self.read_serial_callback)
         self.serial_buffer = ""
         self.last_killswitch_state = False
+
+    def servo_command_callback(self, msg):
+        if not self.serial_port or not self.serial_port.is_open:
+            self.get_logger().error("Serial port is not open.")
+            return
+
+        try:
+            servo_index = msg.index + 100
+            serial_msg = f"{servo_index}<{round(msg.pwm, 2)}\n"
+            self.serial_port.write(serial_msg.encode("utf-8"))
+        except serial.SerialException as e:
+            self.get_logger().error(f"Error writing servo command to serial port: {e}")
 
     def throttle_callback(self, msg):
         if not self.serial_port or not self.serial_port.is_open:
@@ -119,12 +135,12 @@ class SerialOutputNode(Node):
                             # Send KILL_MISSION and OFF mode
                             mission_msg = MissionCommand()
                             mission_msg.command = MissionCommand.KILL_MISSION
-                            self.mission_publisher.publish(mission_msg)
+                            # self.mission_publisher.publish(mission_msg)
 
                             control_msg = ControlMode()
                             control_msg.header.stamp = self.get_clock().now().to_msg()
                             control_msg.control_mode = ControlMode.OFF
-                            self.control_mode_publisher.publish(control_msg)
+                            # self.control_mode_publisher.publish(control_msg)
 
                         self.last_killswitch_state = killswitch_active
 
