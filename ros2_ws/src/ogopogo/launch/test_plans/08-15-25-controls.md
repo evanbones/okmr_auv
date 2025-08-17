@@ -17,5 +17,5 @@ ros2 action send_goal /movement_command okmr_msgs/action/Movement "{movement_com
 ros2 action send_goal /movement_command okmr_msgs/action/Movement "{movement_command: {command: 1, translation: {y: 2.0}}}"
 ros2 action send_goal /movement_command okmr_msgs/action/Movement "{movement_command: {command: 1, translation: {z: -1.0}}}"
 
-ros2 action send_goal /movement_command okmr_msgs/action/Movement "{movement_command: {command: 7, timeout_sec: 6.0}}"
+ros2 action send_goal /movement_command okmr_msgs/action/Movement "{command_msg: {command: 7, goal_velocity: {twist: {angular: {x: 100.0}}, duration: 3.6, integrate: true}, timeout_sec: 6.0}}"
 
