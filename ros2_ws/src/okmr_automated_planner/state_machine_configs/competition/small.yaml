@@ -22,7 +22,7 @@ automated_planner:
       turn_marker_two_angle: 90.0
       approaching_dropper_distance: 0.5
 
-      servo_pwm: 1800.0
+      servo_pwm: 1700.0
       servo_index: 0
 
       turn_to_octagon_angle: 90.0
