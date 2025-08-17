@@ -1,7 +1,7 @@
 from okmr_automated_planner.base_state_machine import BaseStateMachine
 from okmr_utils.logging import make_green_log
 from okmr_msgs.msg import MissionCommand, ServoCommand, MovementCommand
-from okmr_msgs.srv import GetPoseTwistAccel
+from okmr_msgs.srv import GetPoseTwistAccel, SetDeadReckoningEnabled
 import time
 
 
