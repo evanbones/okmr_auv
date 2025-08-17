@@ -7,7 +7,7 @@ import cv2
 import os
 import threading
 from typing import Tuple, Optional
-from okmr_msgs.srv import ChangeModel
+from okmr_msgs.srv import ChangeModel, SetInferenceCamera
 
 
 def sigmoid(x):
@@ -79,12 +79,22 @@ class OnnxSegmentationDetector(ObjectDetectorNode):
             ChangeModel.Request.TORPEDO_BOARD: "torpedo_board.onnx"
         }
 
-        # Create service
+        # Create services
         self.change_model_srv = self.create_service(
             ChangeModel, 
             'change_model', 
             self.change_model_callback
         )
+        
+        self.set_inference_camera_srv = self.create_service(
+            SetInferenceCamera,
+            'set_inference_camera',
+            self.set_inference_camera_callback
+        )
+        
+        # Camera state tracking
+        self.camera_mode = SetInferenceCamera.Request.FRONT_CAMERA  # Default to front camera
+        self.inference_enabled = True
 
         
         self.model_lock = threading.Lock()
@@ -145,6 +155,40 @@ class OnnxSegmentationDetector(ObjectDetectorNode):
             except Exception as e:
                 response.success = False
                 response.message = f"Service error: {str(e)}"
+            
+        return response
+
+    def set_inference_camera_callback(self, request, response):
+        """Service callback to set inference camera mode"""
+        try:
+            if request.camera_mode == SetInferenceCamera.Request.DISABLED:
+                self.inference_enabled = False
+                self.camera_mode = request.camera_mode
+                response.success = True
+                response.message = "Inference disabled"
+                self.get_logger().info("Inference disabled")
+                
+            elif request.camera_mode == SetInferenceCamera.Request.FRONT_CAMERA:
+                self.inference_enabled = True
+                self.camera_mode = request.camera_mode
+                response.success = True
+                response.message = "Inference enabled for front camera"
+                self.get_logger().info("Inference enabled for front camera")
+                
+            elif request.camera_mode == SetInferenceCamera.Request.BOTTOM_CAMERA:
+                self.inference_enabled = True
+                self.camera_mode = request.camera_mode
+                response.success = True
+                response.message = "Inference enabled for bottom camera"
+                self.get_logger().info("Inference enabled for bottom camera")
+                
+            else:
+                response.success = False
+                response.message = f"Invalid camera mode: {request.camera_mode}. Valid modes: 0=disabled, 1=front, 2=bottom"
+                
+        except Exception as e:
+            response.success = False
+            response.message = f"Service error: {str(e)}"
             
         return response
 
