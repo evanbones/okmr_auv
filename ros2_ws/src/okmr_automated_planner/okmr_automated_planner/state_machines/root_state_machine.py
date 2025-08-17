@@ -69,6 +69,11 @@ class RootStateMachine(BaseStateMachine):
             "descriptor": "angle for second slalom turn",
         },
         {
+            "name": "return_home_rotation_angle",
+            "value": -10.0,
+            "descriptor": "angle for second slalom turn",
+        },
+        {
             "name": "slalom_move_forward_two_distance",
             "value": 2.0,
             "descriptor": "distance for second slalom forward movement",
@@ -123,6 +128,9 @@ class RootStateMachine(BaseStateMachine):
         self.return_home_distance = self.get_local_parameter("return_home_distance")
         self.pass_gate_distance = self.get_local_parameter("pass_gate_distance")
         self.slalom_turn_one_angle = self.get_local_parameter("slalom_turn_one_angle")
+        self.return_home_rotation_angle = self.get_local_parameter(
+            "return_home_rotation_angle"
+        )
         self.slalom_move_forward_one_distance = self.get_local_parameter(
             "slalom_move_forward_one_distance"
         )
@@ -354,6 +362,14 @@ class RootStateMachine(BaseStateMachine):
             self.turn_marker_one_angle,
             self.turn_marker_one_done,
             self.turn_marker_one_done,
+            "Failed to send turn marker one movement command",
+        )
+
+    def on_enter_return_home_rotation(self):
+        self._send_rotation_command(
+            self.return_home_rotation_angle,
+            self.return_home_rotation_done,
+            self.return_home_rotation_done,
             "Failed to send turn marker one movement command",
         )
 

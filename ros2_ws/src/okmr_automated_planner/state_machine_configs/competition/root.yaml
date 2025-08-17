@@ -20,6 +20,7 @@ root:
   - {name: surfacing_octagon}
   - {name: sinking_octagon}
   - {name: return_home}
+  - {name: return_home_rotation}
   - {name: pass_gate}
   - {name: surface}
 
@@ -43,6 +44,7 @@ root:
   - {trigger: approaching_octagon_done, source: approaching_octagon, dest: surfacing_octagon}
   - {trigger: surfacing_octagon_done, source: surfacing_octagon, dest: sinking_octagon}
   - {trigger: sinking_octagon_done, source: sinking_octagon, dest: return_home}
-  - {trigger: return_home_done, source: return_home, dest: pass_gate}
+  - {trigger: return_home_done, source: return_home, dest: return_home_rotation}
+  - {trigger: return_home_rotation_done, source: return_home_rotation, dest: pass_gate}
   - {trigger: pass_gate_done, source: pass_gate, dest: surface}
 
