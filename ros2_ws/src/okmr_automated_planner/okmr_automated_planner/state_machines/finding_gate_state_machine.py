@@ -1,6 +1,6 @@
 from okmr_msgs.msg import MovementCommand
 from okmr_msgs.msg import GoalVelocity
-from okmr_msgs.srv import Status
+from okmr_msgs.srv import Status, SetInferenceCamera, ChangeModel
 from geometry_msgs.msg import Vector3
 
 # TODO: Replace with actual BoundingBox message when available
@@ -74,6 +74,16 @@ class FindingGateStateMachine(BaseStateMachine):
         )
         self._subscriptions.append(self.detection_subscription)
 
+    def set_inference_camera(self, camera_mode):
+        request = SetInferenceCamera.Request()
+        request.camera_mode = camera_mode
+        self.send_service_request(SetInferenceCamera, "/set_inference_camera", request, lambda f: None)
+
+    def change_model(self, model_id):
+        request = ChangeModel.Request()
+        request.model_id = model_id
+        self.send_service_request(ChangeModel, "/change_model", request, lambda f: None)
+
     def detection_callback(self, msg):
         if abs(msg.y_offset) > 0.1:
             self.cached_mask_offset = msg
@@ -81,10 +91,9 @@ class FindingGateStateMachine(BaseStateMachine):
                 self.follow_detection()
 
     def on_enter_initializing(self):
-        # start up object detection model
-        # on request success, initializingDone
+        self.change_model(ChangeModel.Request.GATE)
+        self.set_inference_camera(SetInferenceCamera.Request.FRONT_CAMERA)
         self.queued_method = self.initializing_done
-        pass
 
     def on_enter_scanning_cw(self):
         movement_msg = MovementCommand()
@@ -179,9 +188,8 @@ class FindingGateStateMachine(BaseStateMachine):
     '''
 
     def on_completion(self):
+        self.set_inference_camera(SetInferenceCamera.Request.DISABLED)
         self.ros_node.get_logger().info("FindingGate state machine completed")
-        # disable object detection
-        pass
 
     def handle_movement_failure(self):
         """Handle movement action failure"""

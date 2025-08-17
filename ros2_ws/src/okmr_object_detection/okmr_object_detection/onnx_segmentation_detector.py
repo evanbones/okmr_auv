@@ -7,7 +7,7 @@ import cv2
 import os
 import threading
 from typing import Tuple, Optional
-from okmr_msgs.srv import ChangeModel
+from okmr_msgs.srv import ChangeModel, SetInferenceCamera
 
 
 def sigmoid(x):
@@ -79,12 +79,22 @@ class OnnxSegmentationDetector(ObjectDetectorNode):
             ChangeModel.Request.TORPEDO_BOARD: "torpedo_board.onnx"
         }
 
-        # Create service
+        # Create services
         self.change_model_srv = self.create_service(
             ChangeModel, 
             'change_model', 
             self.change_model_callback
         )
+        
+        self.set_inference_camera_srv = self.create_service(
+            SetInferenceCamera,
+            'set_inference_camera',
+            self.set_inference_camera_callback
+        )
+        
+        # Camera state tracking
+        self.camera_mode = SetInferenceCamera.Request.FRONT_CAMERA  # Default to front camera
+        self.inference_enabled = True
 
         
         self.model_lock = threading.Lock()
@@ -148,6 +158,40 @@ class OnnxSegmentationDetector(ObjectDetectorNode):
             
         return response
 
+    def set_inference_camera_callback(self, request, response):
+        """Service callback to set inference camera mode"""
+        try:
+            if request.camera_mode == SetInferenceCamera.Request.DISABLED:
+                self.inference_enabled = False
+                self.camera_mode = request.camera_mode
+                response.success = True
+                response.message = "Inference disabled"
+                self.get_logger().info("Inference disabled")
+                
+            elif request.camera_mode == SetInferenceCamera.Request.FRONT_CAMERA:
+                self.inference_enabled = True
+                self.camera_mode = request.camera_mode
+                response.success = True
+                response.message = "Inference enabled for front camera"
+                self.get_logger().info("Inference enabled for front camera")
+                
+            elif request.camera_mode == SetInferenceCamera.Request.BOTTOM_CAMERA:
+                self.inference_enabled = True
+                self.camera_mode = request.camera_mode
+                response.success = True
+                response.message = "Inference enabled for bottom camera"
+                self.get_logger().info("Inference enabled for bottom camera")
+                
+            else:
+                response.success = False
+                response.message = f"Invalid camera mode: {request.camera_mode}. Valid modes: 0=disabled, 1=front, 2=bottom"
+                
+        except Exception as e:
+            response.success = False
+            response.message = f"Service error: {str(e)}"
+            
+        return response
+
     def load_model(self):
         """Load the ONNX model"""
         if not os.path.isfile(self.model_path):
@@ -198,8 +242,24 @@ class OnnxSegmentationDetector(ObjectDetectorNode):
             self.get_logger().error(f"Failed to load ONNX model: {e}")
             raise
 
-    def preprocess(self, img: np.ndarray) -> Tuple[np.ndarray, float, int, int]:
+    def apply_depth_masking(self, img: np.ndarray, depth: np.ndarray) -> np.ndarray:
+        """Apply depth-based masking to turn distant pixels blue"""
+        img_masked = img.copy()
+        
+        # Create mask for pixels at 10+ meters (assuming depth is in meters)
+        distant_mask = depth >= 10.0
+        
+        # Set distant pixels to blue (BGR format: [255, 0, 0])
+        img_masked[distant_mask] = [255, 90, 90]
+        
+        return img_masked
+
+    def preprocess(self, img: np.ndarray, depth: Optional[np.ndarray] = None) -> Tuple[np.ndarray, float, int, int]:
         """Preprocess image for ONNX inference"""
+        # Apply depth masking if depth data is available
+        if depth is not None:
+            img = self.apply_depth_masking(img, depth)
+        
         h0, w0 = img.shape[:2]
         scale = self.input_size / max(h0, w0)
         nw, nh = int(w0 * scale), int(h0 * scale)
@@ -302,8 +362,7 @@ class OnnxSegmentationDetector(ObjectDetectorNode):
             mask = sigmoid(mask_logit)
 
             # Handle aspect ratio correction
-            aspect_ratio = W0 / H0
-            corrected_height = int(W0 / aspect_ratio)
+            corrected_height = int(H0*1.333)
             mask_resized = cv2.resize(mask, (W0, corrected_height))
 
             if corrected_height > H0:
@@ -339,7 +398,7 @@ class OnnxSegmentationDetector(ObjectDetectorNode):
                     self.get_logger().debug(f"DEBUG: Input depth shape: {depth.shape}")
 
             # Preprocess image
-            inp, scale, pad_x, pad_y = self.preprocess(rgb)
+            inp, scale, pad_x, pad_y = self.preprocess(rgb, depth)
 
             if self.debug:
                 self.get_logger().debug(f"DEBUG: Preprocessed input shape: {inp.shape}")
