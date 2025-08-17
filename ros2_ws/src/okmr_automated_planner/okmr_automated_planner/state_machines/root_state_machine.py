@@ -143,6 +143,11 @@ class RootStateMachine(BaseStateMachine):
 
         self.post_gate_pose = None
 
+    def on_enter_initializing(self):
+        # check system state
+        # transition to waiting for mission start
+        self.queued_method = self.initialized
+
     def _pose_callback(self, future):
         try:
             response = future.result()
