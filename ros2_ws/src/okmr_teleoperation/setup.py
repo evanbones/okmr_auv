@@ -26,6 +26,7 @@ setup(
     entry_points={
         'console_scripts': [
             'teleop_node = okmr_teleoperation.teleop_node:main',
+            'keyboard_teleop_node.py = okmr_teleoperation.keyboard_teleop_node:main',
         ],
     },
 )
