@@ -1,0 +1,12 @@
+# Request
+int32 camera_mode
+
+# Camera mode constants
+int32 DISABLED = 0
+int32 FRONT_CAMERA = 1
+int32 BOTTOM_CAMERA = 2
+
+---
+# Response
+bool success
+string message
