@@ -19,7 +19,7 @@ automated_planner:
       slalom_move_forward_two_distance: 2.0
       mission_altitude: 0.75
       translation_timeout_factor: 3.0
-      barrel_roll_angular_velocity: -100.0
-      barrel_roll_duration: 7.2
+      barrel_roll_angular_velocity: -200.0
+      barrel_roll_duration: 3.6
       servo_pwm: 1500.0
       servo_index: 0
