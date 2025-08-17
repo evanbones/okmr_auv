@@ -1,6 +1,8 @@
 from okmr_automated_planner.base_state_machine import BaseStateMachine
 from okmr_utils.logging import make_green_log
-from okmr_msgs.msg import MissionCommand, ServoCommand
+from okmr_msgs.msg import MissionCommand, ServoCommand, MovementCommand
+from okmr_msgs.srv import GetPoseTwistAccel
+import time
 
 
 class RootStateMachine(BaseStateMachine):
@@ -138,6 +140,95 @@ class RootStateMachine(BaseStateMachine):
         self.barrel_roll_duration = self.get_local_parameter("barrel_roll_duration")
         self.servo_pwm = self.get_local_parameter("servo_pwm")
         self.servo_index = self.get_local_parameter("servo_index")
+        
+        self.post_gate_pose = None
+
+    def _pose_callback(self, future):
+        try:
+            response = future.result()
+            if response.success:
+                self.post_gate_pose = response.pose
+                self.ros_node.get_logger().info("Post-gate pose saved successfully")
+            else:
+                self.ros_node.get_logger().error("Failed to get current pose")
+        except Exception as e:
+            self.ros_node.get_logger().error(f"Exception in pose callback: {e}")
+
+    def _send_translation_command(
+        self, distance, success_callback, failure_callback, error_msg
+    ):
+        movement_msg = MovementCommand()
+        movement_msg.command = MovementCommand.MOVE_RELATIVE
+        movement_msg.translation.x = distance
+        movement_msg.altitude = self.mission_altitude
+        movement_msg.timeout_sec = abs(distance) * self.translation_timeout_factor
+
+        success = self.movement_client.send_movement_command(
+            movement_msg, on_success=success_callback, on_failure=failure_callback
+        )
+
+        if not success:
+            self.ros_node.get_logger().error(error_msg)
+            self.queued_method = self.abort
+
+    def _send_rotation_command(
+        self, angle, success_callback, failure_callback, error_msg
+    ):
+        movement_msg = MovementCommand()
+        movement_msg.command = MovementCommand.MOVE_RELATIVE
+        movement_msg.rotation.z = angle
+        movement_msg.altitude = self.mission_altitude
+        movement_msg.timeout_sec = 10.0
+
+        success = self.movement_client.send_movement_command(
+            movement_msg, on_success=success_callback, on_failure=failure_callback
+        )
+
+        if not success:
+            self.ros_node.get_logger().error(error_msg)
+            self.queued_method = self.abort
+
+    def _send_surface_command(self, success_callback, failure_callback, error_msg):
+        movement_msg = MovementCommand()
+        movement_msg.command = MovementCommand.SURFACE_PASSIVE
+
+        success = self.movement_client.send_movement_command(
+            movement_msg, on_success=success_callback, on_failure=failure_callback
+        )
+
+        if not success:
+            self.ros_node.get_logger().error(error_msg)
+            self.queued_method = self.abort
+
+    def _send_sink_command(self, success_callback, failure_callback, error_msg):
+        movement_msg = MovementCommand()
+        movement_msg.command = MovementCommand.MOVE_RELATIVE
+        movement_msg.altitude = self.mission_altitude
+        movement_msg.timeout_sec = 10.0
+
+        success = self.movement_client.send_movement_command(
+            movement_msg, on_success=success_callback, on_failure=failure_callback
+        )
+
+        if not success:
+            self.ros_node.get_logger().error(error_msg)
+            self.queued_method = self.abort
+
+    def _send_absolute_command(self, pose, success_callback, failure_callback, error_msg):
+        movement_msg = MovementCommand()
+        movement_msg.command = MovementCommand.MOVE_ABSOLUTE
+        movement_msg.goal_pose.pose = pose
+        movement_msg.goal_pose.copy_orientation = False
+        movement_msg.altitude = self.mission_altitude
+        movement_msg.timeout_sec = 60.0
+
+        success = self.movement_client.send_movement_command(
+            movement_msg, on_success=success_callback, on_failure=failure_callback
+        )
+
+        if not success:
+            self.ros_node.get_logger().error(error_msg)
+            self.queued_method = self.abort
 
     def mission_command_callback(self, msg):
         """Handle incoming mission command messages"""
@@ -190,42 +281,31 @@ class RootStateMachine(BaseStateMachine):
 
     def on_enter_sinking_start(self):
         self.record_initial_start_time()
-        movement_msg = MovementCommand()
-        movement_msg.command = MovementCommand.MOVE_RELATIVE
-        movement_msg.altitude = self.mission_altitude
-
-        movement_msg.timeout_sec = 10.0
-
-        success = self.movement_client.send_movement_command(
-            movement_msg,
-            on_success=self.sinking_start_done,
-            on_failure=self.sinking_start_done,
+        self._send_sink_command(
+            self.sinking_start_done,
+            self.sinking_start_done,
+            "Failed to send sinking movement command",
         )
-
-        if not success:
-            self.ros_node.get_logger().error("Failed to send sinking movement command")
-            self.queued_method = self.abort
 
     def on_enter_gate(self):
-        movement_msg = MovementCommand()
-        movement_msg.command = MovementCommand.MOVE_RELATIVE
-        movement_msg.translation.x = self.gate_distance
-        movement_msg.altitude = self.mission_altitude
-        movement_msg.timeout_sec = (
-            abs(self.gate_distance) * self.translation_timeout_factor
+        self._send_translation_command(
+            self.gate_distance,
+            self.gate_done,
+            self.gate_done,
+            "Failed to send gate movement command",
         )
-
-        success = self.movement_client.send_movement_command(
-            movement_msg,
-            on_success=self.gate_done,
-            on_failure=self.gate_done,
-        )
-
-        if not success:
-            self.ros_node.get_logger().error("Failed to send gate movement command")
-            self.queued_method = self.abort
 
     def on_enter_barrel_roll(self):
+        request = GetPoseTwistAccel.Request()
+        self.send_service_request(
+            GetPoseTwistAccel,
+            "get_pose_twist_accel",
+            request,
+            self._pose_callback,
+        )
+
+        time.sleep(0.1)
+
         movement_msg = MovementCommand()
         movement_msg.command = MovementCommand.BARREL_ROLL
         movement_msg.goal_velocity.twist.angular.x = self.barrel_roll_angular_velocity
@@ -261,164 +341,68 @@ class RootStateMachine(BaseStateMachine):
             self.queued_method = self.abort
 
     def on_enter_turn_marker_one(self):
-        movement_msg = MovementCommand()
-        movement_msg.command = MovementCommand.MOVE_RELATIVE
-        movement_msg.rotation.z = self.turn_marker_one_angle
-        movement_msg.altitude = self.mission_altitude
-        movement_msg.timeout_sec = 10.0
-
-        success = self.movement_client.send_movement_command(
-            movement_msg,
-            on_success=self.turn_marker_one_done,
-            on_failure=self.turn_marker_one_done,
+        self._send_rotation_command(
+            self.turn_marker_one_angle,
+            self.turn_marker_one_done,
+            self.turn_marker_one_done,
+            "Failed to send turn marker one movement command",
         )
-
-        if not success:
-            self.ros_node.get_logger().error(
-                "Failed to send turn marker one movement command"
-            )
-            self.queued_method = self.abort
 
     def on_enter_approaching_slalom(self):
-        movement_msg = MovementCommand()
-        movement_msg.command = MovementCommand.MOVE_RELATIVE
-        movement_msg.translation.x = self.approaching_slalom_distance
-        movement_msg.altitude = self.mission_altitude
-        movement_msg.timeout_sec = (
-            abs(self.approaching_slalom_distance) * self.translation_timeout_factor
+        self._send_translation_command(
+            self.approaching_slalom_distance,
+            self.approaching_slalom_done,
+            self.approaching_slalom_done,
+            "Failed to send approaching slalom movement command",
         )
-
-        success = self.movement_client.send_movement_command(
-            movement_msg,
-            on_success=self.approaching_slalom_done,
-            on_failure=self.approaching_slalom_done,
-        )
-
-        if not success:
-            self.ros_node.get_logger().error(
-                "Failed to send approaching slalom movement command"
-            )
-            self.queued_method = self.abort
 
     def on_enter_slalom_turn_one(self):
-        movement_msg = MovementCommand()
-        movement_msg.command = MovementCommand.MOVE_RELATIVE
-        movement_msg.rotation.z = self.slalom_turn_one_angle
-        movement_msg.altitude = self.mission_altitude
-        movement_msg.timeout_sec = 10.0
-
-        success = self.movement_client.send_movement_command(
-            movement_msg,
-            on_success=self.slalom_turn_one_done,
-            on_failure=self.slalom_turn_one_done,
+        self._send_rotation_command(
+            self.slalom_turn_one_angle,
+            self.slalom_turn_one_done,
+            self.slalom_turn_one_done,
+            "Failed to send slalom turn one movement command",
         )
-
-        if not success:
-            self.ros_node.get_logger().error(
-                "Failed to send slalom turn one movement command"
-            )
-            self.queued_method = self.abort
 
     def on_enter_slalom_move_forward_one(self):
-        movement_msg = MovementCommand()
-        movement_msg.command = MovementCommand.MOVE_RELATIVE
-        movement_msg.translation.x = self.slalom_move_forward_one_distance
-        movement_msg.altitude = self.mission_altitude
-        movement_msg.timeout_sec = (
-            abs(self.slalom_move_forward_one_distance) * self.translation_timeout_factor
+        self._send_translation_command(
+            self.slalom_move_forward_one_distance,
+            self.slalom_move_forward_one_done,
+            self.slalom_move_forward_one_done,
+            "Failed to send slalom move forward one movement command",
         )
-
-        success = self.movement_client.send_movement_command(
-            movement_msg,
-            on_success=self.slalom_move_forward_one_done,
-            on_failure=self.slalom_move_forward_one_done,
-        )
-
-        if not success:
-            self.ros_node.get_logger().error(
-                "Failed to send slalom move forward one movement command"
-            )
-            self.queued_method = self.abort
 
     def on_enter_slalom_turn_two(self):
-        movement_msg = MovementCommand()
-        movement_msg.command = MovementCommand.MOVE_RELATIVE
-        movement_msg.rotation.z = self.slalom_turn_two_angle
-        movement_msg.altitude = self.mission_altitude
-        movement_msg.timeout_sec = 10.0
-
-        success = self.movement_client.send_movement_command(
-            movement_msg,
-            on_success=self.slalom_turn_two_done,
-            on_failure=self.slalom_turn_two_done,
+        self._send_rotation_command(
+            self.slalom_turn_two_angle,
+            self.slalom_turn_two_done,
+            self.slalom_turn_two_done,
+            "Failed to send slalom turn two movement command",
         )
-
-        if not success:
-            self.ros_node.get_logger().error(
-                "Failed to send slalom turn two movement command"
-            )
-            self.queued_method = self.abort
 
     def on_enter_slalom_move_forward_two(self):
-        movement_msg = MovementCommand()
-        movement_msg.command = MovementCommand.MOVE_RELATIVE
-        movement_msg.translation.x = self.slalom_move_forward_two_distance
-        movement_msg.altitude = self.mission_altitude
-        movement_msg.timeout_sec = (
-            abs(self.slalom_move_forward_two_distance) * self.translation_timeout_factor
+        self._send_translation_command(
+            self.slalom_move_forward_two_distance,
+            self.slalom_move_forward_two_done,
+            self.slalom_move_forward_two_done,
+            "Failed to send slalom move forward two movement command",
         )
-
-        success = self.movement_client.send_movement_command(
-            movement_msg,
-            on_success=self.slalom_move_forward_two_done,
-            on_failure=self.slalom_move_forward_two_done,
-        )
-
-        if not success:
-            self.ros_node.get_logger().error(
-                "Failed to send slalom move forward two movement command"
-            )
-            self.queued_method = self.abort
 
     def on_enter_turn_marker_two(self):
-        movement_msg = MovementCommand()
-        movement_msg.command = MovementCommand.MOVE_RELATIVE
-        movement_msg.rotation.z = self.turn_marker_two_angle
-        movement_msg.altitude = self.mission_altitude
-        movement_msg.timeout_sec = 10.0
-
-        success = self.movement_client.send_movement_command(
-            movement_msg,
-            on_success=self.turn_marker_two_done,
-            on_failure=self.turn_marker_two_done,
+        self._send_rotation_command(
+            self.turn_marker_two_angle,
+            self.turn_marker_two_done,
+            self.turn_marker_two_done,
+            "Failed to send turn marker two movement command",
         )
-
-        if not success:
-            self.ros_node.get_logger().error(
-                "Failed to send turn marker two movement command"
-            )
-            self.queued_method = self.abort
 
     def on_enter_approaching_dropper(self):
-        movement_msg = MovementCommand()
-        movement_msg.command = MovementCommand.MOVE_RELATIVE
-        movement_msg.translation.x = self.approaching_dropper_distance
-        movement_msg.altitude = self.mission_altitude
-        movement_msg.timeout_sec = (
-            abs(self.approaching_dropper_distance) * self.translation_timeout_factor
+        self._send_translation_command(
+            self.approaching_dropper_distance,
+            self.approaching_dropper_done,
+            self.approaching_dropper_done,
+            "Failed to send approaching dropper movement command",
         )
-
-        success = self.movement_client.send_movement_command(
-            movement_msg,
-            on_success=self.approaching_dropper_done,
-            on_failure=self.approaching_dropper_done,
-        )
-
-        if not success:
-            self.ros_node.get_logger().error(
-                "Failed to send approaching dropper movement command"
-            )
-            self.queued_method = self.abort
 
     def on_enter_actuating_servo(self):
         servo_msg = ServoCommand()
@@ -428,7 +412,9 @@ class RootStateMachine(BaseStateMachine):
         servo_publisher = self.ros_node.create_publisher(
             ServoCommand, "/servo_command", 10
         )
-        servo_publisher.publish(servo_msg)
+        for i in range(10):
+            servo_publisher.publish(servo_msg)
+            time.sleep(0.1)
 
         self.ros_node.get_logger().info(
             f"Servo actuated: index={self.servo_index}, pwm={self.servo_pwm}"
@@ -437,134 +423,66 @@ class RootStateMachine(BaseStateMachine):
         self.queued_method = self.actuating_servo_done
 
     def on_enter_turn_to_octagon(self):
-        movement_msg = MovementCommand()
-        movement_msg.command = MovementCommand.MOVE_RELATIVE
-        movement_msg.rotation.z = self.turn_to_octagon_angle
-        movement_msg.altitude = self.mission_altitude
-        movement_msg.timeout_sec = 10.0
-
-        success = self.movement_client.send_movement_command(
-            movement_msg,
-            on_success=self.turn_to_octagon_done,
-            on_failure=self.turn_to_octagon_done,
+        self._send_rotation_command(
+            self.turn_to_octagon_angle,
+            self.turn_to_octagon_done,
+            self.turn_to_octagon_done,
+            "Failed to send turn to octagon movement command",
         )
-
-        if not success:
-            self.ros_node.get_logger().error(
-                "Failed to send turn to octagon movement command"
-            )
-            self.queued_method = self.abort
 
     def on_enter_approaching_octagon(self):
-        movement_msg = MovementCommand()
-        movement_msg.command = MovementCommand.MOVE_RELATIVE
-        movement_msg.translation.x = self.approaching_octagon_distance
-        movement_msg.altitude = self.mission_altitude
-        movement_msg.timeout_sec = (
-            abs(self.approaching_octagon_distance) * self.translation_timeout_factor
+        self._send_translation_command(
+            self.approaching_octagon_distance,
+            self.approaching_octagon_done,
+            self.approaching_octagon_done,
+            "Failed to send approaching octagon movement command",
         )
-
-        success = self.movement_client.send_movement_command(
-            movement_msg,
-            on_success=self.approaching_octagon_done,
-            on_failure=self.approaching_octagon_done,
-        )
-
-        if not success:
-            self.ros_node.get_logger().error(
-                "Failed to send approaching octagon movement command"
-            )
-            self.queued_method = self.abort
 
     def on_enter_surfacing_octagon(self):
-        movement_msg = MovementCommand()
-        movement_msg.command = MovementCommand.SURFACE_PASSIVE
-
-        success = self.movement_client.send_movement_command(
-            movement_msg,
-            on_success=self.surfacing_octagon_done,
-            on_failure=self.surfacing_octagon_done,
+        self._send_surface_command(
+            self.surfacing_octagon_done,
+            self.surfacing_octagon_done,
+            "Failed to send surfacing octagon movement command",
         )
-
-        if not success:
-            self.ros_node.get_logger().error(
-                "Failed to send surfacing octagon movement command"
-            )
-            self.queued_method = self.abort
 
     def on_enter_sinking_octagon(self):
-        movement_msg = MovementCommand()
-        movement_msg.command = MovementCommand.MOVE_RELATIVE
-        movement_msg.altitude = self.mission_altitude
-        movement_msg.timeout_sec = 10.0
-
-        success = self.movement_client.send_movement_command(
-            movement_msg,
-            on_success=self.sinking_octagon_done,
-            on_failure=self.sinking_octagon_done,
+        self._send_sink_command(
+            self.sinking_octagon_done,
+            self.sinking_octagon_done,
+            "Failed to send sinking octagon movement command",
         )
-
-        if not success:
-            self.ros_node.get_logger().error(
-                "Failed to send sinking octagon movement command"
-            )
-            self.queued_method = self.abort
 
     def on_enter_return_home(self):
-        movement_msg = MovementCommand()
-        movement_msg.command = MovementCommand.MOVE_RELATIVE
-        movement_msg.translation.x = self.return_home_distance
-        movement_msg.altitude = self.mission_altitude
-        movement_msg.timeout_sec = (
-            abs(self.return_home_distance) * self.translation_timeout_factor
-        )
-
-        success = self.movement_client.send_movement_command(
-            movement_msg,
-            on_success=self.return_home_done,
-            on_failure=self.return_home_done,
-        )
-
-        if not success:
-            self.ros_node.get_logger().error(
-                "Failed to send return home movement command"
+        if self.post_gate_pose is not None:
+            self._send_absolute_command(
+                self.post_gate_pose,
+                self.return_home_done,
+                self.return_home_done,
+                "Failed to send return home absolute movement command"
             )
-            self.queued_method = self.abort
+        else:
+            self.ros_node.get_logger().warn("No post-gate pose saved, using relative movement")
+            self._send_translation_command(
+                self.return_home_distance,
+                self.return_home_done,
+                self.return_home_done,
+                "Failed to send return home movement command",
+            )
 
     def on_enter_pass_gate(self):
-        movement_msg = MovementCommand()
-        movement_msg.command = MovementCommand.MOVE_RELATIVE
-        movement_msg.translation.x = self.pass_gate_distance
-        movement_msg.altitude = self.mission_altitude
-        movement_msg.timeout_sec = (
-            abs(self.pass_gate_distance) * self.translation_timeout_factor
+        self._send_translation_command(
+            self.pass_gate_distance,
+            self.pass_gate_done,
+            self.pass_gate_done,
+            "Failed to send pass gate movement command",
         )
-
-        success = self.movement_client.send_movement_command(
-            movement_msg,
-            on_success=self.pass_gate_done,
-            on_failure=self.pass_gate_done,
-        )
-
-        if not success:
-            self.ros_node.get_logger().error(
-                "Failed to send pass gate movement command"
-            )
-            self.queued_method = self.abort
 
     def on_enter_surface(self):
-        movement_msg = MovementCommand()
-        movement_msg.command = MovementCommand.SURFACE_PASSIVE
-
-        success = self.movement_client.send_movement_command(
-            movement_msg,
-            on_success=self.surface_done,
-            on_failure=self.surface_done,
+        self._send_surface_command(
+            self.surface_done,
+            self.surface_done,
+            "Failed to send surface movement command",
         )
-
-        if not success:
-            self.ros_node.get_logger().error("Failed to send surface movement command")
-            self.queued_method = self.abort
 
     def on_completion(self):
         self.ros_node.get_logger().info(make_green_log("Root State Machine Exiting"))
