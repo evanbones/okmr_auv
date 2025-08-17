@@ -140,7 +140,7 @@ class RootStateMachine(BaseStateMachine):
         self.barrel_roll_duration = self.get_local_parameter("barrel_roll_duration")
         self.servo_pwm = self.get_local_parameter("servo_pwm")
         self.servo_index = self.get_local_parameter("servo_index")
-        
+
         self.post_gate_pose = None
 
     def _pose_callback(self, future):
@@ -161,7 +161,9 @@ class RootStateMachine(BaseStateMachine):
         movement_msg.command = MovementCommand.MOVE_RELATIVE
         movement_msg.translation.x = distance
         movement_msg.altitude = self.mission_altitude
-        movement_msg.timeout_sec = abs(distance) * self.translation_timeout_factor
+        movement_msg.timeout_sec = (
+            10.0 + abs(distance) * self.translation_timeout_factor
+        )
 
         success = self.movement_client.send_movement_command(
             movement_msg, on_success=success_callback, on_failure=failure_callback
@@ -178,7 +180,7 @@ class RootStateMachine(BaseStateMachine):
         movement_msg.command = MovementCommand.MOVE_RELATIVE
         movement_msg.rotation.z = angle
         movement_msg.altitude = self.mission_altitude
-        movement_msg.timeout_sec = 10.0
+        movement_msg.timeout_sec = 10.0 + abs(angle / 10.0)
 
         success = self.movement_client.send_movement_command(
             movement_msg, on_success=success_callback, on_failure=failure_callback
@@ -214,7 +216,9 @@ class RootStateMachine(BaseStateMachine):
             self.ros_node.get_logger().error(error_msg)
             self.queued_method = self.abort
 
-    def _send_absolute_command(self, pose, success_callback, failure_callback, error_msg):
+    def _send_absolute_command(
+        self, pose, success_callback, failure_callback, error_msg
+    ):
         movement_msg = MovementCommand()
         movement_msg.command = MovementCommand.MOVE_ABSOLUTE
         movement_msg.goal_pose.pose = pose
@@ -458,10 +462,12 @@ class RootStateMachine(BaseStateMachine):
                 self.post_gate_pose,
                 self.return_home_done,
                 self.return_home_done,
-                "Failed to send return home absolute movement command"
+                "Failed to send return home absolute movement command",
             )
         else:
-            self.ros_node.get_logger().warn("No post-gate pose saved, using relative movement")
+            self.ros_node.get_logger().warn(
+                "No post-gate pose saved, using relative movement"
+            )
             self._send_translation_command(
                 self.return_home_distance,
                 self.return_home_done,

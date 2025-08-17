@@ -4,23 +4,23 @@ automated_planner:
     state_timeout_check_period: 0.1
 
     root:
-      mission_altitude: 0.75
-      translation_timeout_factor: 5.0
+      mission_altitude: 0.5
+      translation_timeout_factor: 3.0
 
-      gate_distance: 5.5
+      gate_distance: 1.0
       barrel_roll_angular_velocity: -200.0
       barrel_roll_duration: 3.6
 
       turn_marker_one_angle: 90.0
-      approaching_slalom_distance: 3.0
+      approaching_slalom_distance: 0.5
 
       slalom_turn_one_angle: 45.0
-      slalom_move_forward_one_distance: 2.0
+      slalom_move_forward_one_distance: 0.4
       slalom_turn_two_angle: -90.0
-      slalom_move_forward_two_distance: 2.0
+      slalom_move_forward_two_distance: 0.4
 
       turn_marker_two_angle: 90.0
-      approaching_dropper_distance: 2.5
+      approaching_dropper_distance: 0.5
 
       servo_pwm: 1800.0
       servo_index: 0
@@ -28,9 +28,9 @@ automated_planner:
       turn_to_octagon_angle: 90.0
       approaching_octagon_distance: 4.0
 
-      return_home_distance: -10.0
+      return_home_distance: -2.0
 
-      pass_gate_distance: 3.0
+      pass_gate_distance: 0.5
 
       
 

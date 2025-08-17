@@ -9,6 +9,7 @@ from launch.substitutions import (
 from launch.actions import DeclareLaunchArgument, SetEnvironmentVariable, GroupAction
 from ament_index_python.packages import get_package_share_directory
 import os
+from okmr_utils import *
 
 
 def generate_launch_description():
@@ -63,24 +64,17 @@ def generate_launch_description():
                 )
             },
             {"root_config": LaunchConfiguration("root_config")},
-        ],
-        output="screen",
-        ros_arguments=[
-            "--log-level",
-            PythonExpression(
+            # this loads all params from the specified parameter file, which is why it doesnt have a key : value structure
+            PathJoinSubstitution(
                 [
-                    '"debug" if "',
-                    LaunchConfiguration("debug"),
-                    '" == "true" else "info"',
+                    LaunchConfiguration("config_share_path"),
+                    LaunchConfiguration("config_folder"),
+                    LaunchConfiguration("param_file"),
                 ]
             ),
-            "--log-level",
-            "rcl:=warn",  # Suppress noisy RCL debug messages
-            "--log-level",
-            "rcl_action:=warn",  # Suppress RCL action client messages
-            "--log-level",
-            "rmw_fastrtps_cpp:=warn",  # Suppress FastRTPS sub topic messages
         ],
+        output="screen",
+        ros_arguments=debug_ros_args,
     )
 
     navigator_server_node = Node(
@@ -95,15 +89,10 @@ def generate_launch_description():
         output="screen",
     )
 
-    # Set colorized output for better log readability
-    colorized_output = SetEnvironmentVariable(
-        name="RCUTILS_COLORIZED_OUTPUT", value="1"
-    )
-
     # Return the launch description
     return LaunchDescription(
         [
-            colorized_output,
+            color_output,
             config_share_path_arg,
             config_folder_arg,
             param_file_arg,
