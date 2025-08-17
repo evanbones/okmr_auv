@@ -42,13 +42,20 @@ def generate_launch_description():
         remappings=[
             ("/rgb", "/ogopogo/front/color/image_raw"),
             ("/depth", "/ogopogo/front/depth/image_rect_raw"),
-            ("/labeled_image", "/labeled_image"),
         ],
         ros_arguments=debug_ros_args,
     )
 
+    mask_offset_node = Node(
+            package='okmr_object_detection',
+            executable='mask_offset_node',
+            name='mask_offset_node',
+            output='screen'
+        )
+
     return LaunchDescription(
         [
+            mask_offset_node,
             color_output,
             debug_arg,
             object_detection_node,

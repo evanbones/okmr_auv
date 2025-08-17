@@ -1,7 +1,7 @@
 onnx_segmentation_detector:
   ros__parameters:
-    conf_threshold: 0.7
-    mask_threshold: 0.7
+    conf_threshold: 0.3
+    mask_threshold: 0.3
     providers:
       #- TensorrtExecutionProvider
       - CUDAExecutionProvider
