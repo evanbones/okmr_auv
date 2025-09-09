@@ -25,3 +25,6 @@ datasets/
 .pcd
 .npy
 crl_parameter_gui/
+
+# ROS2 bag files
+rosbag2_*/
