@@ -1,2 +1,0 @@
-ros2 launch realsense2_camera rs_dual_camera_launch.py serial_no1:="'234322306161'" serial_no2:="'218722270621'"
-
