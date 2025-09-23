@@ -1,4 +1,4 @@
-# OKMR 2025 Software Application Challenge
+# OKMR 2025 AUV Software Application Challenge
 
 Welcome to the Okanagan Marine Robotics (OKMR) software application challenge! 
 This challenge will help you get familiar with ROS2 and our software ecosystem.
