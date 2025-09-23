@@ -1,18 +1,15 @@
-# Okanagan Marine Robotics AUV Software
+# UBC Okanagan Marine Robotics AUV Software
 
 ## Overview
 
-This repository contains the software for Okanagan Marine Robotic's AUV's
+This repository contains the software for UBC Okanagan Marine Robotic's AUV's.
 
-### Install Instructions
-``` bash
-git clone --recurse-submodules https://github.com/Okanagan-Marine-Robotics/okmr_auv.git
-cd okmr_auv/ros2_ws
-colcon build --packages-select okmr_msgs
-source install/setup.bash
-TODO CREATE DEPENDANCY INSTALLING SCRIPT
-colcon build
-```
+ROS2 is heavily utilized for inter process communication, software configuration, and package management.
+
+Other software libraries used are dependant on specific packages. eg.
+- okmr_object_detection uses PyTorch and ONNX
+- okmr_controls uses Eigen 
+- okmr_mapping uses PCL
 
 ### Package Structure
 The codebase is organized into different ros2 packages, with each one containing code related to a 
@@ -22,7 +19,6 @@ specific area of the system. For example:
 - okmr_automated_planner is for the high level decision making state machines
 
 Check the specific README.md files inside each package for more details
-
 
 ### Controls Hierarchy
 The overall system is designed in a layered manner, with L5 systems making high level decisions,
@@ -40,7 +36,6 @@ This also strongly defines what programming language the code should be written 
 - L1 = PID controllers ~200hz
 - L0 = hardware I/O (motor/sensor interfaces) ~200hz
 
+### System Diagram
 
-All documentation can be found [here](https://docs.google.com/document/d/1PhQ2q0ED-8mXD5I1RwiWC_7xKGJy2q97WKZ9-5tj8FE/edit?usp=sharing)
-
-![ROS Graph](/diagrams/IMG_6097.png)
+![System Diagram](/diagrams/SystemDiagram.png)
