@@ -3,8 +3,11 @@
 Welcome to the Okanagan Marine Robotics (OKMR) software application challenge! 
 This challenge will help you get familiar with ROS2 and our software ecosystem.
 
-If you have Linux or ROS2 expereince, this should take ~30-60 minutes, otherwise,
-you can **expect to spend ~2-4 hours to get everything up and running**.
+If you have Linux or ROS2 experience, this should take ~30-60 minutes.
+
+Otherwise, you can **expect to spend ~2-4 hours to get everything up and running**.
+
+> This challenge intentionally does not provide every step in detail. You are expected to troubleshoot issues and fill in gaps using documentation, AI tools, and your problem-solving skills.
 
 ## Prerequisites
 
@@ -17,7 +20,6 @@ Before starting, ensure you have access to a system that can run Ubuntu 24.04 or
 - Docker container
 - Remote server access
 
-**Feel free to use AI or your tutorial of choice to get this working.**
 
 ## Challenge Tasks
 
@@ -49,7 +51,7 @@ based on the version of Ubuntu you installed. **(ubuntu 24 = jazzy, ubuntu 25 = 
 
 ### 3. Work with OKMR Messages
 
-1. Clone the entire okmr_auv repo 
+1. Clone the entire okmr_auv repository 
 2. cd into the ros2_ws folder 
 3. compile the `okmr_msgs` package 
     - ```colcon build --packages-select okmr_msgs```
