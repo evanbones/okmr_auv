@@ -4,7 +4,7 @@ Welcome to the Okanagan Marine Robotics (OKMR) software application challenge!
 This challenge will help you get familiar with ROS2 and our software ecosystem.
 
 If you have Linux or ROS2 expereince, this should take ~30-60 minutes, otherwise,
-you can expect to spend ~2-4 hours to get everything up and running.
+you can **expect to spend ~2-4 hours to get everything up and running**.
 
 ## Prerequisites
 
@@ -35,14 +35,14 @@ based on the version of Ubuntu you installed. **(ubuntu 24 = jazzy, ubuntu 25 = 
 
 ### 2. Basic ROS2 Pub/Sub Example
 
-1. In one terminal, start a listener:
-   ```bash
-   ros2 topic echo /okmr_application std_msgs/msg/String
+1. In one terminal, publish a message:
+    ```bash
+   ros2 topic pub /okmr_application std_msgs/msg/String "{data: '{YOUR NAME} is locked in on okmr software team'}"
    ```
 
-2. In another terminal, publish a message:
+2. In another terminal, start a listener:
    ```bash
-   ros2 topic pub /okmr_application std_msgs/msg/String "{data: '{YOUR NAME} is locked in on okmr software team'}"
+   ros2 topic echo /okmr_application std_msgs/msg/String
    ```
 
 3. Take a screenshot showing both terminals with the message being published and received.
@@ -58,7 +58,6 @@ based on the version of Ubuntu you installed. **(ubuntu 24 = jazzy, ubuntu 25 = 
     - [/ros2_ws/src/okmr_msgs/msg/]
 5. Take a screenshot of the working example
 
-
 ## Submission
 
 Complete the Google Form with the following:
@@ -71,15 +70,13 @@ Complete the Google Form with the following:
 Answer these questions in the Google Form:
 
 **Basic ROS2 Knowledge:**
-- What is ROS2? (Research using Google or AI tools)
+- What is ROS2? (~100 words or 2-4 sentences is enough) 
 
 **OKMR System Understanding:**
-Read the main project README.md and answer:
+Read the main project [/README.md] and very briefly answer:
 - How does OKMR use ROS2?
 - What are some examples of software packages used in the OKMR AUV system?
-- Summarize the general structure of the software system based on your understanding
+- Summarize the general structure of the software system based on the system diagram at the bottom of the [/README.md]
 
-**Main README:** [/README.md]
-
-Good luck!
+Good luck! If you need an extension on the challenge (for a good reason), please reach out to OKMR via email or instagram.
 
