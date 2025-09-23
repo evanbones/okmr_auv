@@ -7,7 +7,9 @@ If you have Linux or ROS2 experience, this should take ~30-60 minutes.
 
 Otherwise, you can **expect to spend ~2-4 hours to get everything up and running**.
 
-> This challenge intentionally does not provide every step in detail. You are expected to troubleshoot issues and fill in gaps using documentation, AI tools, and your problem-solving skills. No prior experience with Linux or ROS is required to complete this challenge. We designed it to be achievable for anyone with a strong motivation to learn. We care more about your ability to troubleshoot and use documentation than what you already know.
+> This challenge intentionally does not provide every step in detail. You are expected to troubleshoot issues and fill in gaps using documentation, AI tools, and your problem-solving skills.
+
+> However, no prior experience with Linux or ROS is required. We designed this challenge to be achievable for anyone with a strong motivation to learn, as we care more about your ability to troubleshoot and use documentation than what you already know.
 
 ## Prerequisites
 
