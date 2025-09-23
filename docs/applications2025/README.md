@@ -55,7 +55,7 @@ based on the version of Ubuntu you installed. **(ubuntu 24 = jazzy, ubuntu 25 = 
     - ```colcon build --packages-select okmr_msgs```
     - Ensure you source the workspace afterwards using: ```source install/setup.bash```
 4. Repeat the pub/sub example using an OKMR message type of your choice
-    - [/ros2_ws/src/okmr_msgs/msg/]
+    - [Link to message definitions](/ros2_ws/src/okmr_msgs/msg/)
 5. Take a screenshot of the working example
 
 ## Submission
@@ -73,10 +73,10 @@ Answer these questions in the Google Form:
 - What is ROS2? (~100 words or 2-4 sentences is enough) 
 
 **OKMR System Understanding:**
-Read the main project [/README.md] and very briefly answer:
+Read the main project [README](/README.md) and very briefly answer:
 - How does OKMR use ROS2?
 - What are some examples of software packages used in the OKMR AUV system?
-- Summarize the general structure of the software system based on the system diagram at the bottom of the [/README.md]
+- Summarize the general structure of the software system based on the system diagram at the bottom of the [README](/README.md)
 
 Good luck! If you need an extension on the challenge (for a good reason), please reach out to OKMR via email or instagram.
 
