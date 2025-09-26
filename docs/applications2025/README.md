@@ -13,12 +13,13 @@ Otherwise, you can **expect to spend ~2-4 hours to get everything up and running
 
 ## Prerequisites
 
-Before starting, ensure you have access to a system that can run Ubuntu 24.04 or 25.04. This can be:
+Before starting, ensure you have access to a system that can run Ubuntu 24.04. This can be:
 - Native Ubuntu installation
 - Virtual Machine (VM)
-    - on macOS UTM works well: [UTM VM Link](https://mac.getutm.app/)
+    - On macOS, UTM works well: [UTM VM Link](https://mac.getutm.app/)
+    - On Windows, [VMWare](https://www.vmware.com/products/desktop-hypervisor/workstation-and-fusion) and [VirtualBox](https://www.virtualbox.org/wiki/Downloads) are both good options
 - Windows Subsystem for Linux (WSL)
-    - highly recommended if you are using Windows
+    - Highly recommended if you are using Windows
 - Docker container
 - Remote server access
 
@@ -30,12 +31,12 @@ Before starting, ensure you have access to a system that can run Ubuntu 24.04 or
 Install ROS2 Jazzy or Kilted on your chosen system.
 
 **Installation Guide:** Follow the official 
-[ROS2 Jazzy Jalisco Installation Tutorial](https://docs.ros.org/en/jazzy/Installation.html) 
-or 
-[ROS2 Kilted Kaiju Installation Tutorial](https://docs.ros.org/en/kilted/Installation.html)
-based on the version of Ubuntu you installed. **(ubuntu 24 = jazzy, ubuntu 25 = kilted)**.
+[ROS2 Kilted Kaiju Installation Tutorial](https://docs.ros.org/en/kilted/Installation.html) or [ROS2 Jazzy Jalisco Installation Tutorial](https://docs.ros.org/en/jazzy/Installation.html) (older, but still supported)
 
-> **Note:** Choose the installation method that best fits your system and experience level. The goal is to get ROS2 running, regardless of the specific setup method. Generally, installing Ubuntu on a VM or through WSL will be the easiest to work with.
+
+> **Important**: Both Jazzy and Kilted only support Ubuntu 24.04. If you are using Ubuntu 25.04 or another version, you will need to downgrade or use a supported environment.
+
+> **Tip**: Choose the installation method that best fits your system and experience level. The goal is to get ROS2 running, regardless of the specific setup method. Generally, installing Ubuntu on a VM or through WSL will be the easiest to work with.
 
 ### 2. Basic ROS2 Pub/Sub Example
 
