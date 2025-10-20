@@ -314,7 +314,7 @@ class BaseStateMachine(Machine):
         self._subscriptions.clear()
 
     def cleanup_ros2_publishers(self):
-        for sub in self._publishers:
+        for pub in self._publishers:
             try:
                 self.ros_node.destroy_publisher(pub)
             except:

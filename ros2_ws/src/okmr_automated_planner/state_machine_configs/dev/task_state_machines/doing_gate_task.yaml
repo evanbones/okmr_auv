@@ -9,7 +9,7 @@ doing_gate_task:
     - { name: readjusting_depth }
 
   transitions:
-    - { trigger: initializing_done, source: initializing, dest: spproaching_gate}
+    - { trigger: initializing_done, source: initializing, dest: approaching_gate}
     - { trigger: approaching_gate_done, source: approaching_gate, dest: sideways_scan_gate }
     - { trigger: sideways_scan_gate_done, source: sideways_scan_gate, dest: finding_shark}
     - { trigger: no_shark_found, source: finding_shark, dest: return_initial }
